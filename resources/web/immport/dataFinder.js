@@ -346,6 +346,11 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
             }
         };
 
+        $scope.groupsAvailable = function ()
+        {
+            return $scope.groupList.length > 0;
+        };
+
         $scope.saveParticipantIdGroupInSession = function (participantIds)
         {
             if ($scope.subjects.length == 0)

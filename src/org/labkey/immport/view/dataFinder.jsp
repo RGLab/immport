@@ -517,13 +517,13 @@
                         <ul class="nav navbar-nav">
                             <li id="manageMenu" class="labkey-dropdown" ng-mouseover="openMenu($event, true)">
                                 <a href="#"><i class="fa fa-cog"></i></a>
-                                <ul class="labkey-dropdown-menu" ng-if="!isGuest && groupList.length > 0">
+                                <ul class="labkey-dropdown-menu" ng-show="!isGuest">
                                     <li class="x4-menu-item-text"><a class="menu-item-link x4-menu-item-link" href="<%=new ActionURL("study", "manageParticipantCategories", getContainer()).toHString()%>">Manage Groups</a></li>
                                 </ul>
                             </li>
                             <li id="loadMenu" class="labkey-dropdown" >
                                 <a ng-class="{'labkey-text-link' : loadedStudiesShown(), 'labkey-disabled-text-link': !loadedStudiesShown()} " class="no-arrow" style="margin-right: 0.8em" href="#" ng-mouseover="openMenu($event, false)">Load <i class="fa fa-caret-down"></i></a>
-                                <ul class="labkey-dropdown-menu" ng-if="loadedStudiesShown() && groupList.length > 0" >
+                                <ul class="labkey-dropdown-menu" ng-show="loadedStudiesShown() && groupsAvailable()" >
                                     <li class="x4-menu-item-text" ng-repeat="group in groupList">
                                         <a class="menu-item-link x4-menu-item-link" ng-click="applySubjectGroupFilter(group, $event)">{{group.label}}</a>
                                     </li>

@@ -510,7 +510,7 @@
     <table border=0 class="labkey-data-finder">
         <tr>
             <td>
-                <div ng-controller="SubjectGroupController">
+                <div ng-controller="SubjectGroupController" id="filterArea">
                     <div>{{currentGroup.id != null ? "Saved group: ": ""}}{{currentGroup.label}}</div>
 
                     <div class="navbar navbar-default ">
@@ -762,14 +762,14 @@ LABKEY.help.Tour.register({
         {
             target: 'summaryArea',
             title: "Summary",
-            content: "Here is a summary of the data in the selected studies. Studies represents the number of studies that contain some participants that match the criteria. Participants is the number of subjects accross all selected studies (including participants that did not match all attributes).",
-            placement: "left"
+            content: "Here is a summary of the data in the selected studies. Studies represents the number of studies that contain some participants that match the criteria. Subjects is the number of subjects across all selected studies (including subjects that did not match all attributes).",
+            placement: "right"
         },
         {
             target: 'filterArea',
             title: "Filter Area",
             content: "See and manage your active filters.",
-            placement: "left"
+            placement: "right"
         }
     ]
 });

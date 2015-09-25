@@ -811,7 +811,7 @@ function start_tutorial()
         if (componentSize)
         {
             var bottom = componentOuter.getXY()[1] + componentOuter.getSize().height;
-            Ext4.get("selectionpanel").setHeight(bottom - Ext4.get("selectionpanel").getXY()[1]);
+            Ext4.get("selectionPanel").setHeight(bottom - Ext4.get("selectionPanel").getXY()[1]);
             Ext4.get("studypanel").setHeight(bottom - Ext4.get("studypanel").getXY()[1]);
         }
     };

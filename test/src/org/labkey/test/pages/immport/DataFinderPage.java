@@ -10,6 +10,7 @@ import org.labkey.test.components.immport.StudySummaryWindow;
 import org.labkey.test.pages.LabKeyPage;
 import org.labkey.test.util.LogMethod;
 import org.labkey.test.util.LoggedParam;
+import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -53,14 +54,12 @@ public class DataFinderPage extends LabKeyPage
     public void showUnloadedImmPortStudies()
     {
         selectStudySubset("Unloaded ImmPort studies");
-//        _test.doAndWaitForPageSignal(() -> _test.selectOptionByText(Locators.studySubsetChooser, "Unloaded ImmPort studies"), COUNT_SIGNAL);
     }
 
     public void showAllImmuneSpaceStudies()
     {
         selectStudySubset("ImmuneSpace studies");
-//        _test.doAndWaitForPageSignal(() -> _test.selectOptionByText(Locators.studySubsetChooser, "ImmuneSpace studies"), COUNT_SIGNAL);
-     }
+    }
 
     public void selectStudySubset(String text)
     {
@@ -86,19 +85,17 @@ public class DataFinderPage extends LabKeyPage
 
     public Map<Dimension, Integer> getSummaryCounts()
     {
-        // FIXME figure out what counts the tests want and create locator for that
-//        List<WebElement> summaryCountRows = Locators.summaryCountRow.findElements(_test.getDriver());
+        WebElement summaryElement = Locators.summaryArea.findElement(_test.getDriver());
+        DimensionPanel summary = new DimensionPanel(summaryElement);
+
         Map<Dimension, Integer> countMap = new HashMap<>();
-
-//        for (WebElement row : summaryCountRows)
-//        {
-//            List<WebElement> cells = row.findElements(By.cssSelector("td"));
-//            Dimension dimension = Dimension.fromString(cells.get(1).getText().trim());
-//            Integer count = Integer.parseInt(cells.get(0).getText());
-//
-//            countMap.put(dimension, count);
-//        }
-
+        for (String value : summary.getValues())
+        {
+            String[] parts = value.split("\n");
+            Dimension dimension = Dimension.fromString(parts[0].toLowerCase());
+            Integer count = Integer.parseInt(parts[1].trim());
+            countMap.put(dimension, count);
+        }
         return countMap;
     }
 
@@ -115,37 +112,42 @@ public class DataFinderPage extends LabKeyPage
         return studyCards;
     }
 
-    public Map<Dimension, SummaryFilterPanel> getSelectionPanels()
+    public List<DimensionMember> getSelectedMembers()
     {
-        // FIXME figure out what the tests wants and update selectors for that
-//        List<WebElement> selectionEls = Locators.selection.findElements(_test.getDriver());
-        Map<Dimension, SummaryFilterPanel> dimensionSelections = new HashMap<>();
-
-//        for (WebElement el : selectionEls)
-//        {
-//            SummaryFilterPanel dimensionSelection = new SummaryFilterPanel(el);
-//            dimensionSelections.put(dimensionSelection.getDimension(), dimensionSelection);
-//        }
-
-        return dimensionSelections;
+        List<DimensionMember> members = new ArrayList<>();
+        for (WebElement el : Locators.selection.findElements(_test.getDriver()))
+        {
+            members.add(new DimensionMember(el));
+        }
+        return members;
     }
 
     public Map<Dimension, List<String>> getSelectionValues()
     {
-        Map<Dimension, SummaryFilterPanel> selectionPanels = getSelectionPanels();
         Map<Dimension, List<String>> selectionValues = new HashMap<>();
 
-        for (Map.Entry<Dimension, SummaryFilterPanel> selection : selectionPanels.entrySet())
+        for (DimensionMember member : getSelectedMembers())
         {
-            selectionValues.put(selection.getKey(), selection.getValue().getFilterValues());
+            List<String> values = selectionValues.get(member.getDimension());
+            if (values == null)
+            {
+                values = new ArrayList<>();
+                selectionValues.put(member.getDimension(), values);
+            }
+            values.add(member.getName());
         }
 
         return selectionValues;
     }
 
-    public Map<Dimension, DimensionPanel> getDimensionPanels()
+    public Map<Dimension, DimensionPanel> getAllDimensionPanels()
     {
-        List<WebElement> dimensionPanelEls = Locators.facet.findElements(_test.getDriver());
+        return getDimensionPanels(Locators.facet);
+    }
+
+    public Map<Dimension, DimensionPanel> getDimensionPanels(Locator locator)
+    {
+        List<WebElement> dimensionPanelEls = locator.findElements(_test.getDriver());
         Map<Dimension, DimensionPanel> dimensionPanels = new HashMap<>();
 
         for (WebElement el : dimensionPanelEls)
@@ -155,16 +157,6 @@ public class DataFinderPage extends LabKeyPage
         }
 
         return dimensionPanels;
-    }
-
-    /**
-     * Not very precise
-     */
-    public SummaryFilterPanel waitForSelection(String value)
-    {
-        WebElement selectionEl = Locators.selection.containing(value).waitForElement(_test.shortWait());
-
-        return new SummaryFilterPanel(selectionEl);
     }
 
     public void clearAllFilters()
@@ -207,31 +199,23 @@ public class DataFinderPage extends LabKeyPage
     
     public static class Locators
     {
-        public static Locator.CssLocator studyFinder = Locator.css("#dataFinderApp");
-        public static Locator.XPathLocator exportDatasets = Locator.linkWithText("Export Study Datasets");
-        public static Locator.CssLocator studySearchInput = studyFinder.append(Locator.css("#searchTerms"));
-        public static Locator.CssLocator searchMessage = studyFinder.append(Locator.css("span.labkey-study-search"));
-
-        public static Locator.NameLocator studySubsetChooser = Locator.name("studySubsetSelect");
-        //        public Locator.XPathLocator showAllRadioButton = Locator.radioButtonByNameAndValue("studySubset", "ImmPort");
-//        public Locator.XPathLocator showAllImmuneSpaceRadioButton = Locator.radioButtonByNameAndValue("studySubset","ImmuneSpace");
-        public static Locator.CssLocator studyPanel = studyFinder.append(Locator.css("#studypanel"));
-        public static Locator.CssLocator studyCard = studyFinder.append(Locator.css(".labkey-study-card"));
-        public static Locator.CssLocator selectionPanel = studyFinder.append(Locator.css(".selection-panel"));
-        public static Locator.CssLocator facetPanel = selectionPanel.append(Locator.css("#facetPanel"));
-        public static Locator.CssLocator facet = facetPanel.append(" .facet");
-        public static Locator.CssLocator emptyMember = facetPanel.append(Locator.css("li.empty-member"));
-        public static Locator.CssLocator summaryArea = selectionPanel.append(Locator.css("#summaryArea"));
-//        public Locator.CssLocator summaryCounts = summaryArea.append(Locator.css("> tbody:first-child"));
-//        public Locator.CssLocator summaryCountRow = summaryCounts.append(Locator.css("> tr:not(:first-child):not(:last-child)"));
-        public static Locator.CssLocator selection = facetPanel.append(Locator.css(".bar-selected"));
-        public static Locator.CssLocator clearAll = summaryArea.append(Locator.css("span[ng-click='clearAllFilters(true);']"));
+        public static final Locator.CssLocator studyFinder = Locator.css("#dataFinderApp");
+        public static final Locator.XPathLocator exportDatasets = Locator.linkWithText("Export Study Datasets");
+        public static final Locator.CssLocator studySearchInput = studyFinder.append(Locator.css("#searchTerms"));
+        public static final Locator.NameLocator studySubsetChooser = Locator.name("studySubsetSelect");
+        public static final Locator.CssLocator studyCard = studyFinder.append(Locator.css(".labkey-study-card"));
+        public static final Locator.CssLocator selectionPanel = studyFinder.append(Locator.css(".selection-panel"));
+        public static final Locator.CssLocator facetPanel = selectionPanel.append(Locator.css("#facetPanel"));
+        public static final Locator.CssLocator facet = facetPanel.append(" .facet");
+        public static final Locator.CssLocator summaryArea = selectionPanel.append(Locator.css("#summaryArea"));
+        public static final Locator.CssLocator selection = facetPanel.append(Locator.css(" .selected-member"));
+        public static final Locator.CssLocator clearAll = Locator.css("span[ng-click='clearAllFilters(true);']");
     }
 
     public enum Dimension
     {
         STUDIES(null, "studies"),
-        PARTICIPANTS(null, "participants"),
+        SUBJECTS(null, "subjects"),
         SPECIES("Species", "species"),
         CONDITION("Condition", "conditions"),
         TYPE("Type", "types"),
@@ -303,28 +287,47 @@ public class DataFinderPage extends LabKeyPage
 
         public List<String> getValues()
         {
-            return _test.getTexts(findElements(elements.value));
+            displayDimension();
+            return _test.getTexts(findElements(elements.member));
         }
 
         public List<String> getEmptyValues()
         {
-            return _test.getTexts(findElements(elements.emptyValue));
+            displayDimension();
+            return _test.getTexts(findElements(elements.emptyMemberName));
         }
 
         public List<String> getNonEmptyValues()
         {
-            return _test.getTexts(findElements(elements.nonEmptyValue));
+            displayDimension();
+            return _test.getTexts(findElements(elements.nonEmptyMemberName));
         }
 
         public List<String> getSelectedValues()
         {
-            return _test.getTexts(findElements(elements.selectedValue));
+            displayDimension();
+            return _test.getTexts(findElements(elements.selectedMemberName));
         }
 
+        public void displayDimension()
+        {
+            if (!isDisplayed())
+            {
+                WebElement caption = findElement(elements.facetCaption);
+                caption.click();
+            }
+        }
+
+        public boolean isDisplayed()
+        {
+            return this.panel.getAttribute("class").contains("expanded");
+        }
 
         public String selectFirstIntersectingMeasure()
         {
-            WebElement el = findElement(elements.nonEmptyNonSelectedValue);
+            displayDimension();
+
+            WebElement el = findElement(elements.nonEmptyNonSelectedMemberName);
             String value = el.getText();
 
             addToSelection(el);
@@ -333,16 +336,46 @@ public class DataFinderPage extends LabKeyPage
             return value;
         }
 
-        public void select(String value)
+        public Map<String, Integer> getMemberCounts()
         {
-            select(findElement(elements.value.withText(value)));
-            waitForSelection(value);
+            displayDimension();
+            Map<String, Integer> countMap = new HashMap<>();
+            List<WebElement> members = findElements(elements.member);
+            for (WebElement member : members)
+            {
+                String[] parts = member.getText().split("\n");
+                String name = parts[0].trim();
+                Integer count = Integer.valueOf(parts[1].trim());
+                countMap.put(name, count);
+            }
+
+            return countMap;
+        }
+
+        public void selectMember(String memberName)
+        {
+            displayDimension();
+            select(findElement(elements.memberName.withText(memberName)));
+            waitForSelection(memberName);
+        }
+
+        public void deselectMember(String memberName)
+        {
+            WebElement member = findElement(elements.member.containing(memberName));
+            WebElement check = member.findElement(By.cssSelector(elements.selectedMemberCheck.getLocatorString()));
+            select(check);
         }
 
         public void addToSelection(String value)
         {
-            addToSelection(findElement(elements.value.withText(value)));
+            displayDimension();
+            addToSelection(findElement(elements.member.withText(value)));
             waitForSelection(value);
+        }
+
+        public void clearFilters()
+        {
+            select(findElement(elements.clearFilters));
         }
 
         private void select(final WebElement value)
@@ -371,18 +404,21 @@ public class DataFinderPage extends LabKeyPage
 
         private void waitForSelection(String value)
         {
-            elements.selectedValue.withText(value).waitForElement(panel, BaseWebDriverTest.WAIT_FOR_JAVASCRIPT);
+            elements.selectedMemberName.containing(value).waitForElement(panel, BaseWebDriverTest.WAIT_FOR_JAVASCRIPT);
         }
 
         private class Elements
         {
-            // FIXME these elements are probably not correct
+            public Locator.CssLocator facetCaption = Locator.css(".facet-caption");
             public Locator.CssLocator dimension = Locator.css(".facet-caption > span");
-            public Locator.CssLocator value = Locator.css(".member");
-            public Locator.CssLocator emptyValue = Locator.css(".ng-scope.empty-member");
-            public Locator.CssLocator nonEmptyValue = Locator.css(".ng-scope.member:not(.empty-member)");
-            public Locator.CssLocator nonEmptyNonSelectedValue = Locator.css(".ng-scope.member:not(.empty-member):not(.selected-member)");
-            public Locator.CssLocator selectedValue = Locator.css(".ng-scope.selected-member");
+            public Locator.CssLocator member = Locator.css(".member");
+            public Locator.CssLocator memberName = Locator.css(".member-name");
+            public Locator.CssLocator selectedMemberCheck = Locator.css(".member .member-indicator.selected");
+            public Locator.CssLocator emptyMemberName = Locator.css(".ng-scope.empty-member .member-name");
+            public Locator.CssLocator nonEmptyMemberName = Locator.css(".ng-scope.member:not(.empty-member) .member-name");
+            public Locator.CssLocator nonEmptyNonSelectedMemberName = Locator.css(".ng-scope.member:not(.empty-member):not(.selected-member) .member-name");
+            public Locator.CssLocator selectedMemberName = Locator.css(".ng-scope.selected-member .member-name");
+            public Locator.CssLocator clearFilters = Locator.css(".clear-filter");
         }
     }
 
@@ -413,7 +449,7 @@ public class DataFinderPage extends LabKeyPage
 
         public void clickGoToStudy()
         {
-            elements.goToStudyLink.findElement(card).click();
+            _test.clickAndWait(elements.goToStudyLink.findElement(card));
         }
 
         public String getAccession()
@@ -441,31 +477,30 @@ public class DataFinderPage extends LabKeyPage
         }
     }
 
-    public class SummaryFilterPanel extends Component
+    public class DimensionMember extends Component
     {
-        private final WebElement dimensionFilter;
         private final Elements elements;
-        private final Dimension dimension;
+        private final WebElement memberElement;
+        private Dimension dimension;
 
-        private SummaryFilterPanel(final WebElement dimensionFilter)
+        private DimensionMember(final WebElement memberElement)
         {
-            this.dimensionFilter = dimensionFilter;
+            this.memberElement = memberElement;
             elements = new Elements();
-            _test.shortWait().until(new Predicate<WebDriver>()
-            {
-                @Override
-                public boolean apply(WebDriver webDriver)
-                {
-                    return findElement(elements.dimension).getText().length() > 0;
-                }
-            });
-            dimension = Dimension.fromString(findElement(elements.dimension).getText());
+            parseMemberId();
+        }
+
+        private void parseMemberId()
+        {
+            String id = this.memberElement.getAttribute("id");
+            String[] parts = id.split("_");
+            this.dimension = Dimension.fromString(parts[1]);
         }
 
         @Override
         public WebElement getComponentElement()
         {
-            return dimensionFilter;
+            return memberElement;
         }
 
         public Dimension getDimension()
@@ -473,32 +508,20 @@ public class DataFinderPage extends LabKeyPage
             return dimension;
         }
 
-        public List<String> getFilterValues()
+        public String getName()
         {
-            List<WebElement> valueEls = elements.filterValue.findElements(dimensionFilter);
-            List<String> values = new ArrayList<>();
-
-            for (WebElement el : valueEls)
-            {
-                values.add(el.getText().trim());
-            }
-
-            return values;
+            return elements.memberName.findElement(memberElement).getText();
         }
 
-        public void removeFilter(String value)
+        public Integer getCount()
         {
-            final WebElement filter = findElement(elements.filterValue.withText(value));
-
-            _test.doAndWaitForPageSignal(() -> Locator.css("img.delete").findElement(filter).click(), COUNT_SIGNAL);
-
-            _test.shortWait().until(ExpectedConditions.stalenessOf(filter));
+            return Integer.parseInt(elements.memberCount.findElement(memberElement).getText());
         }
 
         private class Elements
         {
-            public Locator dimension = Locator.css("legend.ng-binding");
-            public Locator filterValue = Locator.css("div.filter-member");
+            public Locator memberName = Locator.css(".member-name");
+            public Locator memberCount = Locator.css(".member-count");
         }
     }
 }

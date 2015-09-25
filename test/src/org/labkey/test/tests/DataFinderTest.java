@@ -101,8 +101,8 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
     @Override
     protected void doCleanup(boolean afterTest) throws TestTimeoutException
     {
-        AbstractContainerHelper containerHelper = new APIContainerHelper(this);
-        containerHelper.deleteProject(getProjectName(), afterTest);
+//        AbstractContainerHelper containerHelper = new APIContainerHelper(this);
+//        containerHelper.deleteProject(getProjectName(), afterTest);
     }
 
     @BeforeClass
@@ -213,7 +213,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         }
     }
 
-//    @Test
+    @Test
     public void testCounts()
     {
         DataFinderPage finder = new DataFinderPage(this);
@@ -257,60 +257,62 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         assertEquals("Wrong study cards for ImmuneSpace studies", Arrays.asList(STUDY_SUBFOLDERS), studies);
     }
 
-//    @Test
+    @Test
     public void testSelection()
     {
         DataFinderPage finder = new DataFinderPage(this);
         finder.showUnloadedImmPortStudies();
 
-        Map<Dimension, DataFinderPage.DimensionPanel> dimensionPanels = finder.getDimensionPanels();
+        Map<Dimension, DataFinderPage.DimensionPanel> dimensionPanels = finder.getAllDimensionPanels();
 
-        // FIXME these selections need to be updated to open the dimension section and then select.
-        dimensionPanels.get(Dimension.SPECIES).selectFirstIntersectingMeasure();
+        String selectedSpecies = dimensionPanels.get(Dimension.SPECIES).selectFirstIntersectingMeasure();
         String selectedGender = dimensionPanels.get(Dimension.GENDER).selectFirstIntersectingMeasure();
 
         assertCountsSynced(finder);
-        assertSelectionsSynced(finder);
 
-        List<String> finalSelectedGenders = dimensionPanels.get(Dimension.GENDER).getSelectedValues();
-        List<String> finalSelectedSpecies = dimensionPanels.get(Dimension.SPECIES).getSelectedValues();
+        dimensionPanels.get(Dimension.GENDER).clearFilters();
+        assertEquals("Clearing Gender filters did not remove selection",  Collections.emptyList(), dimensionPanels.get(Dimension.GENDER).getSelectedValues());
 
-        assertEquals("Clearing Species selection removed Gender filter", Collections.singletonList(selectedGender), finalSelectedGenders);
-        assertEquals("Clicking 'ALL' didn't clear species selection", Collections.emptyList(), finalSelectedSpecies);
+        // re-select a gender
+        selectedGender = dimensionPanels.get(Dimension.GENDER).selectFirstIntersectingMeasure();
+        dimensionPanels.get(Dimension.SPECIES).deselectMember(selectedSpecies);
+        assertEquals("Clearing Species selection did not remove selection", Collections.emptyList(), dimensionPanels.get(Dimension.SPECIES).getSelectedValues());
+        assertEquals("Clearing Species selection removed Gender filter", Collections.singletonList(selectedGender), dimensionPanels.get(Dimension.GENDER).getSelectedValues());
+
+        finder.clearAllFilters();
+        assertEquals("Clearing all filters didn't clear gender selection", Collections.emptyList(), dimensionPanels.get(Dimension.GENDER).getSelectedValues());
 
         assertCountsSynced(finder);
-        assertSelectionsSynced(finder);
     }
 
-//    @Test
+    @Test
     public void testSelectingEmptyMeasure()
     {
         Map<Dimension, Integer> expectedCounts = new HashMap<>();
         expectedCounts.put(Dimension.STUDIES, 0);
-        expectedCounts.put(Dimension.PARTICIPANTS, 0);
-        expectedCounts.put(Dimension.SPECIES, 0);
-        expectedCounts.put(Dimension.TYPE, 0);
-        expectedCounts.put(Dimension.CONDITION, 0);
-        expectedCounts.put(Dimension.ASSAY, 0);
-        expectedCounts.put(Dimension.TIMEPOINT, 0);
-        expectedCounts.put(Dimension.GENDER, 0);
-        expectedCounts.put(Dimension.AGE, 0);
-        expectedCounts.put(Dimension.RACE, 0);
+        expectedCounts.put(Dimension.SUBJECTS, 0);
 
         DataFinderPage finder = DataFinderPage.goDirectlyToPage(this, getProjectName());
+        finder.showAllImmuneSpaceStudies();
 
-        // FIXME this selector doesn't seem to work
-        WebElement emptyMember = DataFinderPage.Locators.emptyMember.waitForElement(shortWait());
-        String value = emptyMember.getText().trim();
-        emptyMember.click();
+        Map<Dimension, DataFinderPage.DimensionPanel> dimensionPanels = finder.getAllDimensionPanels();
 
-        finder.waitForSelection(value);
+        dimensionPanels.get(Dimension.TYPE).selectMember("Longitudinal");
 
         List<DataFinderPage.StudyCard> filteredStudyCards = finder.getStudyCards();
-        Map<Dimension, Integer> filteredSummaryCounts = finder.getSummaryCounts();
-
         assertEquals("Study cards visible after selection", 0, filteredStudyCards.size());
+
+        Map<Dimension, Integer> filteredSummaryCounts = finder.getSummaryCounts();
         assertEquals("Wrong counts after selecting empty measure", expectedCounts, filteredSummaryCounts);
+
+        for (DataFinderPage.DimensionPanel panel : dimensionPanels.values())
+        {
+            Map<String, Integer> memberCounts = panel.getMemberCounts();
+            for (Map.Entry<String, Integer> memberCount : memberCounts.entrySet())
+            {
+                assertEquals("Wrong counts for member " + memberCount.getKey() + " of dimension " + panel.getDimension() + " after selecting empty measure", 0, memberCount.getValue().intValue());
+            }
+        }
     }
 
     @Test
@@ -329,8 +331,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
 
         assertEquals("Wrong number of studies after search", 1, studyCards.size());
 
-        // FIXME we need to get counts
-//        assertCountsSynced(finder);
+        assertCountsSynced(finder);
     }
 
     @Test
@@ -351,7 +352,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         summaryWindow.closeWindow();
     }
 
-//    @Test
+    @Test
     public void testStudyParticipantCounts()
     {
         Map<String, Integer> finderParticipantCounts = new HashMap<>();
@@ -361,7 +362,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         for (String studyAccession : STUDY_SUBFOLDERS)
         {
             finder.studySearch(studyAccession);
-            finderParticipantCounts.put(studyAccession, finder.getSummaryCounts().get(Dimension.PARTICIPANTS));
+            finderParticipantCounts.put(studyAccession, finder.getSummaryCounts().get(Dimension.SUBJECTS));
         }
 
         for (String studyAccession : STUDY_SUBFOLDERS)
@@ -374,7 +375,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         assertEquals("Participant counts in study finder don't match LabKey studies", finderParticipantCounts, studyParticipantCounts);
     }
 
-//    @Test
+    @Test
     public void testStudyCardStudyLinks()
     {
         Set<String> foundAccessions = new HashSet<>();
@@ -386,19 +387,18 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
             foundAccessions.add(studyAccession);
             studyCard.clickGoToStudy();
             WebElement title = Locator.css(".labkey-folder-title > a").waitForElement(shortWait());
-            // FIXME stale element problem here for some reason
-            assertEquals("Study card linked to wrong study", studyAccession, title.getText());
+            assertEquals("Study card " + studyAccession + " linked to wrong study", studyAccession, title.getText());
             goBack();
         }
 
         assertEquals("Didn't find all studies", new HashSet<>(Arrays.asList(STUDY_SUBFOLDERS)), foundAccessions);
     }
 
-//    @Test
+    @Test
     public void testNavigationDoesNotRemoveFinderFilter()
     {
         DataFinderPage finder = new DataFinderPage(this);
-        Map<Dimension, DataFinderPage.DimensionPanel> dimensionPanels = finder.getDimensionPanels();
+        Map<Dimension, DataFinderPage.DimensionPanel> dimensionPanels = finder.getAllDimensionPanels();
         dimensionPanels.get(Dimension.SPECIES).selectFirstIntersectingMeasure();
 
         Map<Dimension, List<String>> selections = finder.getSelectionValues();
@@ -407,11 +407,11 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         assertEquals("Navigation cleared study finder filter", selections, finder.getSelectionValues());
     }
 
-//    @Test
+    @Test
     public void testRefreshDoesNotRemoveFinderFilter()
     {
         DataFinderPage finder = new DataFinderPage(this);
-        Map<Dimension, DataFinderPage.DimensionPanel> dimensionPanels = finder.getDimensionPanels();
+        Map<Dimension, DataFinderPage.DimensionPanel> dimensionPanels = finder.getAllDimensionPanels();
         dimensionPanels.get(Dimension.SPECIES).selectFirstIntersectingMeasure();
 
         Map<Dimension, List<String>> selections = finder.getSelectionValues();
@@ -419,11 +419,11 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         assertEquals("'Refresh' cleared study finder filter", selections, finder.getSelectionValues());
     }
 
-//    @Test
+    @Test
     public void testBackDoesNotRemoveFinderFilter()
     {
         DataFinderPage finder = new DataFinderPage(this);
-        Map<Dimension, DataFinderPage.DimensionPanel> dimensionPanels = finder.getDimensionPanels();
+        Map<Dimension, DataFinderPage.DimensionPanel> dimensionPanels = finder.getAllDimensionPanels();
         dimensionPanels.get(Dimension.SPECIES).selectFirstIntersectingMeasure();
 
         Map<Dimension, List<String>> selections = finder.getSelectionValues();
@@ -432,11 +432,11 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         assertEquals("'Back' cleared study finder filter", selections, finder.getSelectionValues());
     }
 
-//    @Test
+    @Test
     public void testFinderWebPartAndActionShareFilter()
     {
         DataFinderPage finder = new DataFinderPage(this);
-        Map<Dimension, DataFinderPage.DimensionPanel> dimensionPanels = finder.getDimensionPanels();
+        Map<Dimension, DataFinderPage.DimensionPanel> dimensionPanels = finder.getAllDimensionPanels();
         dimensionPanels.get(Dimension.SPECIES).selectFirstIntersectingMeasure();
 
         Map<Dimension, List<String>> selections = finder.getSelectionValues();
@@ -444,26 +444,23 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         assertEquals("WebPart study finder filter didn't get applied", selections, finder.getSelectionValues());
     }
 
-//    @Test
+    @Test
     public void testStickyFinderFilterOnDataset()
     {
         Map<Dimension, Integer> expectedCounts = new HashMap<>();
         expectedCounts.put(Dimension.STUDIES, 2);
-        expectedCounts.put(Dimension.PARTICIPANTS, 345);
-        expectedCounts.put(Dimension.SPECIES, 1);
-        expectedCounts.put(Dimension.TYPE, 1);
-        expectedCounts.put(Dimension.CONDITION, 0);
-        expectedCounts.put(Dimension.ASSAY, 3);
-        expectedCounts.put(Dimension.TIMEPOINT, 11);
-        expectedCounts.put(Dimension.GENDER, 1);
-        expectedCounts.put(Dimension.AGE, 1);
-        expectedCounts.put(Dimension.RACE, 1);
+        expectedCounts.put(Dimension.SUBJECTS, 345);
 
         DataFinderPage finder = new DataFinderPage(this);
-        finder.getDimensionPanels().get(Dimension.CATEGORY).select("Immune Response");
+        Map<DataFinderPage.Dimension, DataFinderPage.DimensionPanel> dimensionPanels = finder.getAllDimensionPanels();
+        dimensionPanels.get(Dimension.CATEGORY).selectMember("Immune Response");
 
         Map<Dimension, Integer> finderSummaryCounts = finder.getSummaryCounts();
         assertEquals("Study finder counts not as expected for 'Immune Response'.", expectedCounts, finderSummaryCounts);
+
+        int numGender = dimensionPanels.get(Dimension.GENDER).getNonEmptyValues().size();
+        int numRace = dimensionPanels.get(Dimension.RACE).getNonEmptyValues().size();
+        int numSpecies = dimensionPanels.get(Dimension.SPECIES).getNonEmptyValues().size();
 
         clickAndWait(Locator.linkContainingText("datasets"));
         clickAndWait(Locator.linkWithText("Demographics"));
@@ -471,36 +468,37 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         demData.showAll();
         demData.openFilterDialog("gender");
         assertEquals("Demographics data set doesn't have same number of genders as filtered study finder",
-                Locator.css(".labkey-filter-dialog .labkey-link").findElements(getDriver()).size(), finderSummaryCounts.get(Dimension.GENDER).intValue());
-        clickButton("Cancel", 0);
+                Locator.css(".labkey-filter-dialog .labkey-link").findElements(getDriver()).size(), numGender);
+        clickButton("CANCEl", 0);
 
         demData.openFilterDialog("race");
         assertEquals("Demographics dataset doesn't have same number of races as filtered study finder",
-                Locator.css(".labkey-filter-dialog .labkey-link").findElements(getDriver()).size(), finderSummaryCounts.get(Dimension.RACE).intValue());
-        clickButton("Cancel", 0);
+                Locator.css(".labkey-filter-dialog .labkey-link").findElements(getDriver()).size(), numRace);
+        clickButton("CANCEL", 0);
 
         demData.openFilterDialog("species");
         assertEquals("Demographics dataset doesn't have same number of species as filtered study finder",
-                Locator.css(".labkey-filter-dialog .labkey-link").findElements(getDriver()).size(), finderSummaryCounts.get(Dimension.SPECIES).intValue());
-        clickButton("Cancel", 0);
+                Locator.css(".labkey-filter-dialog .labkey-link").findElements(getDriver()).size(), numSpecies);
+        clickButton("CANCEL", 0);
 
         assertEquals("Demographics dataset doesn't have same number of participants as filtered study finder",
-                demData.getDataRowCount(), finderSummaryCounts.get(Dimension.PARTICIPANTS).intValue());
+                demData.getDataRowCount(), finderSummaryCounts.get(Dimension.SUBJECTS).intValue());
 
         clickTab("Participants");
         ParticipantListWebPart participantListWebPart = new ParticipantListWebPart(this);
-        assertEquals("Participant list count doesn't match study finder", participantListWebPart.getParticipantCount(), finderSummaryCounts.get(Dimension.PARTICIPANTS));
+        assertEquals("Participant list count doesn't match study finder", participantListWebPart.getParticipantCount(), finderSummaryCounts.get(Dimension.SUBJECTS));
     }
 
+    // FIXME Issue 24407: need to apply the session filter to the navigator
 //    @Test
     public void testStickyFinderFilterOnStudyNavigator()
     {
         DataFinderPage finder = new DataFinderPage(this);
         finder.dismissTour();
-        finder.getDimensionPanels().get(Dimension.CATEGORY).select("Immune Response");
+        finder.getAllDimensionPanels().get(Dimension.CATEGORY).selectMember("Immune Response");
 
-        List<String> assaysWithData = finder.getDimensionPanels().get(Dimension.ASSAY).getNonEmptyValues();
-        List<String> assaysWithoutData = finder.getDimensionPanels().get(Dimension.ASSAY).getEmptyValues();
+        List<String> assaysWithData = finder.getAllDimensionPanels().get(Dimension.ASSAY).getNonEmptyValues();
+        List<String> assaysWithoutData = finder.getAllDimensionPanels().get(Dimension.ASSAY).getEmptyValues();
         Map<Dimension, Integer> finderSummaryCounts = finder.getSummaryCounts();
 
         OverviewPage studyOverview = new StudyOverviewWebPart(this).clickStudyNavigator();
@@ -509,9 +507,10 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
 
         for (String assayWithData : assaysWithData)
         {
+            assayWithData = assayWithData.toLowerCase();
             for (Map.Entry<String, Integer> participantCount : studyOverviewParticipantCounts.entrySet())
             {
-                if (participantCount.getKey().contains(assayWithData))
+                if (participantCount.getKey().toLowerCase().contains(assayWithData))
                 {
                     assertTrue(String.format("Assay [%s] should have data with current filter, but does not.",
                             assayWithData), participantCount.getValue() > 0);
@@ -520,11 +519,13 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
             }
         }
 
+
         for (String assayWithoutData : assaysWithoutData)
         {
+            assayWithoutData = assayWithoutData.toLowerCase();
             for (Map.Entry<String, Integer> participantCount : studyOverviewParticipantCounts.entrySet())
             {
-                if (participantCount.getKey().contains(assayWithoutData))
+                if (participantCount.getKey().toLowerCase().contains(assayWithoutData))
                 {
                     assertEquals(String.format("Assay [%s] should be empty with current filter, but is not.",
                             assayWithoutData), 0, participantCount.getValue().intValue());
@@ -534,16 +535,16 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         }
 
         // Issue 23689: study overview navigator displays incorrect participant and row counts for demographics
-//        assertEquals("Participant count from study finder does not match Demographics dataset participant count.",
-//                finderSummaryCounts.get(Dimension.PARTICIPANTS), studyOverviewParticipantCounts.get("Demographics"));
+        assertEquals("Participant count from study finder does not match Demographics dataset participant count.",
+                finderSummaryCounts.get(Dimension.SUBJECTS), studyOverviewParticipantCounts.get("Demographics"));
     }
 
-//    @Test
+    @Test
     public void testDatasetExport() throws IOException
     {
         DataFinderPage finder = DataFinderPage.goDirectlyToPage(this, getProjectName());
         finder.dismissTour();
-        finder.getDimensionPanels().get(Dimension.CATEGORY).select("Immune Response");
+        finder.getAllDimensionPanels().get(Dimension.CATEGORY).selectMember("Immune Response");
 
         Map<Dimension, Integer> studyCounts = finder.getSummaryCounts();
         assertEquals("Study count mismatch", 2, studyCounts.get(Dimension.STUDIES).intValue());
@@ -599,41 +600,8 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
     {
         List<DataFinderPage.StudyCard> studyCards = finder.getStudyCards();
         Map<Dimension, Integer> studyCounts = finder.getSummaryCounts();
-        Map<Dimension, DataFinderPage.DimensionPanel> dimensions = finder.getDimensionPanels();
 
         assertEquals("Study count mismatch", studyCards.size(), studyCounts.get(Dimension.STUDIES).intValue());
-
-        for (Dimension dim : Dimension.values())
-        {
-            if (dim.getSummaryLabel() != null && dim.getCaption() != null)
-            {
-                assertEquals("Counts out of sync: " + dim.getCaption(), studyCounts.get(dim).intValue(), dimensions.get(dim).getNonEmptyValues().size());
-            }
-        }
-    }
-
-    @LogMethod(quiet = true)
-    private void assertSelectionsSynced(DataFinderPage finder)
-    {
-        Map<Dimension, DataFinderPage.DimensionPanel> dimensionPanels = finder.getDimensionPanels();
-        Map<Dimension, DataFinderPage.SummaryFilterPanel> summarySelections = finder.getSelectionPanels();
-
-        for (Dimension dim : Dimension.values())
-        {
-            Bag<String> panelSelections;
-            if (dimensionPanels.containsKey(dim))
-                panelSelections = new HashBag<>(dimensionPanels.get(dim).getSelectedValues());
-            else
-                panelSelections = new HashBag<>();
-
-            Bag<String> dimensionSummarySelections;
-            if (summarySelections.containsKey(dim))
-                dimensionSummarySelections = new HashBag<>(summarySelections.get(dim).getFilterValues());
-            else
-                dimensionSummarySelections = new HashBag<>();
-
-            assertEquals("Selection did not match summary for " + dim.getCaption(), panelSelections, dimensionSummarySelections);
-        }
     }
 
     @Override

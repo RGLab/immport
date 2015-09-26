@@ -100,8 +100,8 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
     @Override
     protected void doCleanup(boolean afterTest) throws TestTimeoutException
     {
-//        AbstractContainerHelper containerHelper = new APIContainerHelper(this);
-//        containerHelper.deleteProject(getProjectName(), afterTest);
+        AbstractContainerHelper containerHelper = new APIContainerHelper(this);
+        containerHelper.deleteProject(getProjectName(), afterTest);
     }
 
     @BeforeClass

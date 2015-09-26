@@ -16,8 +16,6 @@
 
 package org.labkey.test.tests;
 
-import org.apache.commons.collections15.Bag;
-import org.apache.commons.collections15.bag.HashBag;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpDelete;
@@ -35,7 +33,7 @@ import org.labkey.test.Locator;
 import org.labkey.test.TestFileUtils;
 import org.labkey.test.TestTimeoutException;
 import org.labkey.test.WebTestHelper;
-import org.labkey.test.categories.InDevelopment;
+import org.labkey.test.categories.External;
 import org.labkey.test.components.ParticipantListWebPart;
 import org.labkey.test.components.immport.StudySummaryWindow;
 import org.labkey.test.components.study.StudyOverviewWebPart;
@@ -43,6 +41,7 @@ import org.labkey.test.pages.immport.DataFinderPage;
 import org.labkey.test.pages.immport.DataFinderPage.Dimension;
 import org.labkey.test.pages.immport.ExportStudyDatasetsPage;
 import org.labkey.test.pages.immport.ImmPortBeginPage;
+import org.labkey.test.pages.immport.ManageParticipantGroupsPage;
 import org.labkey.test.pages.study.OverviewPage;
 import org.labkey.test.util.APIContainerHelper;
 import org.labkey.test.util.AbstractContainerHelper;
@@ -78,7 +77,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
-@Category({InDevelopment.class})
+@Category({External.class})
 public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTest, ReadOnlyTest
 {
     private static File immPortArchive = TestFileUtils.getSampleData("HIPC/ANIMAL_STUDIES-DR11.zip");
@@ -266,7 +265,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         Map<Dimension, DataFinderPage.DimensionPanel> dimensionPanels = finder.getAllDimensionPanels();
 
         String selectedSpecies = dimensionPanels.get(Dimension.SPECIES).selectFirstIntersectingMeasure();
-        String selectedGender = dimensionPanels.get(Dimension.GENDER).selectFirstIntersectingMeasure();
+        dimensionPanels.get(Dimension.GENDER).selectFirstIntersectingMeasure();
 
         assertCountsSynced(finder);
 
@@ -274,7 +273,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         assertEquals("Clearing Gender filters did not remove selection",  Collections.emptyList(), dimensionPanels.get(Dimension.GENDER).getSelectedValues());
 
         // re-select a gender
-        selectedGender = dimensionPanels.get(Dimension.GENDER).selectFirstIntersectingMeasure();
+        String selectedGender = dimensionPanels.get(Dimension.GENDER).selectFirstIntersectingMeasure();
         dimensionPanels.get(Dimension.SPECIES).deselectMember(selectedSpecies);
         assertEquals("Clearing Species selection did not remove selection", Collections.emptyList(), dimensionPanels.get(Dimension.SPECIES).getSelectedValues());
         assertEquals("Clearing Species selection removed Gender filter", Collections.singletonList(selectedGender), dimensionPanels.get(Dimension.GENDER).getSelectedValues());
@@ -469,7 +468,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         demData.openFilterDialog("gender");
         assertEquals("Demographics data set doesn't have same number of genders as filtered study finder",
                 Locator.css(".labkey-filter-dialog .labkey-link").findElements(getDriver()).size(), numGender);
-        clickButton("CANCEl", 0);
+        clickButton("CANCEL", 0);
 
         demData.openFilterDialog("race");
         assertEquals("Demographics dataset doesn't have same number of races as filtered study finder",
@@ -562,7 +561,6 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         for (int i = 1; i < grid.getRowCount()+1; i++)
         {
             String name = (String)grid.getFieldValue(i, "name");
-            Long datasetId = (Long)grid.getFieldValue(i, "id");
             Long numRows = (Long)grid.getFieldValue(i, "numRows");
             datasetCounts.put(name, numRows.intValue());
         }
@@ -594,6 +592,101 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
                     fcs_analyzed_rowCount + 1, lines.size());
         }
     }
+
+    @Test
+    public void testDisabledLoadAndSave()
+    {
+        DataFinderPage finder = new DataFinderPage(this);
+        finder.showUnloadedImmPortStudies();
+        Assert.assertTrue("Save menu should not be enabled for unloaded studies", finder.menuIsDisabled(DataFinderPage.Locators.saveMenu));
+        Assert.assertTrue("Load menu should not be enabled for unloaded studies", finder.menuIsDisabled(DataFinderPage.Locators.loadMenu));
+    }
+
+    @Test
+    public void testGroupSaveAndLoad()
+    {
+        DataFinderPage finder = new DataFinderPage(this);
+        finder.showAllImmuneSpaceStudies();
+        finder.clearAllFilters();
+        assertEquals("Group label not as expected", "Unsaved Group", finder.getGroupLabel());
+
+        Map<Dimension, DataFinderPage.DimensionPanel> dimensionPanels = finder.getAllDimensionPanels();
+        Map<Dimension, List<String>> selections = new HashMap<>();
+        selections.put(Dimension.CONDITION, Collections.singletonList(dimensionPanels.get(Dimension.CONDITION).selectFirstIntersectingMeasure()));
+        selections.put(Dimension.CATEGORY, Collections.singletonList(dimensionPanels.get(Dimension.CATEGORY).selectFirstIntersectingMeasure()));
+        Map<Dimension, Integer> summaryCounts = finder.getSummaryCounts();
+
+        // click on "Save" menu and assert "Save" is not active then assert "Save as" is active
+        DataFinderPage.GroupMenu saveMenu = finder.getMenu(DataFinderPage.Locators.saveMenu);
+        saveMenu.toggleMenu();
+        Assert.assertEquals("Unexpected number of inactive options", 1, saveMenu.getInactiveOptions().size());
+        Assert.assertTrue("'Save' option is not an inactive menu option but should be", saveMenu.getInactiveOptions().contains("Save"));
+
+        Assert.assertEquals("Unexpected number of active options", 1, saveMenu.getActiveOptions().size());
+        Assert.assertTrue("'Save as' option is not active but should be", saveMenu.getActiveOptions().contains("Save As"));
+
+        String filterName = "testGroupSaveAndLoad" + System.currentTimeMillis();
+        saveMenu.chooseOption("Save As");
+        // assert that popup has the proper number of Selected Studies and Subjects
+        DataRegionTable subjectData = new DataRegionTable("demoDataRegion", this);
+        Assert.assertEquals("Subject counts on save group window differ from those on data finder", summaryCounts.get(Dimension.SUBJECTS).intValue(), subjectData.getDataRowCount());
+        finder.saveGroup(filterName);
+        sleep(1000); // FIXME There should be a better way to wait...
+
+        assertEquals("Group label not as expected", "Saved group: " + filterName, finder.getGroupLabel());
+
+        finder.clearAllFilters();
+        //load group with test name
+        DataFinderPage.GroupMenu loadMenu = finder.getMenu(DataFinderPage.Locators.loadMenu);
+        loadMenu.toggleMenu();
+        Assert.assertTrue("Saved group does not appear in load menu", loadMenu.getActiveOptions().contains(filterName));
+        loadMenu.chooseOption(filterName);
+        assertEquals("Group label not as expected", "Saved group: " + filterName, finder.getGroupLabel());
+
+        // assert the selected items are the same and the counts are the same as before.
+        assertEquals("Summary counts not as expected after load", summaryCounts, finder.getSummaryCounts());
+        assertEquals("Selected items not as expected after load", selections, finder.getSelectionValues());
+        // assert that "Save" is now active in the menu
+        saveMenu = finder.getMenu(DataFinderPage.Locators.saveMenu);
+        saveMenu.toggleMenu();
+        Assert.assertTrue("'Save' option is not an active menu option but should be", saveMenu.getActiveOptions().contains("Save"));
+        saveMenu.toggleMenu(); // close the menu
+
+        // Choose another dimension and save the summary counts
+        selections.put(Dimension.ASSAY, Collections.singletonList(dimensionPanels.get(Dimension.ASSAY).selectFirstIntersectingMeasure()));
+        summaryCounts = finder.getSummaryCounts();
+        selections = finder.getSelectionValues();
+        log("Selections is now " + selections);
+
+        // Save the filter
+        saveMenu = finder.getMenu(DataFinderPage.Locators.saveMenu);
+        saveMenu.toggleMenu();
+        saveMenu.chooseOption("Save");
+
+        finder.clearAllFilters();
+
+        // Load the filter
+        loadMenu = finder.getMenu(DataFinderPage.Locators.loadMenu);
+        loadMenu.toggleMenu();
+        Assert.assertTrue("Saved filter does not appear in menu", loadMenu.getActiveOptions().contains(filterName));
+        loadMenu.chooseOption(filterName);
+
+        // assert that the selections are as expected.
+        assertEquals("Summary counts not as expected after load", summaryCounts, finder.getSummaryCounts());
+        assertEquals("Selected items not as expected after load", selections, finder.getSelectionValues());
+
+        // manage group and delete the group that was created
+        DataFinderPage.GroupMenu manageMenu = finder.getMenu(DataFinderPage.Locators.manageMenu);
+        manageMenu.toggleMenu();
+        manageMenu.chooseOption("Manage Groups");
+        waitForText("Manage Participant Groups");
+        ManageParticipantGroupsPage managePage = new ManageParticipantGroupsPage(this);
+        managePage.selectGroup(filterName);
+        Assert.assertTrue("Delete should be enabled for group created through data finder", managePage.isDeleteEnabled());
+        Assert.assertFalse("Edit should not be enabled for group created through data finder", managePage.isEditEnabled());
+        managePage.deleteGroup(filterName);
+    }
+
 
     @LogMethod(quiet = true)
     private void assertCountsSynced(DataFinderPage finder)

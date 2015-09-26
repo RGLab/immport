@@ -511,7 +511,7 @@
         <tr>
             <td>
                 <div ng-controller="SubjectGroupController" id="filterArea">
-                    <div>{{currentGroup.id != null ? "Saved group: ": ""}}{{currentGroup.label}}</div>
+                    <div class="labkey-group-label">{{currentGroup.id != null ? "Saved group: ": ""}}{{currentGroup.label}}</div>
 
                     <div class="navbar navbar-default ">
                         <ul class="nav navbar-nav">

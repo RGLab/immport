@@ -15,7 +15,6 @@ import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
-import org.openqa.selenium.support.ui.ExpectedConditions;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -81,6 +80,32 @@ public class DataFinderPage extends LabKeyPage
     {
         if (!_test.getFormElement(Locators.studySearchInput).isEmpty())
             studySearch(" ");
+    }
+
+    public void saveGroup(String name)
+    {
+        _test.setFormElement(Locators.groupLabelInput, name);
+        _test.clickButtonContainingText("Save", BaseWebDriverTest.WAIT_FOR_EXT_MASK_TO_DISSAPEAR);
+    }
+
+    public String getGroupLabel()
+    {
+        return Locators.groupLabel.findElement(_test.getDriver()).getText().trim();
+    }
+
+    public GroupMenu getMenu(Locator locator)
+    {
+        return new GroupMenu(locator.findElement(_test.getDriver()));
+    }
+
+    public boolean menuIsDisabled(Locator.CssLocator locator)
+    {
+        return _test.isElementPresent(locator.append(" .labkey-disabled-text-link"));
+    }
+
+    public void openMenu(Locator locator)
+    {
+        locator.findElement(_test.getDriver()).click();
     }
 
     public Map<Dimension, Integer> getSummaryCounts()
@@ -210,6 +235,12 @@ public class DataFinderPage extends LabKeyPage
         public static final Locator.CssLocator summaryArea = selectionPanel.append(Locator.css("#summaryArea"));
         public static final Locator.CssLocator selection = facetPanel.append(Locator.css(" .selected-member"));
         public static final Locator.CssLocator clearAll = Locator.css("span[ng-click='clearAllFilters(true);']");
+        public static final Locator.CssLocator groupLabel = Locator.css(".labkey-group-label");
+        public static final Locator.NameLocator groupLabelInput = Locator.name("groupLabel");
+        public static final Locator.CssLocator saveMenu = Locator.css("#saveMenu");
+        public static final Locator.CssLocator loadMenu = Locator.css("#loadMenu");
+        public static final Locator.IdLocator manageMenu = Locator.id("manageMenu");
+
     }
 
     public enum Dimension
@@ -219,7 +250,7 @@ public class DataFinderPage extends LabKeyPage
         SPECIES("Species", "species"),
         CONDITION("Condition", "conditions"),
         TYPE("Type", "types"),
-        CATEGORY("Research focus", null),
+        CATEGORY("Research focus", "Category"),
         ASSAY("Assay", "assays"),
         TIMEPOINT("Day of Study", "timepoints"),
         GENDER("Gender", "genders"),
@@ -254,6 +285,78 @@ public class DataFinderPage extends LabKeyPage
             }
 
             throw new IllegalArgumentException("No such dimension: " + value);
+        }
+    }
+
+
+    public class GroupMenu extends Component
+    {
+
+        private final WebElement menu;
+        private final Elements elements;
+
+        private GroupMenu(WebElement menu)
+        {
+            this.menu = menu;
+            elements = new Elements();
+        }
+
+        public boolean isEnabled()
+        {
+            return menu.isEnabled();
+        }
+
+        public void toggleMenu()
+        {
+            this.menu.click();
+        }
+
+        @Override
+        public WebElement getComponentElement()
+        {
+            return menu;
+        }
+
+        public List<String> getActiveOptions()
+        {
+            return getOptions(elements.activeOption);
+        }
+
+        public List<String> getInactiveOptions()
+        {
+            return getOptions(elements.inactiveOption);
+        }
+
+        public void chooseOption(String optionText)
+        {
+            List<WebElement> activeOptions = findElements(elements.activeOption);
+            for (WebElement option : activeOptions)
+            {
+                if (optionText.equals(option.getText().trim()))
+                {
+                    option.click();
+                    waitForPage();
+                    return;
+                }
+            }
+//            findElement(Locator.linkContainingText(option)).click();
+        }
+
+        private List<String> getOptions(Locator locator)
+        {
+            List<WebElement> options = findElements(locator);
+            List<String> optionStrings = new ArrayList<String>();
+            for (WebElement option : options)
+            {
+                optionStrings.add(option.getText().trim());
+            }
+            return optionStrings;
+        }
+
+        private class Elements
+        {
+            public Locator.CssLocator activeOption = Locator.css(".menu-item-link:not(.inactive)");
+            public Locator.CssLocator inactiveOption = Locator.css(".menu-item-link.inactive");
         }
     }
 

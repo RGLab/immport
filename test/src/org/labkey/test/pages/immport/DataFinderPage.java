@@ -26,6 +26,7 @@ public class DataFinderPage extends LabKeyPage
     private static final String CONTROLLER = "immport";
     private static final String ACTION = "dataFinder";
     private static final String COUNT_SIGNAL = "dataFinderCountsUpdated";
+    private static final String GROUP_UPDATED_SIGNAL = "participantGroupUpdated";
 
     public DataFinderPage(BaseWebDriverTest test)
     {
@@ -36,6 +37,11 @@ public class DataFinderPage extends LabKeyPage
     protected void waitForPage()
     {
         _test.waitForElement(LabKeyPage.Locators.pageSignal(COUNT_SIGNAL));
+    }
+
+    protected void waitForGroupUpdate()
+    {
+        _test.waitForElement(LabKeyPage.Locators.pageSignal(GROUP_UPDATED_SIGNAL));
     }
 
     public static DataFinderPage goDirectlyToPage(BaseWebDriverTest test, String containerPath)
@@ -86,6 +92,7 @@ public class DataFinderPage extends LabKeyPage
     {
         _test.setFormElement(Locators.groupLabelInput, name);
         _test.clickButtonContainingText("Save", BaseWebDriverTest.WAIT_FOR_EXT_MASK_TO_DISSAPEAR);
+        waitForGroupUpdate();
     }
 
     public String getGroupLabel()
@@ -301,11 +308,6 @@ public class DataFinderPage extends LabKeyPage
             elements = new Elements();
         }
 
-        public boolean isEnabled()
-        {
-            return menu.isEnabled();
-        }
-
         public void toggleMenu()
         {
             this.menu.click();
@@ -327,19 +329,22 @@ public class DataFinderPage extends LabKeyPage
             return getOptions(elements.inactiveOption);
         }
 
-        public void chooseOption(String optionText)
+        public void chooseOption(String optionText, boolean waitForUpdate)
         {
+            _test.log("Choosing menu option " + optionText);
             List<WebElement> activeOptions = findElements(elements.activeOption);
             for (WebElement option : activeOptions)
             {
                 if (optionText.equals(option.getText().trim()))
                 {
                     option.click();
-                    waitForPage();
+                    if (waitForUpdate)
+                        waitForGroupUpdate();
+                    else
+                        waitForPage();
                     return;
                 }
             }
-//            findElement(Locator.linkContainingText(option)).click();
         }
 
         private List<String> getOptions(Locator locator)

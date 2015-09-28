@@ -298,6 +298,7 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
                 if ($scope.localStorageService.isSupported)
                     $scope.localStorageService.remove("group");
             }
+            LABKEY.Utils.signalWebDriverTest('participantGroupUpdated');
 
         };
 

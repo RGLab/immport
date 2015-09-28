@@ -626,12 +626,11 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         Assert.assertTrue("'Save as' option is not active but should be", saveMenu.getActiveOptions().contains("Save As"));
 
         String filterName = "testGroupSaveAndLoad" + System.currentTimeMillis();
-        saveMenu.chooseOption("Save As");
+        saveMenu.chooseOption("Save As", false);
         // assert that popup has the proper number of Selected Studies and Subjects
         DataRegionTable subjectData = new DataRegionTable("demoDataRegion", this);
         Assert.assertEquals("Subject counts on save group window differ from those on data finder", summaryCounts.get(Dimension.SUBJECTS).intValue(), subjectData.getDataRowCount());
         finder.saveGroup(filterName);
-        sleep(1000); // FIXME There should be a better way to wait...
 
         assertEquals("Group label not as expected", "Saved group: " + filterName, finder.getGroupLabel());
 
@@ -640,7 +639,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         DataFinderPage.GroupMenu loadMenu = finder.getMenu(DataFinderPage.Locators.loadMenu);
         loadMenu.toggleMenu();
         Assert.assertTrue("Saved group does not appear in load menu", loadMenu.getActiveOptions().contains(filterName));
-        loadMenu.chooseOption(filterName);
+        loadMenu.chooseOption(filterName, false);
         assertEquals("Group label not as expected", "Saved group: " + filterName, finder.getGroupLabel());
 
         // assert the selected items are the same and the counts are the same as before.
@@ -653,15 +652,17 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         saveMenu.toggleMenu(); // close the menu
 
         // Choose another dimension and save the summary counts
+        log("selecting an Assay filter");
         selections.put(Dimension.ASSAY, Collections.singletonList(dimensionPanels.get(Dimension.ASSAY).selectFirstIntersectingMeasure()));
         summaryCounts = finder.getSummaryCounts();
-        selections = finder.getSelectionValues();
         log("Selections is now " + selections);
+        assertEquals("Selected items not as expected after assay selection", selections, finder.getSelectionValues());
 
         // Save the filter
         saveMenu = finder.getMenu(DataFinderPage.Locators.saveMenu);
         saveMenu.toggleMenu();
-        saveMenu.chooseOption("Save");
+        saveMenu.chooseOption("Save", true);
+        sleep(1000); // Hack!  This seems necessary to give time for saving the filter before loading it again.  Waiting for signals doesn't seem to work...
 
         finder.clearAllFilters();
 
@@ -669,7 +670,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         loadMenu = finder.getMenu(DataFinderPage.Locators.loadMenu);
         loadMenu.toggleMenu();
         Assert.assertTrue("Saved filter does not appear in menu", loadMenu.getActiveOptions().contains(filterName));
-        loadMenu.chooseOption(filterName);
+        loadMenu.chooseOption(filterName, true);
 
         // assert that the selections are as expected.
         assertEquals("Summary counts not as expected after load", summaryCounts, finder.getSummaryCounts());
@@ -678,7 +679,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         // manage group and delete the group that was created
         DataFinderPage.GroupMenu manageMenu = finder.getMenu(DataFinderPage.Locators.manageMenu);
         manageMenu.toggleMenu();
-        manageMenu.chooseOption("Manage Groups");
+        manageMenu.chooseOption("Manage Groups", false);
         waitForText("Manage Participant Groups");
         ManageParticipantGroupsPage managePage = new ManageParticipantGroupsPage(this);
         managePage.selectGroup(filterName);

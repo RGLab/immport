@@ -50,15 +50,13 @@ import org.labkey.api.view.JspView;
 import org.labkey.api.view.NavTree;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.api.view.VBox;
-import org.labkey.api.view.WebPartView;
 import org.labkey.api.view.template.ClientDependency;
 import org.labkey.immport.data.DataLoader;
 import org.labkey.immport.data.StudyBean;
 import org.labkey.immport.data.StudyPersonnelBean;
 import org.labkey.immport.data.StudyPubmedBean;
-import org.labkey.immport.view.StudyFinderWebPart;
-import org.labkey.immport.view.StudyIdForm;
 import org.labkey.immport.view.DataFinderWebPart;
+import org.labkey.immport.view.StudyIdForm;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
@@ -445,29 +443,6 @@ public class ImmPortController extends SpringActionController
 
 
     @RequiresPermission(ReadPermission.class)
-    public class StudyFinderNGAction extends SimpleViewAction
-    {
-        public ModelAndView getView(Object o, BindException errors) throws Exception
-        {
-            setTitle("Study Finder");
-            StudyFinderWebPart wp = new StudyFinderWebPart(getContainer());
-            wp.setFrame(WebPartView.FrameType.DIV);
-            return wp;
-        }
-
-        public NavTree appendNavTrail(NavTree root)
-        {
-            return root;
-        }
-    }
-
-
-    @RequiresPermission(ReadPermission.class)
-    public class StudyFinderAction extends StudyFinderNGAction
-    {
-    }
-
-    @RequiresPermission(ReadPermission.class)
     public class DataFinderAction extends SimpleViewAction
     {
         public ModelAndView getView(Object o, BindException errors) throws Exception
@@ -515,7 +490,7 @@ public class ImmPortController extends SpringActionController
         @Override
         public NavTree appendNavTrail(NavTree root)
         {
-            return root.addChild("Study Finder", new ActionURL(StudyFinderAction.class, getContainer()))
+            return root.addChild("Data Finder", new ActionURL(DataFinderAction.class, getContainer()))
                     .addChild("Export Study Datasets");
         }
     }

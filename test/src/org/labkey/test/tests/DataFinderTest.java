@@ -490,10 +490,11 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         assertEquals("Participant list count doesn't match study finder", participantListWebPart.getParticipantCount(), finderSummaryCounts.get(Dimension.SUBJECTS));
     }
 
-    @Test @Ignore("FIXME Issue 24407: need to apply the session filter to the navigator")
+    @Test
     public void testStickyFinderFilterOnStudyNavigator()
     {
         DataFinderPage finder = new DataFinderPage(this);
+        finder.showAllImmuneSpaceStudies();
         finder.dismissTour();
         finder.getAllDimensionPanels().get(Dimension.CATEGORY).selectMember("Immune Response");
 

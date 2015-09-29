@@ -23,6 +23,7 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.labkey.remoteapi.Command;
@@ -34,6 +35,7 @@ import org.labkey.test.TestFileUtils;
 import org.labkey.test.TestTimeoutException;
 import org.labkey.test.WebTestHelper;
 import org.labkey.test.categories.External;
+import org.labkey.test.categories.Git;
 import org.labkey.test.components.ParticipantListWebPart;
 import org.labkey.test.components.immport.StudySummaryWindow;
 import org.labkey.test.components.study.StudyOverviewWebPart;
@@ -77,7 +79,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
-@Category({External.class})
+@Category({External.class, Git.class})
 public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTest, ReadOnlyTest
 {
     private static File immPortArchive = TestFileUtils.getSampleData("HIPC/ANIMAL_STUDIES-DR11.zip");
@@ -488,8 +490,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         assertEquals("Participant list count doesn't match study finder", participantListWebPart.getParticipantCount(), finderSummaryCounts.get(Dimension.SUBJECTS));
     }
 
-    // FIXME Issue 24407: need to apply the session filter to the navigator
-//    @Test
+    @Test @Ignore("FIXME Issue 24407: need to apply the session filter to the navigator")
     public void testStickyFinderFilterOnStudyNavigator()
     {
         DataFinderPage finder = new DataFinderPage(this);

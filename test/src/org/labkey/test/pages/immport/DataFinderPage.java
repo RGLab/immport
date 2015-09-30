@@ -340,8 +340,6 @@ public class DataFinderPage extends LabKeyPage
                     option.click();
                     if (waitForUpdate)
                         waitForGroupUpdate();
-                    else
-                        waitForPage();
                     return;
                 }
             }

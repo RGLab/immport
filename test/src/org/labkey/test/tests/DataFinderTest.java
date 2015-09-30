@@ -23,7 +23,6 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.labkey.remoteapi.Command;
@@ -545,6 +544,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
     {
         DataFinderPage finder = DataFinderPage.goDirectlyToPage(this, getProjectName());
         finder.dismissTour();
+        finder.showAllImmuneSpaceStudies();
         finder.getAllDimensionPanels().get(Dimension.CATEGORY).selectMember("Immune Response");
 
         Map<Dimension, Integer> studyCounts = finder.getSummaryCounts();

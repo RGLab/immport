@@ -322,7 +322,6 @@
     </table>
     <table tableName="dimstudy" tableDbType="TABLE">
         <columns>
-            <column columnName="participantid"/>
             <column columnName="study"/>
             <column columnName="type"/>
             <column columnName="program"/>
@@ -988,6 +987,7 @@
             </column>
             <column columnName="workspace_id"/>
             <column columnName="study_day"/>
+            <column columnName="subjectId"/>
         </columns>
     </table>
     <table tableName="lk_plate_type" tableDbType="TABLE">
@@ -1305,7 +1305,7 @@
     </table>
     <table tableName="dimassay" tableDbType="TABLE">
         <columns>
-            <column columnName="study"/>
+            <column columnName="subjectId"/>
             <column columnName="assay"/>
         </columns>
     </table>
@@ -1651,7 +1651,8 @@
     </table>
     <table tableName="dimdemographic" tableDbType="TABLE">
         <columns>
-            <column columnName="participantid"/>
+            <column columnName="study"/>
+            <column columnName="subjectId"/>
             <column columnName="ageinyears"/>
             <column columnName="age"/>
             <column columnName="species"/>

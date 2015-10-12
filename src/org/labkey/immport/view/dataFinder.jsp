@@ -510,20 +510,20 @@
     <table border=0 class="labkey-data-finder">
         <tr>
             <td>
-                <div ng-controller="SubjectGroupController">
-                    <div>{{currentGroup.id != null ? "Saved group: ": ""}}{{currentGroup.label}}</div>
+                <div ng-controller="SubjectGroupController" id="filterArea">
+                    <div class="labkey-group-label">{{currentGroup.id != null ? "Saved group: ": ""}}{{currentGroup.label}}</div>
 
                     <div class="navbar navbar-default ">
                         <ul class="nav navbar-nav">
                             <li id="manageMenu" class="labkey-dropdown" ng-mouseover="openMenu($event, true)">
                                 <a href="#"><i class="fa fa-cog"></i></a>
-                                <ul class="labkey-dropdown-menu" ng-if="!isGuest && groupList.length > 0">
+                                <ul class="labkey-dropdown-menu" ng-show="!isGuest">
                                     <li class="x4-menu-item-text"><a class="menu-item-link x4-menu-item-link" href="<%=new ActionURL("study", "manageParticipantCategories", getContainer()).toHString()%>">Manage Groups</a></li>
                                 </ul>
                             </li>
                             <li id="loadMenu" class="labkey-dropdown" >
                                 <a ng-class="{'labkey-text-link' : loadedStudiesShown(), 'labkey-disabled-text-link': !loadedStudiesShown()} " class="no-arrow" style="margin-right: 0.8em" href="#" ng-mouseover="openMenu($event, false)">Load <i class="fa fa-caret-down"></i></a>
-                                <ul class="labkey-dropdown-menu" ng-if="loadedStudiesShown() && groupList.length > 0" >
+                                <ul class="labkey-dropdown-menu" ng-show="loadedStudiesShown() && groupsAvailable()" >
                                     <li class="x4-menu-item-text" ng-repeat="group in groupList">
                                         <a class="menu-item-link x4-menu-item-link" ng-click="applySubjectGroupFilter(group, $event)">{{group.label}}</a>
                                     </li>
@@ -762,14 +762,14 @@ LABKEY.help.Tour.register({
         {
             target: 'summaryArea',
             title: "Summary",
-            content: "Here is a summary of the data in the selected studies. Studies represents the number of studies that contain some participants that match the criteria. Participants is the number of subjects accross all selected studies (including participants that did not match all attributes).",
-            placement: "left"
+            content: "Here is a summary of the data in the selected studies. Studies represents the number of studies that contain some participants that match the criteria. Subjects is the number of subjects across all selected studies (including subjects that did not match all attributes).",
+            placement: "right"
         },
         {
             target: 'filterArea',
             title: "Filter Area",
             content: "See and manage your active filters.",
-            placement: "left"
+            placement: "right"
         }
     ]
 });
@@ -811,7 +811,7 @@ function start_tutorial()
         if (componentSize)
         {
             var bottom = componentOuter.getXY()[1] + componentOuter.getSize().height;
-            Ext4.get("selectionpanel").setHeight(bottom - Ext4.get("selectionpanel").getXY()[1]);
+            Ext4.get("selectionPanel").setHeight(bottom - Ext4.get("selectionPanel").getXY()[1]);
             Ext4.get("studypanel").setHeight(bottom - Ext4.get("studypanel").getXY()[1]);
         }
     };

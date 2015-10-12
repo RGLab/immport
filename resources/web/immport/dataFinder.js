@@ -298,6 +298,7 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
                 if ($scope.localStorageService.isSupported)
                     $scope.localStorageService.remove("group");
             }
+            LABKEY.Utils.signalWebDriverTest('participantGroupUpdated');
 
         };
 
@@ -344,6 +345,11 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
             if (savedGroup != null) {
                 $scope.updateCurrentGroup(savedGroup);
             }
+        };
+
+        $scope.groupsAvailable = function ()
+        {
+            return $scope.groupList.length > 0;
         };
 
         $scope.saveParticipantIdGroupInSession = function (participantIds)

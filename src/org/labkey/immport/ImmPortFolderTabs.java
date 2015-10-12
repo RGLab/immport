@@ -40,13 +40,13 @@ public class ImmPortFolderTabs
         @Override
         public ActionURL getURL(Container container, User user)
         {
-            return new ActionURL(ImmPortController.StudyFinderAction.class, container);
+            return new ActionURL(ImmPortController.DataFinderAction.class, container);
         }
 
         @Override
         public boolean isSelectedPage(ViewContext viewContext)
         {
-            ActionURL tabURL = new ActionURL(ImmPortController.StudyFinderAction.class, viewContext.getContainer());
+            ActionURL tabURL = new ActionURL(ImmPortController.DataFinderAction.class, viewContext.getContainer());
             ActionURL currentURL = viewContext.getActionURL();
             return currentURL.getAction().equalsIgnoreCase(tabURL.getAction()) && currentURL.getController().equalsIgnoreCase(tabURL.getController());
         }

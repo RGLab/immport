@@ -195,6 +195,11 @@
         width:240pt;
     }
 
+    DIV.studyfinder-header
+    {
+    	float:left;
+    }
+
     TD.selection-panel
     {
         vertical-align: text-top;
@@ -208,8 +213,9 @@
         overflow-y:auto;
     }
 
-    TD.help-links
+    DIV.help-links
     {
+	float:right;
         vertical-align: text-top;
         text-align: right;
     }
@@ -549,10 +555,24 @@
                 </div>
 
             </td>
-            <td class="help-links">
+            <td>
+                <div class="studyfinder-header">
+                    <span class="search-box">
+                        <i class="fa fa-search"></i>&nbsp;
+                        <input placeholder="Studies" id="searchTerms" name="q" class="search-box"  ng-model="searchTerms" ng-change="onSearchTermsChanged()">
+                    </span>
+                    <span class="labkey-study-search">
+                        <select ng-model="studySubset" name="studySubsetSelect" ng-change="onStudySubsetChanged()">
+                            <option ng-repeat="option in subsetOptions" value="{{option.value}}" ng-selected="{{option.value == studySubset}}">{{option.name}}</option>
+                        </select>
+                    </span>
+                    <span class="study-search">{{searchMessage}}</span>
+                </div>
+		<div class="help-links">
                 <span id="message" class="labkey-filter-message" ng-if="!loadedStudiesShown()">No data are available for participants since you are viewing unloaded studies.</span>
                 <%=textLink("quick help", "#", "start_tutorial()", "showTutorial")%>
                 <%=textLink("Export Study Datasets", ImmPortController.ExportStudyDatasetsAction.class)%><br>
+                </div>
             </td>
         </tr>
         <tr>
@@ -581,20 +601,6 @@
             </td>
             <td class="study-panel">
                 <div id="studypanel" ng-class="{'x-hidden':(activeTab!=='Studies')}">
-                    <div>
-                        <span class="search-box">
-                            <i class="fa fa-search"></i>&nbsp;
-                            <input placeholder="Studies" id="searchTerms" name="q" class="search-box"  ng-model="searchTerms" ng-change="onSearchTermsChanged()">
-                        </span>
-                        <span class="labkey-study-search">
-                            <select ng-model="studySubset" name="studySubsetSelect" ng-change="onStudySubsetChanged()">
-                                <option ng-repeat="option in subsetOptions" value="{{option.value}}" ng-selected="{{option.value == studySubset}}">{{option.name}}</option>
-                            </select>
-                        </span>
-                        <span class="study-search">{{searchMessage}}</span>
-                    </div>
-
-
                     <div ng-include="'/studycard.html'" ng-repeat="study in studies | filter:countForStudy"></div>
                 </div>
             </td>
@@ -741,36 +747,56 @@ LABKEY.help.Tour.register({
     id: "immport.dataFinder",
     steps: [
         {
+            //target: $('.labkey-wp')[0],
+            target: "bodypanel",
+            title: "Study finder",
+            content: "Welcome to the Data Finder. A tool for searching, accessing and combining data across studies available on ImmuneSpace.",
+            placement: "top"
+        },{
             target: "studypanel",
             title: "Study Panel",
-            content: 'This area contains short descriptions of ImmPort studies. ' +
-            'The <span class="loaded">blue</span> studies have been loaded by the ImmuneSpace team and can be viewed in more detail.<p/>Click on any study card for more information.',
-            placement: "bottom"
-        },
-        {
-            target: 'group_Condition',
-            title: "Study Attributes",
-            content: "Select items in this area to find studies of interest.  The gray bars show the number of selected participants.<p/>Try " + (Ext4.isMac ? "Command" : "Ctrl") + "-click to multi-select.",
-            placement: "right"
-        },
-        {
-            target: 'searchTerms',
-            title: "Quick Search",
-            content: "Enter terms of interest to search study descriptions.",
-            placement: "right"
-        },
-        {
-            target: 'summaryArea',
+            content: "This area contains short descriptions of the studies/datasets that match the selected criteria.",
+            placement: "top"
+        },{
+            target: "summaryArea",
             title: "Summary",
-            content: "Here is a summary of the data in the selected studies. Studies represents the number of studies that contain some participants that match the criteria. Subjects is the number of subjects across all selected studies (including subjects that did not match all attributes).",
+            content: "This summary area indicates how many subjects and studies match the selected criteria.", 
             placement: "right"
-        },
-        {
-            target: 'filterArea',
-            title: "Filter Area",
-            content: "See and manage your active filters.",
+        },{
+            target: "facetPanel",
+            title: "Filters",
+            content: "This is where filters are selected and applied. The numbers (also represented as the length of the gray bars) represent how many subject will match the search if this filter is added.",
+            placement: "right"
+        },{
+            target: "searchTerms",
+            title: "Quick Search",
+            content: "Enter terms of interest to search study and data descriptions. This will find matches within the selection of filtered studies/datasets.",
             placement: "right"
         }
+        //{
+        //    target: 'group_Condition',
+        //    title: "Study Attributes",
+        //    content: "Select items in this area to find studies of interest.  The gray bars show the number of selected participants.<p/>Try " + (Ext4.isMac ? "Command" : "Ctrl") + "-click to multi-select.",
+        //    placement: "right"
+        //},
+        //{
+        //    target: 'searchTerms',
+        //    title: "Quick Search",
+        //    content: "Enter terms of interest to search study descriptions.",
+        //    placement: "right"
+        //},
+        //{
+        //    target: 'summaryArea',
+        //    title: "Summary",
+        //    content: "Here is a summary of the data in the selected studies. Studies represents the number of studies that contain some participants that match the criteria. Subjects is the number of subjects across all selected studies (including subjects that did not match all attributes).",
+        //    placement: "right"
+        //},
+        //{
+        //    target: 'filterArea',
+        //    title: "Filter Area",
+        //    content: "See and manage your active filters.",
+        //    placement: "right"
+        //}
     ]
 });
 

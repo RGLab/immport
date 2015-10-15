@@ -505,6 +505,8 @@
     }
 
     .menu-item-link {
+        line-height: 22px;
+        display: inline-block;
         padding: 0 8px 0 8px;
     }
 </style>
@@ -524,14 +526,14 @@
                             <li id="manageMenu" class="labkey-dropdown" ng-mouseover="openMenu($event, true)">
                                 <a href="#"><i class="fa fa-cog"></i></a>
                                 <ul class="labkey-dropdown-menu" ng-show="!isGuest">
-                                    <li class="x4-menu-item-text"><a class="menu-item-link x4-menu-item-link" href="<%=new ActionURL("study", "manageParticipantCategories", getContainer()).toHString()%>">Manage Groups</a></li>
+                                    <li class="x4-menu-item-text"><a class="menu-item-link" href="<%=new ActionURL("study", "manageParticipantCategories", getContainer()).toHString()%>">Manage Groups</a></li>
                                 </ul>
                             </li>
                             <li id="loadMenu" class="labkey-dropdown" >
                                 <a ng-class="{'labkey-text-link' : loadedStudiesShown(), 'labkey-disabled-text-link': !loadedStudiesShown()} " class="no-arrow" style="margin-right: 0.8em" href="#" ng-mouseover="openMenu($event, false)">Load <i class="fa fa-caret-down"></i></a>
                                 <ul class="labkey-dropdown-menu" ng-show="loadedStudiesShown() && groupsAvailable()" >
                                     <li class="x4-menu-item-text" ng-repeat="group in groupList">
-                                        <a class="menu-item-link x4-menu-item-link" ng-click="applySubjectGroupFilter(group, $event)">{{group.label}}</a>
+                                        <a class="menu-item-link" ng-click="applySubjectGroupFilter(group, $event)">{{group.label}}</a>
                                     </li>
                                 </ul>
                             </li>
@@ -539,12 +541,12 @@
                                 <a ng-class="{'labkey-text-link' : loadedStudiesShown(), 'labkey-disabled-text-link': !loadedStudiesShown()} " class="no-arrow" style="margin-right: 0.8em" href="#" ng-mouseover="openMenu($event, false)" ng-mouseleave="closeMenu($event)">Save <i class="fa fa-caret-down"></i> </a>
                                 <ul class="labkey-dropdown-menu" ng-if="!isGuest && loadedStudiesShown()">
                                     <li class="x4-menu-item-text" ng-repeat="opt in saveOptions" ng-class="{'inactive' : !opt.isActive}">
-                                        <a class="menu-item-link x4-menu-item-link" ng-class="{'inactive' : !opt.isActive}" ng-click="saveSubjectGroup(opt.id, $event)">{{opt.label}}</a>
+                                        <a class="menu-item-link" ng-class="{'inactive' : !opt.isActive}" ng-click="saveSubjectGroup(opt.id, $event)">{{opt.label}}</a>
                                     </li>
                                 </ul>
                                 <ul class="labkey-dropdown-menu" ng-if="isGuest">
                                     <li class="x4-menu-item-text">
-                                        <span class="menu-item-link x4-menu-item-link">You must be logged in to save a group.</span>
+                                        <span class="menu-item-link">You must be logged in to save a group.</span>
                                     </li>
                                 </ul>
                             </li>
@@ -614,7 +616,7 @@
 <div id="filterPopup" class="labkey-filter-popup" style="top:{{filterChoice.y}}px; left:{{filterChoice.x}}px;" ng-if="filterChoice.show" ng-mouseleave="filterChoice.show = false">
     <ul class="labkey-dropdown-menu" ng-if="filterChoice.options.length > 1">
         <li class="x4-menu-item-text" ng-repeat="option in filterChoice.options">
-            <a class="menu-item-link x4-menu-item-link" ng-click="setFilterType(filterChoice.dimName,option.type)">{{option.caption}}</a>
+            <a class="menu-item-link" ng-click="setFilterType(filterChoice.dimName,option.type)">{{option.caption}}</a>
         </li>
     </ul>
 </div>

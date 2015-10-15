@@ -77,8 +77,9 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
                 height: 600,
                 resizable: true,
                 layout: 'fit',
-                baseCls: 'study-detail',
-                bodyCls: 'study-detail',
+                border: false,
+                bodyCls: 'labkey-study-detail',
+                cls: 'labkey-study-detail',
                 autoScroll: true,
                 loader: {
                     autoLoad: true,

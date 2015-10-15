@@ -80,17 +80,6 @@
 <style>
     .immport-highlight{ color:#cc541f; font-size:120%; font-variant:small-caps;}
 
-    div.wrapper {
-        /*margin-left: auto;*/
-        /*margin-right: auto;*/
-        margin-top: -10px;
-        width : 974px;
-    }
-
-    div.wrapper .x4-panel-body {
-        background-color: transparent;
-    }
-
     div.main {
         background-color: white;
         padding: 10px 20px 20px 20px;
@@ -142,22 +131,25 @@
         color: #a9a9a9;
         vertical-align: text-top;
     }
-    div.main-body {
-        margin-top: 0.5em;
-    }
+
 
     #assays-content .detail div {
         font-size: 15px;
         padding: 3px;
     }
 
-    .thumb.x-panel-header {
-        background-color: transparent;
+    .x4-window-header {
+        background-color: #F8F8F8;
+        padding: 0;
+        box-shadow: #F8F8F8 0 0 0 0;
+    }
+
+    .labkey-study-detail {
+        border-color: #F8F8F8;
+        padding: 0;
     }
 
 </style>
-
-
 
 
 <div id="demographics" class="main">

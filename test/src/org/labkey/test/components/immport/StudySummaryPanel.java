@@ -74,7 +74,7 @@ public abstract class StudySummaryPanel
 
     private static class Locators
     {
-        private static Locator self = Locator.css("div#demographics.main");
+        private static Locator self = Locator.css("div#demographics.study-demographics");
     }
 
     private class Paper

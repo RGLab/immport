@@ -1,0 +1,23 @@
+SPAN.hipc-label
+{
+    border-radius: 10px;
+    border: solid 1px #AAAAAA;
+    background: #FFFFFF;
+    padding: 6px;
+}
+
+DIV.hipc-label
+{
+    width:100%;
+    position:absolute;
+    bottom:0;
+    left:0;
+    text-align:center;
+}
+
+.immport-highlight
+{
+    color:#cc541f;
+    font-size:120%;
+    font-variant:small-caps;
+}

@@ -71,7 +71,7 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
 
         var detailWindow = Ext4.create('Ext.window.Window', {
             width: 800,
-            height: 600,
+            maxHeight: 600,
             resizable: true,
             layout: 'fit',
             border: false,

@@ -12,7 +12,7 @@ public class StudySummaryWindow extends StudySummaryPanel
     public StudySummaryWindow(BaseWebDriverTest test)
     {
         super(test);
-        _window = Locator.css("div.study-detail").findElement(test.getDriver());
+        _window = Locator.css("div.labkey-study-detail").findElement(test.getDriver());
     }
 
     public void closeWindow()

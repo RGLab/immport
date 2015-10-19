@@ -12,7 +12,6 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
 //   (TODO angularify)
 //
 
-    var detailWindows = {};
     var detailShowing = null;
     var timerDeferShow = null;
 
@@ -68,25 +67,21 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
         if (targetId)
             target = Ext4.get(targetId);
         if (targetId && !target)
-            console.log("element not found: " + targetId);
-        var detailWindow = detailWindows[member];
-        if (!detailWindow)
-        {
-            detailWindow = Ext4.create('Ext.window.Window', {
-                width: 800,
-                height: 600,
-                resizable: true,
-                layout: 'fit',
-                baseCls: 'study-detail',
-                bodyCls: 'study-detail',
-                autoScroll: true,
-                loader: {
-                    autoLoad: true,
-                    url: 'immport-studyDetail.view?_frame=none&study=' + member
-                }
-            });
-//        detailWindows[member] = detailWindow;
-        }
+            console.error("element not found: " + targetId);
+
+        var detailWindow = Ext4.create('Ext.window.Window', {
+            width: 800,
+            maxHeight: 600,
+            resizable: true,
+            layout: 'fit',
+            border: false,
+            cls: 'labkey-study-detail',
+            autoScroll: true,
+            loader: {
+                autoLoad: true,
+                url: 'immport-studyDetail.view?_frame=none&study=' + member
+            }
+        });
         var viewScroll = Ext4.getBody().getScroll();
         var viewSize = Ext4.getBody().getViewSize();
         var region = [viewScroll.left, viewScroll.top, viewScroll.left + viewSize.width, viewScroll.top + viewSize.height];

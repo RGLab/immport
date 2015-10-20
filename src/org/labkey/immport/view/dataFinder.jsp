@@ -383,44 +383,6 @@ function start_tutorial()
     return false;
 }
 
-
-<% if (me.isAutoResize())
-{ %>
-    function viewport()
-    {
-        if ('innerWidth' in window )
-            return { width:window.innerWidth, height:window.innerHeight};
-        var e = document.documentElement || document.body;
-        return {width: e.clientWidth, height:e.clientheight};
-    }
-    var _resize = function()
-    {
-        var componentOuter = Ext4.get("dataFinderWrapper");
-        if (!componentOuter)
-            return;
-        var paddingX, paddingY;
-        <% if (me.getFrame() == WebPartView.FrameType.PORTAL) {%>
-        paddingX = 26;
-        paddingY = 95;
-        <%}else{%>
-        paddingX = 20;
-        paddingY = 35;
-        <%}%>
-        var vpSize = viewport();
-        var componentSize = resizeToViewport(componentOuter,
-                Math.max(800,vpSize.width), Math.max(600,vpSize.height),
-                paddingX, paddingY);
-        if (componentSize)
-        {
-            var bottom = componentOuter.getXY()[1] + componentOuter.getSize().height;
-            Ext4.get("selectionPanel").setHeight(bottom - Ext4.get("selectionPanel").getXY()[1]);
-            Ext4.get("studypanel").setHeight(bottom - Ext4.get("studypanel").getXY()[1]);
-        }
-    };
-    Ext4.EventManager.onWindowResize(_resize);
-    Ext4.defer(_resize, 300);
-<%
-} %>
 </script>
 
 

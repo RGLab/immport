@@ -47,6 +47,7 @@
     public LinkedHashSet<ClientDependency> getClientDependencies()
     {
         LinkedHashSet<ClientDependency> resources = new LinkedHashSet<>();
+        resources.add(ClientDependency.fromPath("internal/jQuery"));
         resources.add(ClientDependency.fromPath("Ext4"));
         resources.add(ClientDependency.fromPath("clientapi/ext4"));
         resources.add(ClientDependency.fromPath("query/olap.js"));
@@ -253,7 +254,10 @@
  --%>
 <%-- N.B. This is not robust enough to have two finder web parts on the same page --%>
 
-<script>
+<script type="text/javascript">
+
+var $=$||jQuery;
+
 var studyData = [<%
     String comma = "\n  ";
     for (StudyBean study : studies)
@@ -333,21 +337,21 @@ LABKEY.help.Tour.register({
             title: "Study Panel",
             content: "This area contains short descriptions of the studies/datasets that match the selected criteria.",
             placement: "top",
-            showNextButton: true
+            showNextButton: true,
             showPrevButton: true
         },{
             target: "summaryArea",
             title: "Summary",
             content: "This summary area indicates how many subjects and studies match the selected criteria.", 
             placement: "right",
-            showNextButton: true
+            showNextButton: true,
             showPrevButton: true
         },{
             target: "facetPanel",
             title: "Filters",
             content: "This is where filters are selected and applied. The numbers (also represented as the length of the gray bars) represent how many subject will match the search if this filter is added.",
             placement: "right",
-            showNextButton: true
+            showNextButton: true,
             showPrevButton: true
         },{
             target: "searchTerms",

@@ -90,7 +90,7 @@
 <div id="dataFinderWrapper" class="labkey-data-finder-outer">
 <div id="dataFinderApp" class="x-hidden labkey-data-finder-inner" ng-app="dataFinderApp" ng-controller="dataFinder">
 
-    <table border=0 class="labkey-data-finder">
+    <table id="dataFinderTable" border=0 class="labkey-data-finder">
         <tr>
             <td>
                 <div ng-controller="SubjectGroupController" id="filterArea">
@@ -386,23 +386,20 @@ function start_tutorial()
         var componentOuter = Ext4.get("dataFinderWrapper");
         if (!componentOuter)
             return;
-        var paddingX, paddingY;
-        <% if (me.getFrame() == WebPartView.FrameType.PORTAL) {%>
-        paddingX = 26;
-        paddingY = 95;
-        <%}else{%>
-        paddingX = 20;
-        paddingY = 35;
-        <%}%>
+        var paddingX=35, paddingY=95;
+        <%-- resize down to about a 1200x800 screen size --%>
         var vpSize = viewport();
         var componentSize = resizeToViewport(componentOuter,
-                Math.max(800,vpSize.width), Math.max(600,vpSize.height),
+                Math.max(1200,vpSize.width), Math.max(750,vpSize.height),
                 paddingX, paddingY);
         if (componentSize)
         {
             var bottom = componentOuter.getXY()[1] + componentOuter.getSize().height;
-            Ext4.get("selectionPanel").setHeight(bottom - Ext4.get("selectionPanel").getXY()[1]);
-            Ext4.get("studypanel").setHeight(bottom - Ext4.get("studypanel").getXY()[1]);
+            Ext4.each(["selectionPanel","selection-panel","studypanel","study-panel","dataFinderTable"],function(id){
+                var el = Ext4.get(id);
+                if (el)
+                    el.setHeight(bottom - el.getXY()[1]);
+            });
         }
     };
     Ext4.EventManager.onWindowResize(_resize);

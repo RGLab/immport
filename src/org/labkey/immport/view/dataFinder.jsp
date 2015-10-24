@@ -47,6 +47,7 @@
     public LinkedHashSet<ClientDependency> getClientDependencies()
     {
         LinkedHashSet<ClientDependency> resources = new LinkedHashSet<>();
+        resources.add(ClientDependency.fromPath("internal/jQuery"));
         resources.add(ClientDependency.fromPath("Ext4"));
         resources.add(ClientDependency.fromPath("clientapi/ext4"));
         resources.add(ClientDependency.fromPath("query/olap.js"));
@@ -89,7 +90,7 @@
 <div id="dataFinderWrapper" class="labkey-data-finder-outer">
 <div id="dataFinderApp" class="x-hidden labkey-data-finder-inner" ng-app="dataFinderApp" ng-controller="dataFinder">
 
-    <table border=0 class="labkey-data-finder">
+    <table id="dataFinderTable" border=0 class="labkey-data-finder">
         <tr>
             <td>
                 <div ng-controller="SubjectGroupController" id="filterArea">
@@ -253,7 +254,10 @@
  --%>
 <%-- N.B. This is not robust enough to have two finder web parts on the same page --%>
 
-<script>
+<script type="text/javascript">
+
+var $=$||jQuery;
+
 var studyData = [<%
     String comma = "\n  ";
     for (StudyBean study : studies)
@@ -323,31 +327,39 @@ LABKEY.help.Tour.register({
     id: "immport.dataFinder",
     steps: [
         {
-            //target: $('.labkey-wp')[0],
-            target: "dataFinderWrapper",
-            title: "Data finder",
+            target: $('.labkey-wp')[0],
+            title: "Data Finder",
             content: "Welcome to the Data Finder. A tool for searching, accessing and combining data across studies available on ImmuneSpace.",
-            placement: "top"
+            placement: "top",
+            showNextButton: true
         },{
             target: "studypanel",
             title: "Study Panel",
             content: "This area contains short descriptions of the studies/datasets that match the selected criteria.",
-            placement: "top"
+            placement: "top",
+            showNextButton: true,
+            showPrevButton: true
         },{
             target: "summaryArea",
             title: "Summary",
             content: "This summary area indicates how many subjects and studies match the selected criteria.", 
-            placement: "right"
+            placement: "right",
+            showNextButton: true,
+            showPrevButton: true
         },{
             target: "facetPanel",
             title: "Filters",
             content: "This is where filters are selected and applied. The numbers (also represented as the length of the gray bars) represent how many subject will match the search if this filter is added.",
-            placement: "right"
+            placement: "right",
+            showNextButton: true,
+            showPrevButton: true
         },{
             target: "searchTerms",
             title: "Quick Search",
             content: "Enter terms of interest to search study and data descriptions. This will find matches within the selection of filtered studies/datasets.",
-            placement: "right"
+            placement: "right",
+            yOffset: -25,
+            showPrevButton: true
         }
         //{
         //    target: 'group_Condition',
@@ -383,6 +395,41 @@ function start_tutorial()
     return false;
 }
 
+
+<% if (me.isAutoResize())
+{ %>
+    function viewport()
+    {
+        if ('innerWidth' in window )
+            return { width:window.innerWidth, height:window.innerHeight};
+        var e = document.documentElement || document.body;
+        return {width: e.clientWidth, height:e.clientheight};
+    }
+    var _resize = function()
+    {
+        var componentOuter = Ext4.get("dataFinderWrapper");
+        if (!componentOuter)
+            return;
+        var paddingX=35, paddingY=95;
+        <%-- resize down to about a 1200x800 screen size --%>
+        var vpSize = viewport();
+        var componentSize = resizeToViewport(componentOuter,
+                Math.max(1200,vpSize.width), Math.max(750,vpSize.height),
+                paddingX, paddingY);
+        if (componentSize)
+        {
+            var bottom = componentOuter.getXY()[1] + componentOuter.getSize().height;
+            Ext4.each(["selectionPanel","selection-panel","studypanel","study-panel","dataFinderTable"],function(id){
+                var el = Ext4.get(id);
+                if (el)
+                    el.setHeight(bottom - el.getXY()[1]);
+            });
+        }
+    };
+    Ext4.EventManager.onWindowResize(_resize);
+    Ext4.defer(_resize, 300);
+<%
+} %>
 </script>
 
 

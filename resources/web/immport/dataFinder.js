@@ -1000,6 +1000,10 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
                 LABKEY.help.Tour.autoShow('immport.dataFinder');
             }
 
+            // I don't like this, but it seems to keep layout from breaking
+            if (typeof window._resize == "function")
+                $timeout(window._resize,1);
+
             LABKEY.Utils.signalWebDriverTest('dataFinderCountsUpdated');
         };
 

@@ -1,9 +1,3 @@
-/* TODOs and BUGs
-
-NOTE for save subject group, it doesn't make sense to save participantid's for non-loaded studies
-  need to handle that.
-
-*/
 
 function dataFinder(studyData, loadedStudies, dataFinderAppId)
 {

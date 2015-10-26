@@ -20,6 +20,7 @@ import org.labkey.api.action.FormViewAction;
 import org.labkey.api.action.RedirectAction;
 import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
+import org.labkey.api.data.Container;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DbScope;
 import org.labkey.api.data.SQLFragment;
@@ -49,6 +50,7 @@ import org.labkey.api.view.HtmlView;
 import org.labkey.api.view.JspView;
 import org.labkey.api.view.NavTree;
 import org.labkey.api.view.NotFoundException;
+import org.labkey.api.view.RedirectException;
 import org.labkey.api.view.VBox;
 import org.labkey.api.view.template.ClientDependency;
 import org.labkey.immport.data.DataLoader;
@@ -64,6 +66,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class ImmPortController extends SpringActionController
@@ -453,6 +456,70 @@ public class ImmPortController extends SpringActionController
             return wp;
         }
 
+        public NavTree appendNavTrail(NavTree root)
+        {
+            return root;
+        }
+    }
+
+
+    public static class FileForm
+    {
+        String file;
+
+        public String getFile()
+        {
+            return file;
+        }
+
+        public void setFile(String fileName)
+        {
+            this.file = fileName;
+        }
+    }
+
+
+    @RequiresPermission(ReadPermission.class)
+    public class FindFlowFileAction extends SimpleViewAction<FileForm>
+    {
+        @Override
+        public void validate(FileForm fileForm, BindException errors)
+        {
+            super.validate(fileForm, errors);
+            if (StringUtils.isEmpty(fileForm.getFile()))
+                errors.rejectValue("fileName", ERROR_REQUIRED);
+        }
+
+        private ModelAndView notFound(FileForm form)
+        {
+            String back = PageFlowUtil.generateBackButton();
+
+            String msg = "No flow file found with this name: " + PageFlowUtil.filter(form.getFile());
+
+            return new HtmlView(msg + "<p></p>" + back);
+        }
+
+        @Override
+        public ModelAndView getView(FileForm form, BindException errors) throws Exception
+        {
+            Container c = getContainer();
+            QuerySchema ds = DefaultSchema.get(getUser(), c).getSchema("flow");
+            if (null == ds)
+                return notFound(form);
+            TableInfo fcs = ds.getTable("FCSFiles");
+            TableSelector sel = new TableSelector(fcs, Collections.singleton("rowid"),
+                    new SimpleFilter(new FieldKey(null,"Name"),form.getFile()),
+                    null);
+            Integer rowid = sel.getObject(Integer.class);
+            if (null == rowid)
+                return notFound(form);
+
+
+            ActionURL flow = new ActionURL("flow-well","showWell",c).addParameter("wellId", rowid);
+            throw new RedirectException(flow);
+        }
+
+        @Override
         public NavTree appendNavTrail(NavTree root)
         {
             return root;

@@ -145,8 +145,10 @@
                     </span>
                     <span class="study-search">{{searchMessage}}</span>
                 </div>
+		<div class="search-message">
+                    <span id="message" class="labkey-filter-message" ng-if="!loadedStudiesShown()">No data are available for participants since you are viewing unloaded studies.</span>
+		</div>
 		<div class="help-links">
-                <span id="message" class="labkey-filter-message" ng-if="!loadedStudiesShown()">No data are available for participants since you are viewing unloaded studies.</span>
                 <%=textLink("quick help", "#", "start_tutorial()", "showTutorial")%>
                 <%=textLink("Export Study Datasets", ImmPortController.ExportStudyDatasetsAction.class)%><br>
                 </div>

@@ -1081,9 +1081,9 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
             }
 
             var scope = $scope;
-            var url = LABKEY.ActionURL.buildURL("search", "json", LABKEY.containerPath, {
+            var url = LABKEY.ActionURL.buildURL("search", "json", "/home/", {
                 "category": "immport_study",
-                "scope": "site",
+                "scope": "Folder",
                 "q": $scope.searchTerms
             });
             var promise = $scope.http.get(url);

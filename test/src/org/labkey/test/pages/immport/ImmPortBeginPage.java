@@ -49,13 +49,6 @@ public class ImmPortBeginPage extends LabKeyPage
         _test.clickAndWait(Locator.css("form[name=populateCube] input[type=submit]"), 120000);
     }
 
-    public StudyFinderPage goToStudyFinder()
-    {
-        _test.clickAndWait(Locator.linkWithText("Study Finder"));
-
-        return new StudyFinderPage(_test);
-    }
-
     //TODO: Create RestrictedStudiesPage
     public LabKeyPage goToRestrictedStudies()
     {

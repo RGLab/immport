@@ -1,9 +1,3 @@
-/* TODOs and BUGs
-
-NOTE for save subject group, it doesn't make sense to save participantid's for non-loaded studies
-  need to handle that.
-
-*/
 
 function dataFinder(studyData, loadedStudies, dataFinderAppId)
 {
@@ -12,7 +6,6 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
 //   (TODO angularify)
 //
 
-    var detailWindows = {};
     var detailShowing = null;
     var timerDeferShow = null;
 
@@ -68,25 +61,21 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
         if (targetId)
             target = Ext4.get(targetId);
         if (targetId && !target)
-            console.log("element not found: " + targetId);
-        var detailWindow = detailWindows[member];
-        if (!detailWindow)
-        {
-            detailWindow = Ext4.create('Ext.window.Window', {
-                width: 800,
-                height: 600,
-                resizable: true,
-                layout: 'fit',
-                baseCls: 'study-detail',
-                bodyCls: 'study-detail',
-                autoScroll: true,
-                loader: {
-                    autoLoad: true,
-                    url: 'immport-studyDetail.view?_frame=none&study=' + member
-                }
-            });
-//        detailWindows[member] = detailWindow;
-        }
+            console.error("element not found: " + targetId);
+
+        var detailWindow = Ext4.create('Ext.window.Window', {
+            width: 800,
+            maxHeight: 600,
+            resizable: true,
+            layout: 'fit',
+            border: false,
+            cls: 'labkey-study-detail',
+            autoScroll: true,
+            loader: {
+                autoLoad: true,
+                url: 'immport-studyDetail.view?_frame=none&study=' + member
+            }
+        });
         var viewScroll = Ext4.getBody().getScroll();
         var viewSize = Ext4.getBody().getViewSize();
         var region = [viewScroll.left, viewScroll.top, viewScroll.left + viewSize.width, viewScroll.top + viewSize.height];
@@ -298,6 +287,7 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
                 if ($scope.localStorageService.isSupported)
                     $scope.localStorageService.remove("group");
             }
+            LABKEY.Utils.signalWebDriverTest('participantGroupUpdated');
 
         };
 
@@ -344,6 +334,11 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
             if (savedGroup != null) {
                 $scope.updateCurrentGroup(savedGroup);
             }
+        };
+
+        $scope.groupsAvailable = function ()
+        {
+            return $scope.groupList.length > 0;
         };
 
         $scope.saveParticipantIdGroupInSession = function (participantIds)
@@ -1005,6 +1000,10 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
                 LABKEY.help.Tour.autoShow('immport.dataFinder');
             }
 
+            // I don't like this, but it seems to keep layout from breaking
+            if (typeof window._resize == "function")
+                $timeout(window._resize,1);
+
             LABKEY.Utils.signalWebDriverTest('dataFinderCountsUpdated');
         };
 
@@ -1082,9 +1081,9 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
             }
 
             var scope = $scope;
-            var url = LABKEY.ActionURL.buildURL("search", "json", LABKEY.containerPath, {
+            var url = LABKEY.ActionURL.buildURL("search", "json", "/home/", {
                 "category": "immport_study",
-                "scope": "site",
+                "scope": "Folder",
                 "q": $scope.searchTerms
             });
             var promise = $scope.http.get(url);

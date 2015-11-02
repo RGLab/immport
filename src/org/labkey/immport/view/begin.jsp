@@ -31,7 +31,7 @@
 To load new ImmPort (archive)<br>
 <%=textLink("Import Archive", new ActionURL(ImmPortController.ImportArchiveAction.class, c))%>
 <%=textLink("Populate cube", new ActionURL(ImmPortController.PopulateCubeAction.class, c))%>
-<%=textLink("Study Finder", new ActionURL(ImmPortController.StudyFinderAction.class, c))%>
+<%=textLink("Data Finder", new ActionURL(ImmPortController.DataFinderAction.class, c))%>
 <%=textLink("Public/Restricted Studies", new ActionURL(ImmPortController.RestrictedStudiesAction.class, c))%>
 </p>
 <p>

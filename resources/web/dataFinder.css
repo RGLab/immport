@@ -96,6 +96,12 @@ INPUT.search-box
 DIV.studyfinder-header
 {
     float:left;
+    padding-right:10pt;
+}
+
+DIV.search-message
+{
+    padding-left:10pt;
 }
 
 TD.selection-panel
@@ -392,6 +398,7 @@ ul.nav
     border-color:#b4b4b4;
     border-width: 1px;
     border-style: solid;
+    padding: 0;
     box-shadow: rgb(136, 136, 136) 0px 0px 6px;
     z-index: 100;
     -webkit-padding-start: 0px

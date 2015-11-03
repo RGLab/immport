@@ -145,8 +145,10 @@
                     </span>
                     <span class="study-search">{{searchMessage}}</span>
                 </div>
+		<div class="search-message">
+                    <span id="message" class="labkey-filter-message" ng-if="!loadedStudiesShown()">No data are available for participants since you are viewing unloaded studies.</span>
+		</div>
 		<div class="help-links">
-                <span id="message" class="labkey-filter-message" ng-if="!loadedStudiesShown()">No data are available for participants since you are viewing unloaded studies.</span>
                 <%=textLink("quick help", "#", "start_tutorial()", "showTutorial")%>
                 <%=textLink("Export Study Datasets", ImmPortController.ExportStudyDatasetsAction.class)%><br>
                 </div>
@@ -349,7 +351,7 @@ LABKEY.help.Tour.register({
         },{
             target: "facetPanel",
             title: "Filters",
-            content: "This is where filters are selected and applied. The numbers (also represented as the length of the gray bars) represent how many subject will match the search if this filter is added.",
+            content: "This is where filters are selected and applied. The numbers (also represented as the length of the gray bars) represent how many subjects will match the search if this filter is added.",
             placement: "right",
             showNextButton: true,
             showPrevButton: true

@@ -351,7 +351,7 @@ LABKEY.help.Tour.register({
         },{
             target: "facetPanel",
             title: "Filters",
-            content: "This is where filters are selected and applied. The numbers (also represented as the length of the gray bars) represent how many subject will match the search if this filter is added.",
+            content: "This is where filters are selected and applied. The numbers (also represented as the length of the gray bars) represent how many subjects will match the search if this filter is added.",
             placement: "right",
             showNextButton: true,
             showPrevButton: true

@@ -136,7 +136,7 @@
                 <div class="studyfinder-header">
                     <span class="search-box">
                         <i class="fa fa-search"></i>&nbsp;
-                        <input placeholder="Studies" id="searchTerms" name="q" class="search-box"  ng-model="searchTerms" ng-change="onSearchTermsChanged()">
+                        <input placeholder="Studies" id="searchTerms" name="q" class="search-box"  ng-model="searchTerms" ng-change="onSearchTermsChanged()" type="search">
                     </span>
                     <span class="labkey-study-search">
                         <select ng-model="studySubset" name="studySubsetSelect" ng-change="onStudySubsetChanged()">

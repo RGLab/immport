@@ -78,6 +78,10 @@ public class ImmPortDocumentResolver implements SearchService.ResourceResolver
 
         String title = study_accession + ": " + StringUtils.defaultString((String) study.get("brief_title"), (String) study.get("official_title"));
         properties.put(SearchService.PROPERTY.title.toString(), title);
+        String identifiers = study_accession;
+        if (StringUtils.startsWith(study_accession, "SDY"))
+            identifiers += " " + study_accession.substring(3);
+        properties.put(SearchService.PROPERTY.indentifiersHi.toString(), identifiers);
         properties.put(SearchService.PROPERTY.categories.toString(), ImmPortModule.searchCategoryStudy.getName());
 
         StringBuilder html = new StringBuilder(4000);

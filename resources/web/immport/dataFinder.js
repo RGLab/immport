@@ -1,9 +1,3 @@
-/* TODOs and BUGs
-
-NOTE for save subject group, it doesn't make sense to save participantid's for non-loaded studies
-  need to handle that.
-
-*/
 
 function dataFinder(studyData, loadedStudies, dataFinderAppId)
 {
@@ -1087,9 +1081,9 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
             }
 
             var scope = $scope;
-            var url = LABKEY.ActionURL.buildURL("search", "json", LABKEY.containerPath, {
+            var url = LABKEY.ActionURL.buildURL("search", "json", "/home/", {
                 "category": "immport_study",
-                "scope": "site",
+                "scope": "Folder",
                 "q": $scope.searchTerms
             });
             var promise = $scope.http.get(url);

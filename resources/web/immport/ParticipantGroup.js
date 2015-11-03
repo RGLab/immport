@@ -164,7 +164,8 @@ Ext4.define('Study.window.ParticipantGroup', {
             label : fieldValues["groupLabel"],
             participantIds : ptids,
             categoryLabel : '',
-            categoryType : 'list'
+            categoryType : 'list',
+            categoryOwnerId : LABKEY.user.id
         };
 
         if (fieldValues["filters"] != undefined)

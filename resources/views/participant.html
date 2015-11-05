@@ -85,14 +85,14 @@
     var columnName = LABKEY.moduleContext.study && LABKEY.moduleContext.study.subject && LABKEY.moduleContext.study.subject.columnName || (tableName+'Id');
 
     var outer_panel = null;
-    var subject_accession = null;
+    var participantId = null;
 
     LABKEY.requiresExt4ClientAPI(true, function() {
 
         var init = function() {
             Ext4.QuickTips.init();
 
-            subject_accession = LABKEY.ActionURL.getParameter('participantId') || 'SUB112829';
+            participantId = LABKEY.ActionURL.getParameter('participantId') || 'SUB112829';
             outer_panel = Ext4.create('Ext.panel.Panel', {
                 renderTo : 'participant-view',
                 border : false, frame : false,
@@ -127,7 +127,7 @@
             '<div id="demographics" class="main">',
                 '<h2>Information</h2>',
                 '<div id="demographics-content">',      // TODO: move these image references to the web resources directory
-                    '<h3 style="background: url(' + LABKEY.contextPath + '/files/HIPC-DB/demo/@files/images/pie.png) no-repeat; background-size: 60px;">Demographics</h3>',
+                    '<h3 style="background-size: 60px;">Demographics</h3>',
                     '<table class="detail" style="margin-left: 30px">',
                         '<tr><td class="label"  width="120px">Description</td><td>{description:this.renderNull}</td></tr>',
                         '<tr><td class="label"  width="120px">Phenotype</td><td>{phenotype:this.renderNull}</td></tr>',
@@ -140,7 +140,7 @@
                         '<tr><td class="label"  width="120px">Race</td><td>{race:this.renderNull}</td></tr>',
                         '<tr><td class="label"  width="120px">Species</td><td>{species:this.renderNull}</td></tr>',
                     '</table>',
-                    '<h3 style="background:  url(' + LABKEY.contextPath + '/files/HIPC-DB/demo/@files/images/groups.svg) no-repeat; background-size: 35px; background-position: 12px 0; ">Cohort</h3>',
+                    '<h3 style="background-size: 35px; background-position: 12px 0; ">Cohort</h3>',
                     '<table class="detail" style="margin-left: 30px">',
                         '<tr><td class="label"  width="120px">Cohort</td><td>{groups:this.renderNull}</td></tr>',
                     '</table>',
@@ -155,22 +155,12 @@
 
         Ext4.getCmp('leftContainer').add({
             xtype : 'component',
-            id : 'demographics-' + subject_accession,
+            id : 'demographics-' + participantId,
             tpl : tpl,
             border : false, frame : false,
             data : {}
         });
 
-//        var sql = "SELECT d.phenotype, " +
-//                "(d.age_reported || ' ' || d.age_unit || ' (' || d.age_event || ')') AS age,  " +
-//                "d.gender, d.ethnicity, " +
-//                "CASE WHEN d.race_specify IS NOT NULL THEN d.race_specify ELSE d.race END AS race, " +
-//                "d.species, d.description, d.population_name, d.strain, d.strain_characteristics, " +
-//                "s.groups " +
-//                "FROM demographics AS d " +
-//                "LEFT JOIN (SELECT ${columnName}, GROUP_CONCAT(DISTINCT GroupId.Label) AS groups FROM ${tableName}GroupMap GROUP BY ${columnName}) AS s " +
-//                "   ON s.${columnName} = d.${columnName} " +
-//                "WHERE d.${columnName}='" + subject_accession + "'";
         var sql = "SELECT d.phenotype, " +
                 "(d.age_reported || ' ' || d.age_unit || ' (' || d.age_event || ')') AS age,  " +
                 "d.gender, d.ethnicity, " +
@@ -178,7 +168,7 @@
                 "d.species, d.description, d.population_name, d.strain, d.strain_characteristics, " +
                 "d.${columnName}.Cohort.label AS groups " +
                 "FROM demographics AS d " +
-                "WHERE d.${columnName}='" + subject_accession + "'";
+                "WHERE d.${columnName}='" + participantId + "'";
         sql = sql.replace(/\${tableName}/g, tableName);
         sql = sql.replace(/\${columnName}/g, columnName);
 
@@ -188,7 +178,7 @@
             autoLoad : true,
             listeners : {
                 load : function(s) {
-                    var c = Ext4.getCmp('demographics-' + subject_accession);
+                    var c = Ext4.getCmp('demographics-' + participantId);
                     if (c) { c.update(s.getAt(0).data); }
                 },
                 scope : this
@@ -203,7 +193,7 @@
             '<div id="assays" class="main">',
                 '<h2>Data</h2>',
                 '<div id="assays-content" class="main-body">',
-                    '<h3 style="background: url(' + LABKEY.contextPath + '/files/HIPC-DB/demo/@files/images/assays.gif) no-repeat; background-size: 30px;">Assays</h3>',
+                    '<h3 style="background-size: 30px;">Assays</h3>',
                     '<table class="detail">',
                     '<tpl for="rows">',
                         '<tr>' +
@@ -232,7 +222,7 @@
                         params[groupingFilter.getURLParameterName().replace('query.', 'Dataset.')] = groupingFilter.getURLParameterValue();
                     }
 
-                    var subjectFilter = LABKEY.Filter.create('subject_accession', subject_accession);
+                    var subjectFilter = LABKEY.Filter.create('participantid', participantId);
                     params[subjectFilter.getURLParameterName().replace('query.', 'Dataset.')] = subjectFilter.getURLParameterValue();
 
                     return "<a href='" + LABKEY.ActionURL.buildURL('study', 'dataset.view', null, params) + "' target='_blank'"
@@ -243,31 +233,31 @@
 
         Ext4.getCmp('rightContainer').add({
             xtype : 'component',
-            id : 'assays-' + subject_accession,
+            id : 'assays-' + participantId,
             tpl : tpl,
             border : false, frame : false,
             data : {}
         });
 
-        var knownAssayGroupings = {elisa: 'analyte',
-            elispot: 'analyte',
-            hai: 'virus_strain',
-            pcr: null,
-            virus_neut: 'virus_strain'
+        var knownAssayGroupings = {
+            'hai': 'virus_strain',
+            'neut_ab_titer': 'virus_strain',
+            'mbaa': 'analyte',
+            'elisa': 'analyte',
+            'elispot': 'analyte',
+            'pcr': 'entrez_gene_id',
+            'fcs_analyzed_result': 'population_name_reported'//,
+//            'gene_expression_analysis_results': 'gene_symbol' // NOT A DATASET, REQUIRES FURTHER INTEGRATION
         };
 
         LABKEY.Query.executeSql({
             schemaName: 'study',
-        	sql: "SELECT datasetid, name, label, showbydefault FROM study.DataSets WHERE CategoryId.Label = 'Assays' ORDER BY DisplayOrder",
+        	sql: "SELECT datasetid, name, label FROM study.DataSets WHERE CategoryId.Label = 'Assays' AND showbydefault = 'true' ORDER BY DisplayOrder",
         	success: function(data){
         		var unionSql = "";
         		for (var i = 0; i < data.rows.length; i++)
         		{
         			var row = data.rows[i];
-
-                    // skip the hidden datasets (issue 55)
-                    if (!row.showbydefault)
-                        continue;
 
         			if (unionSql.length > 0)
         				unionSql += " UNION ";
@@ -276,11 +266,11 @@
                         + "CONVERT('" + row.name + "', SQL_VARCHAR) AS AssayName, "
                         + "CONVERT('" + row.label + "', SQL_VARCHAR) AS AssayLabel, "
                         + "NULL as SubGroupingCol, NULL AS SubGroupingVal, count(*) AS TypeCount "
-        				+ "FROM study." + row.name + " WHERE ${columnName} = '" + subject_accession + "')";
+                        + "FROM study." + row.name + " WHERE ${columnName} = '" + participantId + "')";
 
                     if (knownAssayGroupings[row.name])
                     {
-                        // sub-grouping for teh assay
+                        // sub-grouping for the assay
                         unionSql += " UNION "
                                 + "(SELECT 2 AS SortOrder, CONVERT('" + row.datasetid + "', SQL_INTEGER) AS DatasetId, "
                                 + "CONVERT('" + row.name + "', SQL_VARCHAR) AS AssayName, "
@@ -288,7 +278,7 @@
                                 + "CONVERT('" + knownAssayGroupings[row.name] + "', SQL_VARCHAR) AS SubGroupingCol, "
                                 + knownAssayGroupings[row.name] + " as SubGroupingVal, count(*) AS TypeCount "
                                 + "FROM study." + row.name + " "
-                                + "WHERE ${columnName} = '" + subject_accession + "' "
+                                + "WHERE ${columnName} = '" + participantId + "' "
                                 + "GROUP BY " + knownAssayGroupings[row.name] + ")";
                     }
         		}
@@ -303,7 +293,7 @@
                         schemaName: 'study',
                         sql: unionSql,
                         success: function(assaysData){
-                            var a = Ext4.getCmp('assays-' + subject_accession);
+                            var a = Ext4.getCmp('assays-' + participantId);
                             if (a) { a.update(assaysData); }
                         }
                     });
@@ -312,3 +302,4 @@
         });
     }
 </script>
+

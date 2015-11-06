@@ -309,6 +309,11 @@ public class StudyBean
         return pi_names;
     }
 
+    public String getRestricted()
+    {
+        return restricted;
+    }
+
     public void setPi_names(String pi_names)
     {
         this.pi_names = pi_names;

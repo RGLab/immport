@@ -264,7 +264,7 @@ var studyData = [<%
     String comma = "\n  ";
     for (StudyBean study : studies)
     {
-        %><%=text(comma)%>[<%=q(study.getStudy_accession())%>,<%=text(study.getStudy_accession().substring(3))%>,<%=q(StringUtils.defaultString(study.getBrief_title(),study.getOfficial_title()))%>,<%=q(study.getPi_names())%>,<%=q(study.getRestricted())%>]<%
+        %><%=text(comma)%>[<%=q(study.getStudy_accession())%>,<%=text(study.getStudy_accession().substring(3))%>,<%=q(StringUtils.defaultString(study.getBrief_title(),study.getOfficial_title()))%>,<%=q(study.getPi_names())%>,<%=study.getRestricted()?"true":"false"%>]<%
         comma = ",\n  ";
     }
 %>];

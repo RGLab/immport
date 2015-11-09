@@ -50,6 +50,7 @@ public class StudyBean
     String minimum_age;
     Date planned_public_release_date;
     String program_title;
+    boolean restricted;
 
     // not in study table, but can be joined if desired
     String pi_names;
@@ -309,7 +310,12 @@ public class StudyBean
         return pi_names;
     }
 
-    public String getRestricted()
+    public void setRestricted(boolean restricted)
+    {
+        this.restricted = restricted;
+    }
+
+    public boolean getRestricted()
     {
         return restricted;
     }

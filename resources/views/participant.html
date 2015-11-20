@@ -92,7 +92,7 @@
         var init = function() {
             Ext4.QuickTips.init();
 
-            participantId = LABKEY.ActionURL.getParameter('participantId') || 'SUB112829';
+            participantId = LABKEY.ActionURL.getParameter('participantId');
             outer_panel = Ext4.create('Ext.panel.Panel', {
                 renderTo : 'participant-view',
                 border : false, frame : false,
@@ -126,7 +126,7 @@
         var tpl = new Ext4.XTemplate(
             '<div id="demographics" class="main">',
                 '<h2>Information</h2>',
-                '<div id="demographics-content">',      // TODO: move these image references to the web resources directory
+                '<div id="demographics-content">',
                     '<h3 style="background-size: 60px;">Demographics</h3>',
                     '<table class="detail" style="margin-left: 30px">',
                         '<tr><td class="label"  width="120px">Description</td><td>{description:this.renderNull}</td></tr>',

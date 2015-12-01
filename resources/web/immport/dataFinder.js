@@ -434,7 +434,7 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
             {
                 'memberName': "[Study].[" + name + "]",
                 'study_accession': name,
-                'id': studyData[i][1], 'title': studyData[i][2], 'pi': studyData[i][3],
+                'id': studyData[i][1], 'title': studyData[i][2], 'pi': studyData[i][3], 'restricted': studyData[i][4],
                 'hipc_funded': false,
                 'loaded': false,
                 'url': null,
@@ -453,7 +453,7 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
                 if (s.hipc_funded)
                     hipc_study_list.push(s.memberName);
             }
-            else
+            else if (!s.restricted)
             {
                 unloaded_study_list.push(s.memberName);
             }

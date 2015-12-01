@@ -145,8 +145,10 @@
                     </span>
                     <span class="study-search">{{searchMessage}}</span>
                 </div>
+		<div class="search-message">
+                    <span id="message" class="labkey-filter-message" ng-if="!loadedStudiesShown()">No data are available for participants since you are viewing unloaded studies.</span>
+		</div>
 		<div class="help-links">
-                <span id="message" class="labkey-filter-message" ng-if="!loadedStudiesShown()">No data are available for participants since you are viewing unloaded studies.</span>
                 <%=textLink("quick help", "#", "start_tutorial()", "showTutorial")%>
                 <%=textLink("Export Study Datasets", ImmPortController.ExportStudyDatasetsAction.class)%><br>
                 </div>
@@ -164,7 +166,7 @@
                                     <span class="member-count">{{dimStudy.summaryCount}}</span>
                                 </li>
                                 <li class="member" style="cursor: default">
-                                    <span class="member-name">Subjects</span>
+                                    <span class="member-name">Participants</span>
                                     <span class="member-count">{{formatNumber(dimSubject.allMemberCount||0)}}</span>
                                 </li>
                             </ul>
@@ -262,7 +264,7 @@ var studyData = [<%
     String comma = "\n  ";
     for (StudyBean study : studies)
     {
-        %><%=text(comma)%>[<%=q(study.getStudy_accession())%>,<%=text(study.getStudy_accession().substring(3))%>,<%=q(StringUtils.defaultString(study.getBrief_title(),study.getOfficial_title()))%>,<%=q(study.getPi_names())%>]<%
+        %><%=text(comma)%>[<%=q(study.getStudy_accession())%>,<%=text(study.getStudy_accession().substring(3))%>,<%=q(StringUtils.defaultString(study.getBrief_title(),study.getOfficial_title()))%>,<%=q(study.getPi_names())%>,<%=study.getRestricted()?"true":"false"%>]<%
         comma = ",\n  ";
     }
 %>];
@@ -342,14 +344,14 @@ LABKEY.help.Tour.register({
         },{
             target: "summaryArea",
             title: "Summary",
-            content: "This summary area indicates how many subjects and studies match the selected criteria.", 
+            content: "This summary area indicates how many participants and studies match the selected criteria.", 
             placement: "right",
             showNextButton: true,
             showPrevButton: true
         },{
             target: "facetPanel",
             title: "Filters",
-            content: "This is where filters are selected and applied. The numbers (also represented as the length of the gray bars) represent how many subject will match the search if this filter is added.",
+            content: "This is where filters are selected and applied. The numbers (also represented by the lengths of the gray bars) indicate how many participants will match the search if this filter is added.",
             placement: "right",
             showNextButton: true,
             showPrevButton: true
@@ -361,30 +363,6 @@ LABKEY.help.Tour.register({
             yOffset: -25,
             showPrevButton: true
         }
-        //{
-        //    target: 'group_Condition',
-        //    title: "Study Attributes",
-        //    content: "Select items in this area to find studies of interest.  The gray bars show the number of selected participants.<p/>Try " + (Ext4.isMac ? "Command" : "Ctrl") + "-click to multi-select.",
-        //    placement: "right"
-        //},
-        //{
-        //    target: 'searchTerms',
-        //    title: "Quick Search",
-        //    content: "Enter terms of interest to search study descriptions.",
-        //    placement: "right"
-        //},
-        //{
-        //    target: 'summaryArea',
-        //    title: "Summary",
-        //    content: "Here is a summary of the data in the selected studies. Studies represents the number of studies that contain some participants that match the criteria. Subjects is the number of subjects across all selected studies (including subjects that did not match all attributes).",
-        //    placement: "right"
-        //},
-        //{
-        //    target: 'filterArea',
-        //    title: "Filter Area",
-        //    content: "See and manage your active filters.",
-        //    placement: "right"
-        //}
     ]
 });
 

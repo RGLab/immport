@@ -226,7 +226,7 @@ public class DataLoader extends PipelineJob
             {
                 if (0 == tsvFile.getContent().getSize())
                 {
-                    context.getErrors().addRowError(new ValidationException("Data file is empty: " + file + ".txt"));
+                    log.warn("Data file is empty: " + file + ".txt");
                     return null;
                 }
                 TabLoader tl = (TabLoader)new TabLoader.TsvFactory().createLoader(tsvFile.getContent().getInputStream(), true, null);
@@ -261,7 +261,7 @@ public class DataLoader extends PipelineJob
                     }
                     if (0 == tsvFile.getContent().getSize())
                     {
-                        context.getErrors().addRowError(new ValidationException("Data file is empty: " + tsvFile.getName()));
+                        log.warn("Data file is empty: " + tsvFile.getName());
                         return null;
                     }
                     final TabLoader tl = (TabLoader)new TabLoader.MysqlFactory().createLoader(tsvFile.getContent().getInputStream(), false, null);

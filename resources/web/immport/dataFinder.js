@@ -348,7 +348,7 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
 
         $scope.saveParticipantIdGroupInSession = function (participantIds)
         {
-            if ($scope.subjects.length == 0)
+            if ($scope.subjects.length == 0 && $scope.dimStudy.filters.length > 0)
             {
                 LABKEY.Ajax.request({
                     method: "DELETE",
@@ -766,6 +766,7 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
                 {
                     if (!filterMembers || filterMembers.length == dim.members.length)
                         continue;
+
                     if (filterMembers.length == 0)
                     {
                         // in the case of study filter, this means no matches, rather than no filter!
@@ -868,6 +869,7 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
 
         $scope.updateCountsZero = function ()
         {
+            $scope.subjects.length = 0;
             for (d in dataspace.dimensions)
             {
                 if (!dataspace.dimensions.hasOwnProperty(d))

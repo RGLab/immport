@@ -874,6 +874,7 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
                     continue;
                 var dim = dataspace.dimensions[d];
                 dim.summaryCount = 0;
+                dim.allMemberCount = 0;
                 for (var m = 0; m < dim.members.length; m++)
                 {
                     dim.members[m].count = 0;

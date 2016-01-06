@@ -15,13 +15,13 @@
 */
 
 ALTER TABLE fcs_header_marker_pkey
-DROP CONSTRAINT PRIMARY KEY (fcs_header_id)
+DROP CONSTRAINT PRIMARY KEY (fcs_header_id);
 
 ALTER TABLE fcs_header_marker_pkey
-ADD CONSTRAINT PRIMARY KEY (fcs_header_id,parameter_number)
+ADD CONSTRAINT PRIMARY KEY (fcs_header_id,parameter_number);
 
 ALTER TABLE reagent_set_2_reagent_pkey
-DROP CONSTRAINT PRIMARY KEY (reagent_set_accession)
+DROP CONSTRAINT PRIMARY KEY (reagent_set_accession);
 
 ALTER TABLE reagent_set_2_reagent_pkey
-ADD CONSTRAINT PRIMARY KEY (reagent_set_accession,reagent_accession)
+ADD CONSTRAINT PRIMARY KEY (reagent_set_accession,reagent_accession);

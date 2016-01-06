@@ -14,14 +14,14 @@
 * limitations under the License.
 */
 
-ALTER TABLE fcs_header_marker_pkey
-DROP CONSTRAINT PRIMARY KEY (fcs_header_id);
+ALTER TABLE immport.fcs_header_marker
+DROP CONSTRAINT fcs_header_marker_pkey;
 
-ALTER TABLE fcs_header_marker_pkey
-ADD CONSTRAINT PRIMARY KEY (fcs_header_id,parameter_number);
+ALTER TABLE immport.fcs_header_marker
+ADD CONSTRAINT fcs_header_marker_pkey PRIMARY KEY (fcs_header_id,parameter_number);
 
-ALTER TABLE reagent_set_2_reagent_pkey
-DROP CONSTRAINT PRIMARY KEY (reagent_set_accession);
+ALTER TABLE immport.reagent_set_2_reagent
+DROP CONSTRAINT reagent_set_2_reagent_pkey;
 
-ALTER TABLE reagent_set_2_reagent_pkey
-ADD CONSTRAINT PRIMARY KEY (reagent_set_accession,reagent_accession);
+ALTER TABLE immport.reagent_set_2_reagent
+ADD CONSTRAINT reagent_set_2_reagent_pkey PRIMARY KEY (reagent_set_accession,reagent_accession);

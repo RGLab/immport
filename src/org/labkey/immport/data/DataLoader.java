@@ -18,7 +18,9 @@ package org.labkey.immport.data;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.vfs2.FileObject;
+import org.apache.commons.vfs2.FileSystemException;
 import org.apache.commons.vfs2.FileSystemManager;
+import org.apache.commons.vfs2.FileType;
 import org.apache.commons.vfs2.VFS;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -84,6 +86,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class DataLoader extends PipelineJob
 {
@@ -222,7 +225,10 @@ public class DataLoader extends PipelineJob
             if (null != tsvFile)
             {
                 if (0 == tsvFile.getContent().getSize())
+                {
+                    log.warn("Data file is empty: " + file + ".txt");
                     return null;
+                }
                 TabLoader tl = (TabLoader)new TabLoader.TsvFactory().createLoader(tsvFile.getContent().getInputStream(), true, null);
                 tl.setInferTypes(false);
                 return tl;
@@ -254,7 +260,10 @@ public class DataLoader extends PipelineJob
                         return null;
                     }
                     if (0 == tsvFile.getContent().getSize())
+                    {
+                        log.warn("Data file is empty: " + tsvFile.getName());
                         return null;
+                    }
                     final TabLoader tl = (TabLoader)new TabLoader.MysqlFactory().createLoader(tsvFile.getContent().getInputStream(), false, null);
                     tl.setInferTypes(false);
                     tl.setColumns(cols);
@@ -366,6 +375,8 @@ public class DataLoader extends PipelineJob
             final DataIteratorBuilder select = super.selectFromSource(dl,context,dir,log);
             final boolean restricted = dl._restricted;
 
+            if (null == select)
+                return null;
             if (!"study".equals(file))
                 return select;
 
@@ -582,6 +593,25 @@ public class DataLoader extends PipelineJob
             else
                 throw new FileNotFoundException(_archive);
 
+            // DR16 added a top level directory to the archive.  Check for that here.
+            // find directories
+            Map<String,FileObject> dirs = (Arrays.asList(archiveFile.getChildren())).stream().filter(fo ->
+                {
+                    try
+                    {
+                        return fo.getType() == FileType.FOLDER;
+                    }
+                    catch (FileSystemException fse)
+                    {
+                        return false;
+                    }
+                })
+            .filter(fo -> !fo.getName().getBaseName().startsWith("."))
+            .collect(Collectors.toMap(fo -> fo.getName().getBaseName(), fo -> fo));
+
+            if (!dirs.containsKey("MySQL") && dirs.size()==1)
+                archiveFile = dirs.values().iterator().next();
+
             execute(immportTables, archiveFile);
         }
         catch (IOException|SQLException x)
@@ -679,12 +709,23 @@ public class DataLoader extends PipelineJob
         {
             // find study accession numbers
             DataIteratorContext dix = new DataIteratorContext();
-            DataIterator it = new StudyCopyConfig("study").selectFromSource(this,dix,dir,getLogger()).getDataIterator(dix);
-            while (it.next())
+            DataIteratorBuilder dib = new StudyCopyConfig("study").selectFromSource(this,dix,dir,getLogger());
+            if (dix.getErrors().hasErrors())
+                throw dix.getErrors();
+
+            if (null != dib)
             {
-                String sdy = (String)it.get(1);
-                setStudyAccession.add(sdy);
+                DataIterator it = dib.getDataIterator(dix);
+                while (it.next())
+                {
+                    String sdy = (String) it.get(1);
+                    setStudyAccession.add(sdy);
+                }
             }
+        }
+        catch (BatchValidationException bve)
+        {
+            bve.getRowErrors().stream().forEach(ve->error(ve.getMessage()));
         }
         catch (Exception x)
         {

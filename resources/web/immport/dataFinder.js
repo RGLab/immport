@@ -1,4 +1,3 @@
-
 function dataFinder(studyData, loadedStudies, dataFinderAppId)
 {
 //
@@ -21,7 +20,7 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
             var positions = cellSet.axes[1].positions;
             if (positions.length > 0 && positions[0].length > 1)
             {
-                console.log("warning rows have nested members");
+                console.log("warning: rows have nested members");
                 throw "illegal state";
             }
             return positions.map(function(inner){return inner[0]});
@@ -186,6 +185,7 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
                                     "filters": group.filters == undefined ? [] : Ext4.decode(group.filters),
                                     "selected": true
                                 };
+
                                 $scope.groupList.push(group);
                                 $scope.updateCurrentGroup(group);
                                 $scope.updateSaveOptions();
@@ -211,6 +211,11 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
 
                     if (filter.name == "Study" && $scope.filterByLevel == "[Study].[Name]")
                         continue;
+
+                    if (filter.name == "Search")
+                    {
+                        $scope.$emit("searchTermsAppliedFromFilter", filter.members);
+                    }
 
                     var dim = dataspace.dimensions[filter.name];
 
@@ -343,7 +348,7 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
 
         $scope.saveParticipantIdGroupInSession = function (participantIds)
         {
-            if ($scope.subjects.length == 0)
+            if ($scope.subjects.length == 0 && $scope.dimStudy.filters.length > 0)
             {
                 LABKEY.Ajax.request({
                     method: "DELETE",
@@ -554,6 +559,13 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
             }
         };
 
+        $scope.$on(
+                "searchTermsAppliedFromFilter", function(event, searchTerms) {
+                    $scope.searchTerms = searchTerms;
+                    $scope.onSearchTermsChanged();
+                }
+        );
+
         $scope.countForStudy = function (study)
         {
             var uniqueName = study.memberName || study.uniqueName;
@@ -754,6 +766,7 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
                 {
                     if (!filterMembers || filterMembers.length == dim.members.length)
                         continue;
+
                     if (filterMembers.length == 0)
                     {
                         // in the case of study filter, this means no matches, rather than no filter!
@@ -856,12 +869,14 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
 
         $scope.updateCountsZero = function ()
         {
+            $scope.subjects.length = 0;
             for (d in dataspace.dimensions)
             {
                 if (!dataspace.dimensions.hasOwnProperty(d))
                     continue;
                 var dim = dataspace.dimensions[d];
                 dim.summaryCount = 0;
+                dim.allMemberCount = 0;
                 for (var m = 0; m < dim.members.length; m++)
                 {
                     dim.members[m].count = 0;
@@ -875,42 +890,6 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
             $scope.changeSubjectGroup();
             $scope.doneRendering();
         };
-
-
-        $scope.updateCounts = function (dim, cellSet)
-        {
-            var member, m;
-            var memberMap = dim.memberMap;
-            var max = 0;
-            dim.summaryCount = 0;
-            for (m = 0; m < dim.members.length; m++)
-            {
-                dim.members[m].count = 0;
-            }
-
-            var positions = cellSetHelper.getRowPositionsOneLevel(cellSet);
-            var data = cellSetHelper.getDataOneColumn(cellSet, 0);
-            for (var i = 0; i < positions.length; i++)
-            {
-                var uniqueName = positions[i].uniqueName;
-                var count = data[i];
-                member = memberMap[uniqueName];
-                member.count = count;
-                if (count > max)
-                    max = count;
-                dim.summaryCount += 1;
-            }
-            for (m = 0; m < dim.members.length; m++)
-            {
-                member = dim.members[m];
-                dim.members[m].percent = max == 0 ? 0 : (100.0 * member.count) / max;
-            }
-
-            $scope.saveFilterState();
-            $scope.updateContainerFilter();
-            $scope.doneRendering();
-        };
-
 
         /* handle query response to update all the member counts with all filters applied */
         $scope.updateCountsUnion = function (cellSet, isSavedGroup)
@@ -1059,6 +1038,7 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
             }
             else
             {
+                $scope.saveFilterState();
                 $scope.clearStudyFilter();
             }
         };
@@ -1088,6 +1068,7 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
             });
             var promise = $scope.http.get(url);
             $scope.doSearchTermsChanged_promise = promise;
+
             promise.success(function (data)
             {
                 // NOOP if we're not current (poor man's cancel)
@@ -1142,6 +1123,7 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
                 $scope.timeout.cancel($scope.onSearchTermsChanged_promise);
             $scope.onSearchTermsChanged_promise = $scope.timeout(function ()
             {
+                $scope.saveFilterState();
                 $scope.doSearchTermsChanged();
             }, 500);
         };
@@ -1176,6 +1158,13 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
                     };
                 }
             }
+            if ($scope.searchTerms) {
+                filterSet["Search"] = {
+                    "name" : "Search",
+                    "members" : $scope.searchTerms,
+                    "operator" : "OR"
+                }
+            }
             if (filterSet.length == 0)
                 $scope.localStorageService.remove("filterSet");
             else
@@ -1196,21 +1185,28 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
                 {
                     if (filterSet.hasOwnProperty(f))
                     {
-                        var filter = filterSet[f];
-                        var dim = dataspace.dimensions[f];
-                        if (filter && filter.members.length)
+                        if (filterSet[f].name == "Search")
                         {
-                            for (var i = 0; i < filter.members.length; i++)
+                            $scope.$emit("searchTermsAppliedFromFilter", filterSet[f].members);
+                        }
+                        else
+                        {
+                            var filter = filterSet[f];
+                            var dim = dataspace.dimensions[f];
+                            if (filter && filter.members.length)
                             {
-                                var filteredName = filter.members[i];
-                                var member = dim.memberMap[filteredName];
-                                if (member)
+                                for (var i = 0; i < filter.members.length; i++)
                                 {
-                                    member.selected = true;
-                                    dim.filters.push(member);
+                                    var filteredName = filter.members[i];
+                                    var member = dim.memberMap[filteredName];
+                                    if (member)
+                                    {
+                                        member.selected = true;
+                                        dim.filters.push(member);
+                                    }
                                 }
+                                dim.filterType = filter.operator;
                             }
-                            dim.filterType = filter.operator;
                         }
                     }
                 }

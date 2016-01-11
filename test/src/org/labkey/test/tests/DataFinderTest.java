@@ -42,7 +42,7 @@ import org.labkey.test.pages.immport.DataFinderPage;
 import org.labkey.test.pages.immport.DataFinderPage.Dimension;
 import org.labkey.test.pages.immport.ExportStudyDatasetsPage;
 import org.labkey.test.pages.immport.ImmPortBeginPage;
-import org.labkey.test.pages.immport.ManageParticipantGroupsPage;
+import org.labkey.test.pages.study.ManageParticipantGroupsPage;
 import org.labkey.test.pages.study.OverviewPage;
 import org.labkey.test.util.APIContainerHelper;
 import org.labkey.test.util.AbstractContainerHelper;

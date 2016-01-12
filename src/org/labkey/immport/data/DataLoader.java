@@ -29,9 +29,11 @@ import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.collections.CaseInsensitiveTreeSet;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.CoreSchema;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DbScope;
 import org.labkey.api.data.JdbcType;
+import org.labkey.api.data.Parameter;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SqlExecutor;
 import org.labkey.api.data.SqlSelector;
@@ -46,6 +48,7 @@ import org.labkey.api.etl.Pump;
 import org.labkey.api.etl.ResultSetDataIterator;
 import org.labkey.api.etl.SimpleTranslator;
 import org.labkey.api.etl.StandardETL;
+import org.labkey.api.etl.StatementDataIterator;
 import org.labkey.api.etl.WrapperDataIterator;
 import org.labkey.api.exp.list.ListImportProgress;
 import org.labkey.api.pipeline.CancelledException;
@@ -98,11 +101,12 @@ public class DataLoader extends PipelineJob
 
     static class CopyConfig extends org.labkey.api.etl.CopyConfig
     {
-        QueryUpdateService.InsertOption option = QueryUpdateService.InsertOption.IMPORT;
+        final QueryUpdateService.InsertOption option;
 
-        CopyConfig(String sourceSchema, String source, String targetSchema, String target)
+        CopyConfig(String sourceSchema, String source, String targetSchema, String target, QueryUpdateService.InsertOption option)
         {
             super(sourceSchema, source, targetSchema, target);
+            this.option = option;
         }
 
         QueryUpdateService.InsertOption getInsertOption()
@@ -124,12 +128,18 @@ public class DataLoader extends PipelineJob
         }
 
         int copyFrom(Container c, User u, DataIteratorContext context, DataIteratorBuilder from, DataLoader dl)
-                throws IOException, BatchValidationException
+                throws IOException, BatchValidationException, SQLException
         {
             assert this.getTargetSchema().getParts().size()==1;
-            context.setInsertOption(option);
             DbSchema targetSchema = DbSchema.get(this.getTargetSchema().getName());
             TableInfo targetTableInfo = targetSchema.getTable(getTargetQuery());
+
+            if (context.getInsertOption() == QueryUpdateService.InsertOption.MERGE && null != targetTableInfo)
+            {
+                if (!(new TableSelector(targetTableInfo).exists()))
+                    context.setInsertOption(QueryUpdateService.InsertOption.IMPORT);
+            }
+
             return copy(context, from, targetTableInfo, c, u, dl);
         }
 
@@ -175,29 +185,19 @@ public class DataLoader extends PipelineJob
     static class ImmPortCopyConfig extends CopyConfig
     {
         // we do not delete from shared tables when in import a single study
-        boolean hasAttachments = false;
         String file;
 
 
         ImmPortCopyConfig(String table)
         {
-            super("#TEXT#", table, "immport", table);
+            super("#TEXT#", table, "immport", table, QueryUpdateService.InsertOption.IMPORT);
             file = table;
         }
 
         ImmPortCopyConfig(String table, QueryUpdateService.InsertOption option)
         {
-            super("#TEXT#", table, "immport", table);
+            super("#TEXT#", table, "immport", table, option);
             file = table;
-            this.option = option;
-        }
-
-
-        ImmPortCopyConfig(String sql, String tsv, String target, boolean hasAttachments)
-        {
-            super("#TEXT#", sql, "immport", target);
-            file = tsv;
-            this.hasAttachments = hasAttachments;
         }
 
 
@@ -284,36 +284,177 @@ public class DataLoader extends PipelineJob
             super(table, QueryUpdateService.InsertOption.MERGE);
         }
 
-
         SharedCopyConfig(String table, QueryUpdateService.InsertOption option)
         {
             super(table, option);
-        }
-
-
-        SharedCopyConfig(String sql, String tsv, String target, boolean hasAttachments)
-        {
-            super(sql, tsv, target, hasAttachments);
-        }
-
-        @Override
-        int copyFrom(Container c, User u, DataIteratorContext context, DataIteratorBuilder from, DataLoader dl) throws IOException, BatchValidationException
-        {
-            // if there are no rows in target table, no need to merge is there...
-            DbSchema targetSchema = DbSchema.get(this.getTargetSchema().getName());
-            TableInfo targetTableInfo = targetSchema.getTable(getTargetQuery());
-            if (null != targetTableInfo)
-            {
-                if (!(new TableSelector(targetTableInfo).exists()))
-                    this.option = QueryUpdateService.InsertOption.IMPORT;
-            }
-            return super.copyFrom(c, u, context, from, dl);
         }
 
         @Override
         public void deleteFromTarget(PipelineJob job, List<String> studies) throws IOException, SQLException
         {
             assert 1==1 : "place to put breakpoint";
+        }
+    }
+
+
+    // hand-written for postgres performance
+    static abstract class CustomMergeCopyConfig extends ImmPortCopyConfig
+    {
+        CustomMergeCopyConfig(String table)
+        {
+            super(table, QueryUpdateService.InsertOption.MERGE);
+        }
+
+        CustomMergeCopyConfig(String table, QueryUpdateService.InsertOption option)
+        {
+            super(table, option);
+        }
+
+        @Override
+        public void deleteFromTarget(PipelineJob job, List<String> studies) throws IOException, SQLException
+        {
+            assert 1==1 : "place to put breakpoint";
+        }
+
+        // TODO don't hard code the custom queries, generate the "upsert" statement using schema meta-data
+        abstract Parameter.ParameterMap getParameterMap() throws SQLException;
+
+        @Override
+        int copyFrom(Container c, User user, DataIteratorContext context, DataIteratorBuilder from, DataLoader dl) throws IOException, BatchValidationException, SQLException
+        {
+            assert this.getTargetSchema().getParts().size()==1;
+            DbSchema targetSchema = DbSchema.get(this.getTargetSchema().getName());
+            TableInfo targetTableInfo = targetSchema.getTable(getTargetQuery());
+
+            // non-merge case
+            if (context.getInsertOption() == QueryUpdateService.InsertOption.MERGE && null != targetTableInfo)
+            {
+                if (!(new TableSelector(targetTableInfo).exists()))
+                {
+                    context.setInsertOption(QueryUpdateService.InsertOption.IMPORT);
+                    return super.copyFrom(c,user,context,from,dl);
+                }
+            }
+
+            StandardETL etl = StandardETL.forInsert(targetTableInfo, from, c, user, context);
+            //DataIteratorBuilder insert = ((UpdateableTableInfo)targetTableInfo).persistRows(etl, context);
+            DataIterator insert = new _StatementDataIterator(etl.getDataIterator(context),getParameterMap(),context);
+            Pump pump = new Pump(insert, context);
+            pump.setProgress(new ListImportProgress()
+            {
+                @Override
+                public void setTotalRows(int rows)
+                {
+
+                }
+
+                @Override
+                public void setCurrentRow(int currentRow)
+                {
+                    if (dl.checkInterrupted())
+                        throw new CancelledException();
+                }
+            });
+            pump.run();
+            return pump.getRowCount();
+        }
+    }
+
+
+    static class ExpSample2FileInfo extends CustomMergeCopyConfig
+    {
+        ExpSample2FileInfo(String table)
+        {
+            super(table);
+        }
+
+        @Override
+        Parameter.ParameterMap getParameterMap() throws SQLException
+        {
+            DbSchema targetSchema = DbSchema.get(this.getTargetSchema().getName());
+            TableInfo targetTableInfo = targetSchema.getTable(getTargetQuery());
+
+            Parameter expsample_accession = new Parameter("expsample_accession", JdbcType.VARCHAR);
+            Parameter file_info_id = new Parameter("file_info_id", JdbcType.INTEGER);
+            Parameter experiment_accession = new Parameter("experiment_accession", JdbcType.VARCHAR);
+            Parameter data_format = new Parameter("data_format", JdbcType.VARCHAR);
+            Parameter result_schema = new Parameter("result_schema", JdbcType.VARCHAR);
+            SQLFragment insert = new SQLFragment(
+                "INSERT INTO immport.expsample_2_file_info (expsample_accession, file_info_id, experiment_accession, data_format, result_schema)\n" +
+                "SELECT ?, ?, ?, ?, ?\n",
+                expsample_accession, file_info_id, experiment_accession, data_format, result_schema);
+            SQLFragment update = new SQLFragment("UPDATE immport.expsample_2_file_info SET expsample_accession=?, file_info_id=?, experiment_accession=?, data_format=?, result_schema=?\n" +
+                "WHERE expsample_accession=? AND file_info_id=?\n",
+                expsample_accession, file_info_id, experiment_accession, data_format, result_schema, expsample_accession, file_info_id);
+            SQLFragment sqlf = new SQLFragment();
+            sqlf.append("WITH __upsert__ AS (").append(update).append(" RETURNING *) ").append(insert).append(" WHERE NOT EXISTS (SELECT * FROM __upsert__)");
+            return new Parameter.ParameterMap(targetSchema.getScope(), sqlf, (Map<String,String>)null);
+        }
+    }
+
+    static class ExpSample2Reagent extends CustomMergeCopyConfig
+    {
+        ExpSample2Reagent(String table)
+        {
+            super(table);
+        }
+
+        @Override
+        Parameter.ParameterMap getParameterMap() throws SQLException
+        {
+            DbSchema targetSchema = DbSchema.get(this.getTargetSchema().getName());
+            TableInfo targetTableInfo = targetSchema.getTable(getTargetQuery());
+
+            Parameter expsample_accession = new Parameter("expsample_accession", JdbcType.VARCHAR);
+            Parameter reagent_accession = new Parameter("reagent_accession", JdbcType.VARCHAR);
+            Parameter experiment_accession = new Parameter("experiment_accession", JdbcType.VARCHAR);
+            SQLFragment insert = new SQLFragment(
+                    "INSERT INTO immport.expsample_2_file_info (expsample_accession, reagent_accession, experiment_accession)\n" +
+                            "SELECT ?, ?, ?, ?, ?\n",
+                    expsample_accession, reagent_accession, experiment_accession);
+            SQLFragment update = new SQLFragment("UPDATE immport.expsample_2_file_info SET expsample_accession=?, reagent_accession=?, experiment_accession=?\n" +
+                    "WHERE expsample_accession=? AND reagent_accession=?\n",
+                    expsample_accession, reagent_accession, experiment_accession, expsample_accession, reagent_accession);
+            SQLFragment sqlf = new SQLFragment();
+            sqlf.append("WITH __upsert__ AS (").append(update).append(" RETURNING *) ").append(insert).append(" WHERE NOT EXISTS (SELECT * FROM __upsert__)");
+            return new Parameter.ParameterMap(targetSchema.getScope(), sqlf, (Map<String,String>)null);
+        }
+    }
+
+    static class ExpSample2Treatment extends CustomMergeCopyConfig
+    {
+        ExpSample2Treatment(String table)
+        {
+            super(table);
+        }
+
+        @Override
+        Parameter.ParameterMap getParameterMap() throws SQLException
+        {
+            DbSchema targetSchema = DbSchema.get(this.getTargetSchema().getName());
+            TableInfo targetTableInfo = targetSchema.getTable(getTargetQuery());
+
+            Parameter expsample_accession = new Parameter("expsample_accession", JdbcType.VARCHAR);
+            Parameter treatment_accession = new Parameter("treatment_accession", JdbcType.VARCHAR);
+            Parameter experiment_accession = new Parameter("experiment_accession", JdbcType.VARCHAR);
+            SQLFragment insert = new SQLFragment(
+                    "INSERT INTO immport.expsample_2_file_info (expsample_accession, treatment_accession, experiment_accession)\n" +
+                            "SELECT ?, ?, ?, ?, ?\n",
+                    expsample_accession, treatment_accession, experiment_accession);
+            SQLFragment update = new SQLFragment("UPDATE immport.expsample_2_file_info SET expsample_accession=?, treatment_accession=?, experiment_accession=?\n" +
+                    "WHERE expsample_accession=? AND treatment_accession=?\n",
+                    expsample_accession, treatment_accession, experiment_accession, expsample_accession, treatment_accession);
+            SQLFragment sqlf = new SQLFragment();
+            sqlf.append("WITH __upsert__ AS (").append(update).append(" RETURNING *) ").append(insert).append(" WHERE NOT EXISTS (SELECT * FROM __upsert__)");
+            return new Parameter.ParameterMap(targetSchema.getScope(), sqlf, (Map<String,String>)null);
+        }
+    }
+
+    static class _StatementDataIterator extends StatementDataIterator
+    {
+        _StatementDataIterator(DataIterator data, @Nullable Parameter.ParameterMap map, DataIteratorContext context)
+        {
+            super(data,map,context);
         }
     }
 
@@ -381,7 +522,8 @@ public class DataLoader extends PipelineJob
                 return select;
 
             // OK wrapp the data iterator with a wrapper, that adds the "restricted" column;
-            DataIteratorBuilder dib = new DataIteratorBuilder()
+            DataIteratorBuilder dib;
+            dib = new DataIteratorBuilder()
             {
                 @Override
                 public DataIterator getDataIterator(DataIteratorContext context)
@@ -406,17 +548,48 @@ public class DataLoader extends PipelineJob
             super(table);
         }
 
+        BiosampleCopyConfig(String table, QueryUpdateService.InsertOption option)
+        {
+            super(table, option);
+        }
+
+        @Override
+        DataIteratorBuilder selectFromSource(DataLoader dl, DataIteratorContext context, @Nullable FileObject dir, Logger log) throws SQLException, IOException
+        {
+            return super.selectFromSource(dl, context, dir, log);
+        }
+
         @Override
         public void deleteFromTarget(PipelineJob job, List<String> studies) throws IOException, SQLException
         {
             DbSchema targetSchema = DbSchema.get(getTargetSchema().getName());
+            TableInfo targetTableInfo = targetSchema.getTable(getTargetQuery());
 
             SQLFragment deleteSql = new SQLFragment();
-            deleteSql.append(
-                    "DELETE FROM " + getTargetSchema().getName() + "." + getTargetQuery() + "\n" +
-                    "WHERE biosample_accession IN (SELECT biosample_accession FROM " + getTargetSchema().getName() + ".biosample WHERE study_accession ");
-            targetSchema.getSqlDialect().appendInClauseSql(deleteSql, studies);
-            deleteSql.append(")");
+
+            if (null != targetTableInfo.getColumn("biosample_accession"))
+            {
+                deleteSql.append(
+                        "DELETE FROM " + getTargetSchema().getName() + "." + getTargetQuery() + "\n" +
+                                "WHERE biosample_accession IN (SELECT biosample_accession FROM " + getTargetSchema().getName() + ".biosample WHERE study_accession ");
+                targetSchema.getSqlDialect().appendInClauseSql(deleteSql, studies);
+                deleteSql.append(")");
+            }
+            else if (null != targetTableInfo.getColumn("expsample_accession"))
+            {
+                deleteSql.append(
+                        "DELETE FROM " + getTargetSchema().getName() + "." + getTargetQuery() + "\n" +
+                        "WHERE expsample_accession IN \n" +
+                        "  (SELECT biosample_2_expsample.expsample_accession FROM " + getTargetSchema().getName() + ".biosample \n" +
+                        "    INNER JOIN " + getTargetSchema().getName() + ".biosample_2_expsample ON biosample.biosample_accession=biosample_2_expsample.biosample_accession\n" +
+                        "    WHERE biosample.study_accession ");
+                targetSchema.getSqlDialect().appendInClauseSql(deleteSql, studies);
+                deleteSql.append(")");
+            }
+            else
+            {
+                throw new IllegalStateException("could not find biosample_accession or expsample_accession");
+            }
 
             int rows = new SqlExecutor(targetSchema).execute(deleteSql);
             job.info("" + rows + " " + (rows == 1 ? "row" : "rows") + " deleted from " + getTargetQuery());
@@ -500,11 +673,10 @@ public class DataLoader extends PipelineJob
         new SharedCopyConfig("experiment"),
         new SharedCopyConfig("expsample"),
         new SharedCopyConfig("file_info"),
-        new SharedCopyConfig("protocol"), //, "protocol", "protocol", true),             //       protocol_file is BINARY
+        new SharedCopyConfig("protocol"),
         new SharedCopyConfig("reagent"),
-        new SharedCopyConfig("treatment", QueryUpdateService.InsertOption.MERGE),   // TODO bug duplicate treatments in mysql archive
+        new SharedCopyConfig("treatment"),
         new StudyCopyConfig("adverse_event"),
-//        new SharedCopyConfig("analyte"),
         new StudyCopyConfig("assessment"),
         new SharedCopyConfig("control_sample"),
         new SharedCopyConfig("expsample_mbaa_detail"),
@@ -553,26 +725,21 @@ public class DataLoader extends PipelineJob
         new BiosampleCopyConfig("biosample_2_expsample"),
         new BiosampleCopyConfig("biosample_2_protocol"),
         new BiosampleCopyConfig("biosample_2_treatment"),
-//      there seems to be one mystery protocol in here
         new SharedCopyConfig("experiment_2_protocol"),
-//          new HipcCopyConfig(
-//                "SELECT * FROM experiment_2_protocol WHERE protocol_accession IN (select protocol_accession from protocol)",
-//                "experiment_2_protocol",
-//                "experiment_2_protocol", false),
-        new SharedCopyConfig("expsample_2_file_info"),
-        new SharedCopyConfig("expsample_2_reagent"),
+        new ExpSample2FileInfo("expsample_2_file_info"),
+        new ExpSample2Reagent("expsample_2_reagent"),
         new StudyCopyConfig("study_2_protocol"),
         new SharedCopyConfig("subject_2_protocol"),
         new SharedCopyConfig("control_sample_2_file_info"),
-        new SharedCopyConfig("expsample_2_treatment"),
+        new ExpSample2Treatment("expsample_2_treatment"),
         new ArmCopyConfig("planned_visit_2_arm"),
         new SharedCopyConfig("reagent_2_fcs_marker"),
         new SharedCopyConfig("standard_curve_2_file_info"),
         new StudyCopyConfig("study_2_panel"),
-        new SharedCopyConfig("reagent_set_2_reagent"), //ERROR: duplicate key value violates unique constraint "reagent_set_2_reagent_pkey"
+        new SharedCopyConfig("reagent_set_2_reagent"),
 
         // this is basically a materialized view, database->database copy
-        new CopyConfig("immport", "q_subject_2_study", "immport", "subject_2_study")
+        new CopyConfig("immport", "q_subject_2_study", "immport", "subject_2_study", QueryUpdateService.InsertOption.IMPORT)
     };
 
 
@@ -628,7 +795,7 @@ public class DataLoader extends PipelineJob
         DbSchema targetSchema = DbSchema.get(config.getTargetSchema().getName());
 
         DataIteratorContext context = new DataIteratorContext();
-        context.setInsertOption(QueryUpdateService.InsertOption.IMPORT);
+        context.setInsertOption(config.getInsertOption());
         context.setFailFast(true);
 
         assert !targetSchema.getScope().isTransactionActive();
@@ -760,7 +927,7 @@ public class DataLoader extends PipelineJob
             }
             catch (SQLException | DataAccessException x)
             {
-                error("deleting from " + config.getTargetQuery() + "\n\t" + x.getMessage());
+                error("deleting from " + config.getTargetQuery() + "\n\t" + x.getMessage(), x);
             }
         }
 
@@ -775,7 +942,7 @@ public class DataLoader extends PipelineJob
             }
             catch (SQLException | DataAccessException x)
             {
-                error("copying to " + config.getTargetQuery() + "\n\t" + x.getMessage());
+                error("copying to " + config.getTargetQuery() + "\n\t" + x.getMessage(), x);
             }
         }
         setStatus(TaskStatus.running, "DONE copying");
@@ -790,24 +957,6 @@ public class DataLoader extends PipelineJob
 
         return super.setStatus(status, info);
     }
-
-
-    static void log(@NotNull PrintWriter log, @NotNull String msg)
-    {
-        log.println(DateUtil.toISO(System.currentTimeMillis()) + " " + msg);
-        _log.debug(msg);
-    }
-
-
-    static void error(@NotNull PrintWriter log, @NotNull String msg)
-    {
-        if (msg.startsWith("ERROR"))
-            log.println(msg);
-        else
-            log.println("ERROR: " + msg);
-        _log.warn(msg);
-    }
-
 
 
     // DataIterator Helpers
@@ -992,11 +1141,25 @@ public class DataLoader extends PipelineJob
         loadFromArchive();
         if (checkInterrupted())
             throw new CancelledException();
+        if (CoreSchema.getInstance().getSqlDialect().isPostgreSQL())
+        {
+            try
+            {
+                setStatus(TaskStatus.running, "VACUUM ANALYZE");
+                info("running VACUUM ANALYZE");
+                new SqlExecutor(CoreSchema.getInstance().getScope()).execute("VACUUM ANALYZE");
+            }
+            catch (Exception x)
+            {
+                warn(x.getMessage());
+            }
+        }
         setStatus(TaskStatus.running, "Adding studies to full text index");
         ImmPortDocumentProvider.reindex();
         if (checkInterrupted())
             throw new CancelledException();
-        setStatus(PipelineJob.TaskStatus.complete);
+        info("COMPLETE");
+        setStatus(PipelineJob.TaskStatus.complete, "Complete");
     }
 }
 

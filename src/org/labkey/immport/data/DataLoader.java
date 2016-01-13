@@ -76,7 +76,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintWriter;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -298,22 +297,11 @@ public class DataLoader extends PipelineJob
 
 
     // hand-written for postgres performance
-    static abstract class CustomMergeCopyConfig extends ImmPortCopyConfig
+    static abstract class CustomMergeCopyConfig extends BiosampleCopyConfig
     {
         CustomMergeCopyConfig(String table)
         {
             super(table, QueryUpdateService.InsertOption.MERGE);
-        }
-
-        CustomMergeCopyConfig(String table, QueryUpdateService.InsertOption option)
-        {
-            super(table, option);
-        }
-
-        @Override
-        public void deleteFromTarget(PipelineJob job, List<String> studies) throws IOException, SQLException
-        {
-            assert 1==1 : "place to put breakpoint";
         }
 
         // TODO don't hard code the custom queries, generate the "upsert" statement using schema meta-data
@@ -410,7 +398,7 @@ public class DataLoader extends PipelineJob
             Parameter experiment_accession = new Parameter("experiment_accession", JdbcType.VARCHAR);
             SQLFragment insert = new SQLFragment(
                     "INSERT INTO immport.expsample_2_file_info (expsample_accession, reagent_accession, experiment_accession)\n" +
-                            "SELECT ?, ?, ?, ?, ?\n",
+                            "SELECT ?, ?, ?\n",
                     expsample_accession, reagent_accession, experiment_accession);
             SQLFragment update = new SQLFragment("UPDATE immport.expsample_2_file_info SET expsample_accession=?, reagent_accession=?, experiment_accession=?\n" +
                     "WHERE expsample_accession=? AND reagent_accession=?\n",
@@ -439,7 +427,7 @@ public class DataLoader extends PipelineJob
             Parameter experiment_accession = new Parameter("experiment_accession", JdbcType.VARCHAR);
             SQLFragment insert = new SQLFragment(
                     "INSERT INTO immport.expsample_2_file_info (expsample_accession, treatment_accession, experiment_accession)\n" +
-                            "SELECT ?, ?, ?, ?, ?\n",
+                            "SELECT ?, ?, ?\n",
                     expsample_accession, treatment_accession, experiment_accession);
             SQLFragment update = new SQLFragment("UPDATE immport.expsample_2_file_info SET expsample_accession=?, treatment_accession=?, experiment_accession=?\n" +
                     "WHERE expsample_accession=? AND treatment_accession=?\n",

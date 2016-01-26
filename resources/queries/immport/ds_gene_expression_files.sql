@@ -26,46 +26,46 @@ FROM (
   file_link,
   geo_link
   FROM (
-    -- Both in GEF and GEO
+    -- Both in q_GEF and q_GEO
     SELECT
-    GEF.expsample_accession AS gef_es,
-    GEF.name AS gef_name,
-    GEF.file_link,
-    GEO.expsample_accession AS gel_es,
-    GEO.name AS gel_name,
-    GEO.geo_link,
-    FROM GEF INNER JOIN GEO ON GEF.name = GEO.name
-                                       AND GEF.expsample_accession = GEO.expsample_accession
+    q_GEF.expsample_accession AS gef_es,
+    q_GEF.name AS gef_name,
+    q_GEF.file_link,
+    q_GEO.expsample_accession AS gel_es,
+    q_GEO.name AS gel_name,
+    q_GEO.geo_link,
+    FROM q_GEF INNER JOIN q_GEO ON q_GEF.name = q_GEO.name
+                                       AND q_GEF.expsample_accession = q_GEO.expsample_accession
 
     UNION ALL 
    
-    -- Only on GEF
+    -- Only on q_GEF
     SELECT
-    GEF.expsample_accession AS gef_es,
-    GEF.name AS gef_name,
-    GEF.file_link,
+    q_GEF.expsample_accession AS gef_es,
+    q_GEF.name AS gef_name,
+    q_GEF.file_link,
     CAST( NULL AS VARCHAR(50)),
     CAST( NULL AS VARCHAR(50)),
     CAST( NULL AS VARCHAR(50))
     FROM
-    GEF
-    WHERE NOT EXISTS ( SELECT * FROM GEO WHERE GEF.name = GEO.name
-                                                 AND GEF.expsample_accession = GEO.expsample_accession)
+    q_GEF
+    WHERE NOT EXISTS ( SELECT * FROM q_GEO WHERE q_GEF.name = q_GEO.name
+                                                 AND q_GEF.expsample_accession = q_GEO.expsample_accession)
 
     UNION ALL 
 
-    -- Only on GEO
+    -- Only on q_GEO
     SELECT
     CAST( NULL AS VARCHAR(50)),
     CAST( NULL AS VARCHAR(50)),
     CAST( NULL AS VARCHAR(50)),
-    GEO.expsample_accession AS gel_es,
-    GEO.name AS gel_name,
-    GEO.geo_link
+    q_GEO.expsample_accession AS gel_es,
+    q_GEO.name AS gel_name,
+    q_GEO.geo_link
     FROM
-    GEO
-    WHERE NOT EXISTS ( SELECT * FROM GEF WHERE GEF.name = GEO.name
-                                                 AND GEF.expsample_accession = GEO.expsample_accession)
+    q_GEO
+    WHERE NOT EXISTS ( SELECT * FROM q_GEF WHERE q_GEF.name = q_GEO.name
+                                                 AND q_GEF.expsample_accession = q_GEO.expsample_accession)
   ) AS ge_links
 ) AS ge_links,
 biosample, biosample_2_expsample, arm_2_subject, arm_or_cohort

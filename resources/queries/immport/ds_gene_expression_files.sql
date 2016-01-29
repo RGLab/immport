@@ -26,46 +26,15 @@ FROM (
   file_link,
   geo_link
   FROM (
-    -- Both in q_GEF and q_GEO
     SELECT
     q_GEF.expsample_accession AS gef_es,
     q_GEF.name AS gef_name,
     q_GEF.file_link,
-    q_GEO.expsample_accession AS gel_es,
-    q_GEO.name AS gel_name,
-    q_GEO.geo_link,
-    FROM q_GEF INNER JOIN q_GEO ON q_GEF.name = q_GEO.name
-                                       AND q_GEF.expsample_accession = q_GEO.expsample_accession
-
-    UNION ALL 
-   
-    -- Only on q_GEF
-    SELECT
-    q_GEF.expsample_accession AS gef_es,
-    q_GEF.name AS gef_name,
-    q_GEF.file_link,
-    CAST( NULL AS VARCHAR(50)),
-    CAST( NULL AS VARCHAR(50)),
-    CAST( NULL AS VARCHAR(50))
-    FROM
-    q_GEF
-    WHERE NOT EXISTS ( SELECT * FROM q_GEO WHERE q_GEF.name = q_GEO.name
-                                                 AND q_GEF.expsample_accession = q_GEO.expsample_accession)
-
-    UNION ALL 
-
-    -- Only on q_GEO
-    SELECT
-    CAST( NULL AS VARCHAR(50)),
-    CAST( NULL AS VARCHAR(50)),
-    CAST( NULL AS VARCHAR(50)),
     q_GEO.expsample_accession AS gel_es,
     q_GEO.name AS gel_name,
     q_GEO.geo_link
-    FROM
-    q_GEO
-    WHERE NOT EXISTS ( SELECT * FROM q_GEF WHERE q_GEF.name = q_GEO.name
-                                                 AND q_GEF.expsample_accession = q_GEO.expsample_accession)
+    FROM q_GEF FULL OUTER JOIN q_GEO ON q_GEF.name = q_GEO.name
+                                    AND q_GEF.expsample_accession = q_GEO.expsample_accession
   ) AS ge_links
 ) AS ge_links,
 biosample, biosample_2_expsample, arm_2_subject, arm_or_cohort

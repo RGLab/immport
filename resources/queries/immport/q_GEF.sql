@@ -2,7 +2,7 @@ SELECT
   regexp_replace (file_info.name, '.CEL$', '', 'g') AS name,
   purpose,
   expsample_2_file_info.expsample_accession,
-  '/filecontent/Studies/' || study_accession || '/sendFile.view?fileName=rawdata/gene_expression/' || file_info.name AS file_link,
+  '/_webdav/Studies/' || study_accession || '/%40files/rawdata/gene_expression/' || file_info.name AS file_link,
   study_accession
 FROM
   file_info, expsample_2_file_info,

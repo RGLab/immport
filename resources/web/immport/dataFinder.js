@@ -718,8 +718,18 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
                     continue;
                 $scope._clearFilter(d);
             }
+
             if (updateCounts)
-                $scope.updateCountsAsync();
+            {
+                if ($scope.searchTerms)
+                {
+                    $scope.searchTerms = null;
+                    $scope.onSearchTermsChanged();
+                }
+                else {
+                    $scope.updateCountsAsync();
+                }
+            }
             $scope.$broadcast("filterSelectionCleared", false);
         };
 

@@ -718,8 +718,18 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
                     continue;
                 $scope._clearFilter(d);
             }
+
             if (updateCounts)
-                $scope.updateCountsAsync();
+            {
+                if ($scope.searchTerms)
+                {
+                    $scope.searchTerms = null;
+                    $scope.onSearchTermsChanged();
+                }
+                else {
+                    $scope.updateCountsAsync();
+                }
+            }
             $scope.$broadcast("filterSelectionCleared", false);
         };
 
@@ -1228,9 +1238,8 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
                     containers.push(study.containerId);
             }
 
-            if (containers.length == 0 || containers.length == $scope.loaded_study_list.length)
+            if (containers.length == 0)
             {
-                // Delete the shared container filter if all loaded_studies are selected
                 LABKEY.Ajax.request({
                     url: LABKEY.ActionURL.buildURL('study-shared', 'sharedStudyContainerFilter.api'),
                     method: 'DELETE'

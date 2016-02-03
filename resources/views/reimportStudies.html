@@ -59,7 +59,8 @@ function FORM_onSubmit()
     var studies = [];
     $("INPUT.study_accession_checkbox").toArray().forEach(function(el)
     {
-        studies.push(el.value);
+        if(el.checked)
+          studies.push(el.value);
     });
     if (studies.length > 0)
         importStudies(studies);

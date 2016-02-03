@@ -22,7 +22,6 @@ biosample.study_time_t0_event_specify,
 biosample.study_accession,
 arm_or_cohort.arm_accession,
 arm_or_cohort.name AS arm_name
-<<<<<<< HEAD
 FROM (
   SELECT
   (CASE WHEN (gef_name IS NULL OR gef_name = '') THEN geo_name ELSE gef_name END) AS name,

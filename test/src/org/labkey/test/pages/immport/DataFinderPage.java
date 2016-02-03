@@ -289,6 +289,8 @@ public class DataFinderPage extends LabKeyPage
             {
                 if (value.equals(dimension.getSummaryLabel()) || value.equals(dimension.getCaption()))
                     return dimension;
+                if (value.equalsIgnoreCase("participants"))
+                    return Dimension.SUBJECTS;
             }
 
             throw new IllegalArgumentException("No such dimension: " + value);

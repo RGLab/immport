@@ -21,7 +21,7 @@ arm_or_cohort.name AS arm_name
 FROM(
   SELECT
   name,
-  purpose
+  IFDEFINED(purpose) AS purpose,
   expsample_accession,
   FROM
   file_info, expsample_2_file_info
@@ -30,7 +30,7 @@ FROM(
   file_info.purpose = 'Gene expression result'
   UNION
   SELECT
-  'GEO link' AS purpose
+  'GEO link' AS purpose,
   repository_accession AS name,
   expsample_accession
   FROM

@@ -35,12 +35,10 @@ To load new ImmPort (archive)<br>
 <%=textLink("Public/Restricted Studies", new ActionURL(ImmPortController.RestrictedStudiesAction.class, c))%>
 </p>
 <p>
-To create the ImmPort mega study<br>
-<%=textLink("Copy Datasets (ALL)", new ActionURL("dataintegration", "begin", c))%>
+<%=textLink("Copy datasets for one study in this folder", new ActionURL("immport", "copyImmPortStudy", c))%>
 </p>
 <p>
-To create a single study<br>
-<%=textLink("Copy Datasets for One Study", new ActionURL("immport", "copyImmPortStudy", c))%>
+<%=textLink("Copy datasets for multiple child studies", new ActionURL("immport", "reimportStudies", c))%>
 </p>
 <p>
 To create a gender subject_groups<br>

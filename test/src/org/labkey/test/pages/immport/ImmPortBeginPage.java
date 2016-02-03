@@ -57,16 +57,9 @@ public class ImmPortBeginPage extends LabKeyPage
         return new LabKeyPage(_test);
     }
 
-    public LabKeyPage copyDatasetsForAllStudies()
-    {
-        _test.clickAndWait(Locator.linkWithText("Copy Datasets (All)"));
-
-        return new LabKeyPage(_test);
-    }
-
     public CopyImmPortStudyPage copyDatasetsForOneStudy()
     {
-        _test.clickAndWait(Locator.linkWithText("Copy Datasets for One Study"));
+        _test.clickAndWait(Locator.linkWithText("Copy datasets for one study in this folder"));
 
         return new CopyImmPortStudyPage(_test);
     }

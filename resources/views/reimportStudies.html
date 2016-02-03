@@ -1,0 +1,112 @@
+<div id="reimportDiv">
+
+</div>
+
+
+<script>
+var EXT = Ext4||Ext;
+var $ = $||jQuery;
+var h = LABKEY.Utils.encodeHtml;
+
+
+LABKEY.Utils.onReady(function()
+{
+    function onFailure(errorInfo, options, responseObj)
+    {
+        if (errorInfo && errorInfo.exception)
+            alert("Failure: " + errorInfo.exception);
+        else
+            alert("Failure: " + responseObj.statusText);
+    }
+
+    function onSuccess(data)
+    {
+        var studies = [];
+        data.rows.forEach(function(row){
+            var study = row.Label;
+            if (study.substring(0,3) == 'SDY')
+                studies.push(study);
+        });
+        renderPage(studies);
+    }
+
+    LABKEY.Query.selectRows({
+        schemaName: 'study',
+        queryName: 'StudyProperties',
+        columns: ['Label'],
+        success: onSuccess,
+        failure: onFailure
+    });
+});
+
+
+function renderPage(studies)
+{
+    var html = [];
+//    html.push("<form onsubmit='return FORM_onSubmit();'>");
+    html.push('<input onchange="return ALL_onChange(this.checked)" class=all_checkbox type=checkbox value="ALL">ALL<br>');
+    studies.forEach(function(study){
+            html.push('<input class="study_accession_checkbox" type=checkbox value="' + h(study) + '">' + h(study) + '<br>');
+    });
+    html.push('<input type=submit value="Import Studies" onclick="return FORM_onSubmit();">');
+//    html.push("</form>");
+    $('#reimportDiv').html(html.join(''));
+}
+
+
+function FORM_onSubmit()
+{
+    var studies = [];
+    $("INPUT.study_accession_checkbox").toArray().forEach(function(el)
+    {
+        studies.push(el.value);
+    });
+    if (studies.length > 0)
+        importStudies(studies);
+    return false;
+}
+
+
+function importStudies(studies)
+{
+    var path = LABKEY.ActionURL.getContainer();
+
+    var count = studies.length;
+
+    studies.forEach(function(study){
+        var url = LABKEY.ActionURL.buildURL("dataintegration","runTransform",path+'/'+study);
+        EXT.Ajax.request({
+            url: url,
+            params:
+            {
+                "$STUDY": study,
+                "transformId": "{ImmPort}/immportReplaceOneStudy"
+            },
+            success: function()
+            {
+                count--;
+                if (count == 0)
+                    window.location = LABKEY.ActionURL.buildURL("pipeline-status","showList","/");
+            },
+            failure:LABKEY.Utils.getCallbackWrapper(null,window,true)
+        });
+        return false;
+    });
+}
+
+function ALL_onChange(value)
+{
+    $("INPUT.study_accession_checkbox").prop('checked', value);
+}
+
+
+/*
+<form id="replaceResultsForm" action="<%=contextPath%><%=containerPath%>/dataintegration-runTransform.api" method="POST" onsubmit="runNow(this); return false;">
+        <input hidden id="transformId" name="transformId" value="{ImmPort}/immportReplaceOneStudy">
+        <input id="$STUDY" name="$STUDY" value="">
+        <input type="submit" value="copy">
+*/
+
+
+//    }
+</script>

@@ -68,7 +68,6 @@ import org.springframework.web.servlet.ModelAndView;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class ImmPortController extends SpringActionController
@@ -496,7 +495,7 @@ public class ImmPortController extends SpringActionController
         {
             super.validate(fileForm, errors);
             if (StringUtils.isEmpty(fileForm.getFile()))
-                errors.rejectValue("fileName", ERROR_REQUIRED);
+                errors.rejectValue("file", ERROR_REQUIRED);
         }
 
         private ModelAndView notFound(FileForm form)
@@ -518,8 +517,8 @@ public class ImmPortController extends SpringActionController
 
             TableInfo fcs = ds.getTable("FCSFiles");
             SimpleFilter filter = new SimpleFilter(new FieldKey(null,"Name"),form.getFile());
-            filter.addClause(new CompareType.CompareClause(new FieldKey(null,"fcsid"), CompareType.NONBLANK, null));
-            TableSelector sel = new TableSelector(fcs, Collections.singleton("rowid"),
+            filter.addClause(new CompareType.CompareClause(new FieldKey(null,"HasFile"), CompareType.EQUAL, Boolean.TRUE));
+            TableSelector sel = new TableSelector(fcs, PageFlowUtil.set("rowid"),
                     filter,
                     null);
             Integer rowid = sel.getObject(Integer.class);

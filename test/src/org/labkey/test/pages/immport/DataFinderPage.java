@@ -13,6 +13,7 @@ import org.labkey.test.util.LoggedParam;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
 
@@ -215,7 +216,7 @@ public class DataFinderPage extends LabKeyPage
                             "else" +
                             "  return true;");
                 }
-                catch (Exception recheck)
+                catch (WebDriverException recheck)
                 {
                     return false;
                 }
@@ -228,7 +229,7 @@ public class DataFinderPage extends LabKeyPage
             }
         });
     }
-    
+
     public static class Locators
     {
         public static final Locator.CssLocator studyFinder = Locator.css("#dataFinderApp");

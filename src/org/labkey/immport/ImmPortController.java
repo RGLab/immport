@@ -522,6 +522,7 @@ public class ImmPortController extends SpringActionController
                     .append(fcs.getFromSQL("FCS"))
                     .append("\nWHERE name = ? AND uri IS NOT NULL")
                         .add(form.getFile())
+                    .append(" AND datafileurl NOT LIKE '%/attributes.flowdata.xml'")
                     .append("\nGROUP BY {fn lcase(uri)}");
             SqlSelector sel = new SqlSelector(fcs.getSchema(),sql);
             Integer[] rowids = sel.getArray(Integer.class);

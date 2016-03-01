@@ -22,10 +22,12 @@ import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.DbSchemaType;
 import org.labkey.api.data.DbScope;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.SqlExecutor;
+import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.data.dialect.SqlDialect;
@@ -53,20 +55,19 @@ import org.labkey.api.view.NotFoundException;
 import org.labkey.api.view.RedirectException;
 import org.labkey.api.view.VBox;
 import org.labkey.api.view.template.ClientDependency;
+import org.labkey.api.view.template.PageConfig;
 import org.labkey.immport.data.DataLoader;
 import org.labkey.immport.data.StudyBean;
 import org.labkey.immport.data.StudyPersonnelBean;
 import org.labkey.immport.data.StudyPubmedBean;
 import org.labkey.immport.view.DataFinderWebPart;
 import org.labkey.immport.view.StudyIdForm;
-import org.springframework.context.MessageSourceResolvable;
 import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class ImmPortController extends SpringActionController
@@ -77,6 +78,15 @@ public class ImmPortController extends SpringActionController
     public ImmPortController()
     {
         setActionResolver(_actionResolver);
+    }
+
+    @Override
+    public PageConfig defaultPageConfig()
+    {
+        PageConfig config = super.defaultPageConfig();
+        config.addClientDependency(ClientDependency.fromPath("Ext4"));
+        config.addClientDependency(ClientDependency.fromPath("internal/jQuery"));
+        return config;
     }
 
     @RequiresPermission(ReadPermission.class)
@@ -140,7 +150,7 @@ public class ImmPortController extends SpringActionController
             {
                 form.log = _log;
             }
-            return new JspView("/org/labkey/immport/view/importArchive.jsp", form, errors);
+            return new JspView<>("/org/labkey/immport/view/importArchive.jsp", form, errors);
         }
 
         @Override
@@ -159,7 +169,10 @@ public class ImmPortController extends SpringActionController
         @Override
         public URLHelper getSuccessURL(CopyBean o)
         {
-            return PageFlowUtil.urlProvider(PipelineUrls.class).urlBegin(getContainer());
+            PipelineUrls urls = PageFlowUtil.urlProvider(PipelineUrls.class);
+            if (null != urls)
+                return urls.urlBegin(getContainer());
+            return getContainer().getStartURL(getUser());
         }
 
         @Override
@@ -183,14 +196,12 @@ public class ImmPortController extends SpringActionController
         @Override
         public ModelAndView getView(CopyBean form, boolean reshow, BindException errors) throws Exception
         {
-            getPageConfig().addClientDependency(ClientDependency.fromPath("Ext4"));
-
             String log = "";
             String error = "";
             if (reshow)
             {
                 if (errors.hasErrors())
-                    error = getViewContext().getMessage((MessageSourceResolvable)errors.getAllErrors().get(0));
+                    error = getViewContext().getMessage(errors.getAllErrors().get(0));
                 log = "<pre>" + PageFlowUtil.filter(_log, true, true) + "</pre>";
             }
             return new HtmlView("<p class='labkey-error'>" + PageFlowUtil.filter(error) + "</p>" +
@@ -203,7 +214,7 @@ public class ImmPortController extends SpringActionController
         @Override
         public boolean handlePost(CopyBean form, BindException errors) throws Exception
         {
-            DbSchema schema = DbSchema.get("immport");
+            DbSchema schema = DbSchema.get("immport", DbSchemaType.Module);
             new SqlExecutor(schema.getScope()).execute(schema.getSqlDialect().execute(schema,"fn_populateDimensions",new SQLFragment()));
             QueryService.get().cubeDataChanged(getContainer());
             ImmPortDocumentProvider.reindex();
@@ -272,10 +283,10 @@ public class ImmPortController extends SpringActionController
             String studyId = (null==form) ? null : form.studyId;
             if (StringUtils.isEmpty(studyId))
                 throw new NotFoundException("study not specified");
-            StudyBean study = (new TableSelector(DbSchema.get("immport").getTable("study"))).getObject(studyId, StudyBean.class);
+            StudyBean study = (new TableSelector(DbSchema.get("immport", DbSchemaType.Module).getTable("study"))).getObject(studyId, StudyBean.class);
             if (null == study)
                 throw new NotFoundException("study not found: " + form.getStudy());
-            return new JspView<StudyBean>("/org/labkey/immport/view/studycard.jsp", study);
+            return new JspView<>("/org/labkey/immport/view/studycard.jsp", study);
         }
 
         @Override
@@ -309,20 +320,20 @@ public class ImmPortController extends SpringActionController
             if (StringUtils.isEmpty(studyId))
                 throw new NotFoundException("study not specified");
 
-            _study.study = (new TableSelector(DbSchema.get("immport").getTable("study"))).getObject(studyId, StudyBean.class);
+            _study.study = (new TableSelector(DbSchema.get("immport", DbSchemaType.Module).getTable("study"))).getObject(studyId, StudyBean.class);
             if (null == _study.study)
                 throw new NotFoundException("study not found: " + form.getStudy());
             SimpleFilter filter = new SimpleFilter();
             filter.addCondition(new FieldKey(null,"study_accession"),studyId);
-            _study.personnel = (new TableSelector(DbSchema.get("immport").getTable("study_personnel"),filter,null)).getArrayList(StudyPersonnelBean.class);
-            _study.pubmed = (new TableSelector(DbSchema.get("immport").getTable("study_pubmed"),filter,null)).getArrayList(StudyPubmedBean.class);
+            _study.personnel = (new TableSelector(DbSchema.get("immport", DbSchemaType.Module).getTable("study_personnel"),filter,null)).getArrayList(StudyPersonnelBean.class);
+            _study.pubmed = (new TableSelector(DbSchema.get("immport", DbSchemaType.Module).getTable("study_pubmed"),filter,null)).getArrayList(StudyPubmedBean.class);
 
             VBox v = new VBox();
             if (null != _form.getReturnActionURL())
             {
                 v.addView(new HtmlView(PageFlowUtil.textLink("back",_form.getReturnActionURL()) + "<br>"));
             }
-            v.addView(new JspView<StudyDetails>("/org/labkey/immport/view/studydetail.jsp", _study));
+            v.addView(new JspView<>("/org/labkey/immport/view/studydetail.jsp", _study));
             return v;
         }
 
@@ -336,20 +347,20 @@ public class ImmPortController extends SpringActionController
             TableInfo t = null==s ? null : s.getTable("study");
             ActionURL grid = null==t ? null : t.getGridURL(getContainer());
 
-            if (null !=  _form.getReturnActionURL())
+            if (null == _form.getReturnActionURL())
             {
-            }
-            else if (null != grid)
-            {
-                root.addChild("Studies",grid);
-            }
-            else
-            {
-                ActionURL list = new ActionURL("query","executeQuery",getContainer());
-                list.addParameter("schemaName","immport");
-                list.addParameter("query.queryName","study");
-                list.addParameter(".lastFilter", "true");
-                root.addChild("Studies", list);
+                if (null != grid)
+                {
+                    root.addChild("Studies",grid);
+                }
+                else
+                {
+                    ActionURL list = new ActionURL("query","executeQuery",getContainer());
+                    list.addParameter("schemaName","immport");
+                    list.addParameter("query.queryName","study");
+                    list.addParameter(".lastFilter", "true");
+                    root.addChild("Studies", list);
+                }
             }
             root.addChild(_study.study.getStudy_accession());
             return root;
@@ -388,9 +399,6 @@ public class ImmPortController extends SpringActionController
         @Override
         public void validateCommand(StudiesForm target, Errors errors)
         {
-            DbSchema schema = DbSchema.get("immport");
-            if (null == schema)
-                throw new NotFoundException("schmea not found: immport");
         }
 
         @Override
@@ -402,7 +410,7 @@ public class ImmPortController extends SpringActionController
         @Override
         public boolean handlePost(StudiesForm form, BindException errors) throws Exception
         {
-            DbSchema schema = DbSchema.get("immport");
+            DbSchema schema = DbSchema.get("immport", DbSchemaType.Module);
             DbScope scope = schema.getScope();
             SqlDialect d = scope.getSqlDialect();
 
@@ -487,14 +495,16 @@ public class ImmPortController extends SpringActionController
         {
             super.validate(fileForm, errors);
             if (StringUtils.isEmpty(fileForm.getFile()))
-                errors.rejectValue("fileName", ERROR_REQUIRED);
+                errors.rejectValue("file", ERROR_REQUIRED);
         }
 
-        private ModelAndView notFound(FileForm form)
+        private ModelAndView notFound(FileForm form, int count)
         {
             String back = PageFlowUtil.generateBackButton();
 
-            String msg = "No flow file found with this name: " + PageFlowUtil.filter(form.getFile());
+            String msg = 0==count?
+                    "No flow file found (or duplicates were found) with this name: " + PageFlowUtil.filter(form.getFile()) :
+                    "Duplicates were found with this name: " + PageFlowUtil.filter(form.getFile());
 
             return new HtmlView(msg + "<p></p>" + back);
         }
@@ -505,17 +515,21 @@ public class ImmPortController extends SpringActionController
             Container c = getContainer();
             QuerySchema ds = DefaultSchema.get(getUser(), c).getSchema("flow");
             if (null == ds)
-                return notFound(form);
+                return notFound(form, 0);
+
             TableInfo fcs = ds.getTable("FCSFiles");
-            TableSelector sel = new TableSelector(fcs, Collections.singleton("rowid"),
-                    new SimpleFilter(new FieldKey(null,"Name"),form.getFile()),
-                    null);
-            Integer rowid = sel.getObject(Integer.class);
-            if (null == rowid)
-                return notFound(form);
+            SQLFragment sql = new SQLFragment("SELECT MIN(rowid) FROM ")
+                    .append(fcs.getFromSQL("FCS"))
+                    .append("\nWHERE name = ? AND uri IS NOT NULL")
+                        .add(form.getFile())
+                    .append(" AND datafileurl NOT LIKE '%/attributes.flowdata.xml'")
+                    .append("\nGROUP BY {fn lcase(uri)}");
+            SqlSelector sel = new SqlSelector(fcs.getSchema(),sql);
+            Integer[] rowids = sel.getArray(Integer.class);
+            if (1 != rowids.length)
+                return notFound(form, rowids.length);
 
-
-            ActionURL flow = new ActionURL("flow-well","showWell",c).addParameter("wellId", rowid);
+            ActionURL flow = new ActionURL("flow-well","showWell",c).addParameter("wellId", rowids[0]);
             throw new RedirectException(flow);
         }
 

@@ -13,6 +13,7 @@ import org.labkey.test.util.LoggedParam;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
 
@@ -215,7 +216,7 @@ public class DataFinderPage extends LabKeyPage
                             "else" +
                             "  return true;");
                 }
-                catch (Exception recheck)
+                catch (WebDriverException recheck)
                 {
                     return false;
                 }
@@ -228,7 +229,7 @@ public class DataFinderPage extends LabKeyPage
             }
         });
     }
-    
+
     public static class Locators
     {
         public static final Locator.CssLocator studyFinder = Locator.css("#dataFinderApp");
@@ -289,6 +290,8 @@ public class DataFinderPage extends LabKeyPage
             {
                 if (value.equals(dimension.getSummaryLabel()) || value.equals(dimension.getCaption()))
                     return dimension;
+                if (value.equalsIgnoreCase("participants"))
+                    return Dimension.SUBJECTS;
             }
 
             throw new IllegalArgumentException("No such dimension: " + value);
@@ -449,9 +452,8 @@ public class DataFinderPage extends LabKeyPage
             List<WebElement> members = findElements(elements.member);
             for (WebElement member : members)
             {
-                String[] parts = member.getText().split("\n");
-                String name = parts[0].trim();
-                Integer count = Integer.valueOf(parts[1].trim());
+                String name = elements.memberName.findElement(member).getText();
+                Integer count = Integer.valueOf(elements.memberCount.findElement(member).getText());
                 countMap.put(name, count);
             }
 
@@ -519,6 +521,7 @@ public class DataFinderPage extends LabKeyPage
             public Locator.CssLocator dimension = Locator.css(".facet-caption > span");
             public Locator.CssLocator member = Locator.css(".member");
             public Locator.CssLocator memberName = Locator.css(".member-name");
+            public Locator.CssLocator memberCount = Locator.css(".member-count");
             public Locator.CssLocator selectedMemberCheck = Locator.css(".member .member-indicator.selected");
             public Locator.CssLocator emptyMemberName = Locator.css(".ng-scope.empty-member .member-name");
             public Locator.CssLocator nonEmptyMemberName = Locator.css(".ng-scope.member:not(.empty-member) .member-name");

@@ -20,7 +20,6 @@ import org.labkey.api.action.FormViewAction;
 import org.labkey.api.action.RedirectAction;
 import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
-import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DbSchemaType;
@@ -28,6 +27,7 @@ import org.labkey.api.data.DbScope;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.SqlExecutor;
+import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.data.dialect.SqlDialect;
@@ -498,11 +498,13 @@ public class ImmPortController extends SpringActionController
                 errors.rejectValue("file", ERROR_REQUIRED);
         }
 
-        private ModelAndView notFound(FileForm form)
+        private ModelAndView notFound(FileForm form, int count)
         {
             String back = PageFlowUtil.generateBackButton();
 
-            String msg = "No flow file found with this name: " + PageFlowUtil.filter(form.getFile());
+            String msg = 0==count?
+                    "No flow file found (or duplicates were found) with this name: " + PageFlowUtil.filter(form.getFile()) :
+                    "Duplicates were found with this name: " + PageFlowUtil.filter(form.getFile());
 
             return new HtmlView(msg + "<p></p>" + back);
         }
@@ -513,20 +515,21 @@ public class ImmPortController extends SpringActionController
             Container c = getContainer();
             QuerySchema ds = DefaultSchema.get(getUser(), c).getSchema("flow");
             if (null == ds)
-                return notFound(form);
+                return notFound(form, 0);
 
             TableInfo fcs = ds.getTable("FCSFiles");
-            SimpleFilter filter = new SimpleFilter(new FieldKey(null,"Name"),form.getFile());
-            filter.addClause(new CompareType.CompareClause(new FieldKey(null,"HasFile"), CompareType.EQUAL, Boolean.TRUE));
-            TableSelector sel = new TableSelector(fcs, PageFlowUtil.set("rowid"),
-                    filter,
-                    null);
-            Integer rowid = sel.getObject(Integer.class);
-            if (null == rowid)
-                return notFound(form);
+            SQLFragment sql = new SQLFragment("SELECT MIN(rowid) FROM ")
+                    .append(fcs.getFromSQL("FCS"))
+                    .append("\nWHERE name = ? AND uri IS NOT NULL")
+                        .add(form.getFile())
+                    .append(" AND datafileurl NOT LIKE '%/attributes.flowdata.xml'")
+                    .append("\nGROUP BY {fn lcase(uri)}");
+            SqlSelector sel = new SqlSelector(fcs.getSchema(),sql);
+            Integer[] rowids = sel.getArray(Integer.class);
+            if (1 != rowids.length)
+                return notFound(form, rowids.length);
 
-
-            ActionURL flow = new ActionURL("flow-well","showWell",c).addParameter("wellId", rowid);
+            ActionURL flow = new ActionURL("flow-well","showWell",c).addParameter("wellId", rowids[0]);
             throw new RedirectException(flow);
         }
 

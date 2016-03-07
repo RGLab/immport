@@ -369,6 +369,7 @@
             <column columnName="value_preferred"/>
             <column columnName="value_reported"/>
             <column columnName="virus_strain"/>
+            <column columnName="virus_strain_preferred"/>
             <column columnName="workspace_id"/>
             <column columnName="file_info_id"/>
         </columns>
@@ -1176,6 +1177,7 @@
             <column columnName="unit_reported"/>
             <column columnName="unit_preferred"/>
             <column columnName="virus_strain"/>
+            <column columnName="virus_strain_preferred"/>
             <column columnName="workspace_id"/>
             <column columnName="file_info_id"/>
         </columns>

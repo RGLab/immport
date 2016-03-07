@@ -8,6 +8,7 @@ PARAMETERS($STUDY VARCHAR DEFAULT NULL)
 SELECT
 file_info.name AS file_info_name,
 file_info.purpose AS file_info_purpose,
+file_info.filesize_bytes as filesize,
 biosample_2_expsample.expsample_accession,
 biosample.biosample_accession,
 biosample.subject_accession || '.' || SUBSTRING(biosample.study_accession,4) as participantid,

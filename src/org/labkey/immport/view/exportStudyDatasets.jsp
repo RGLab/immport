@@ -176,12 +176,14 @@
                     }
                     multi.add(LABKEY.Query.executeSql, {
                         schemaName: 'immport',
-                        sql: 'SELECT ds.filesize as filesize, ds.' + fileCol + ' as filename FROM ' + this.queryPrefix + ds + ' as ds GROUP BY ds.' + fileCol + ', ds.filesize',
+                        sql: 'SELECT ds.filesize as filesize, ds.' + fileCol + ' as filename FROM '
+                            + this.queryPrefix + ds + ' as ds GROUP BY ds.' + fileCol + ', ds.filesize',
                         sort: "ds.filesize",
                         parameters: {
                             $STUDY: this.studies[i]
                         },
                         success: function (details) {fileHandler.call(this, details, ds)},
+                        failure : function(){/*swallow failure*/},
                         scope: this
                     });
                 }
@@ -258,7 +260,9 @@
                     }
                     getGeneExpMatriceSizes(matrices);
 
-                }, scope : this
+                },
+                failure : function(){/*swallow failure*/},
+                scope : this
             });
         }
 

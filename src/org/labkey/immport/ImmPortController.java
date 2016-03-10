@@ -31,6 +31,8 @@ import org.labkey.api.action.SpringActionController;
 import org.labkey.api.data.ColumnHeaderType;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerFilter;
+import org.labkey.api.data.ContainerFilterable;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DbSchemaType;
 import org.labkey.api.data.DbScope;
@@ -542,7 +544,12 @@ public class ImmPortController extends SpringActionController
                         if (matrix.equals("gene_expression_files"))
                         {
                             folder = "exprs_matrices";
-                            matrices = new TableSelector(QueryService.get().getUserSchema(getUser(), container, "assay.ExpressionMatrix.matrix").getTable(test?"SelectedRuns2":"SelectedRuns")).getArrayList(GeneExpressionMatricesBean.class);
+                            SimpleFilter filter = new SimpleFilter();
+                            ContainerFilter cf = new ContainerFilter.CurrentAndSubfolders(getUser());
+                            filter.addClause(cf.createFilterClause(QueryService.get().getUserSchema(getUser(), container, "assay.ExpressionMatrix.matrix").getDbSchema(), FieldKey.fromParts(test?"Container":"Folder/EntityId"), container));
+
+                            TableSelector table = new TableSelector(QueryService.get().getUserSchema(getUser(), container, "assay.ExpressionMatrix.matrix").getTable(test?"SelectedRuns2":"SelectedRuns"), filter, null);
+                            matrices = table.getArrayList(GeneExpressionMatricesBean.class);
                             matrix = "gene_expression_matrices";
                             LOG.info("Number of files found: " + matrices.size());
                         }

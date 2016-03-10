@@ -453,6 +453,9 @@ public class ImmPortController extends SpringActionController
 
                 for (FileBean file : files)
                 {
+                    LOG.info("Adding file to zip");
+                    LOG.info("File study: " + file.getStudy());
+                    LOG.info("File name: " + file.getFileName());
                     if (file.getStudy() == null || file.getFileName() == null)
                         continue;
 
@@ -469,6 +472,8 @@ public class ImmPortController extends SpringActionController
                                 + File.separator + "@files" + File.separator + "rawdata" + File.separator + folder
                                 + File.separator + file.getFileName());
                     }
+
+                    LOG.info("Source file: " + src.getAbsolutePath());
 
                     try (InputStream in = new FileInputStream(src))
                     {
@@ -533,11 +538,13 @@ public class ImmPortController extends SpringActionController
 
                     for (String matrix : form.getMatrices())
                     {
+                        LOG.info("Adding matrix: " + matrix);
                         if (matrix.equals("gene_expression_files"))
                         {
                             folder = "exprs_matrices";
                             matrices = new TableSelector(QueryService.get().getUserSchema(getUser(), container, "assay.ExpressionMatrix.matrix").getTable(test?"SelectedRuns2":"SelectedRuns")).getArrayList(GeneExpressionMatricesBean.class);
                             matrix = "gene_expression_matrices";
+                            LOG.info("Number of files found: " + matrices.size());
                         }
 
                         if(null != matrices)

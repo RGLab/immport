@@ -95,14 +95,17 @@
 
                     for (var i = 0; i < rows.length; i++)
                     {
-                        dataStore.add({
-                            id: rows[i].DataSetId,
-                            name: rows[i].Name,
-                            label: rows[i].Label,
-                            numRows: -1
-                        });
+                        if(rows[i].Name != "HM_InputSamplesQuerySnapshot")
+                        {
+                            dataStore.add({
+                                id: rows[i].DataSetId,
+                                name: rows[i].Name,
+                                label: rows[i].Label,
+                                numRows: -1
+                            });
 
-                        getNumOfRows(rows[i].Name, rows[i].DataSetId);
+                            getNumOfRows(rows[i].Name, rows[i].DataSetId);
+                        }
                     }
                 }, scope : this
             });

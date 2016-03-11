@@ -444,7 +444,6 @@ public class ImmPortController extends SpringActionController
     @Action(ActionType.Export.class)
     public class ExportTablesAction extends ExportAction<ExportTablesForm>
     {
-        boolean test = false;
         private void addToZip(List<? extends FileBean> files, ZipFile zip, String dir, String folder, boolean matrice) throws Exception
         {
             FileContentService fileService = ServiceRegistry.get().getService(FileContentService.class);
@@ -455,9 +454,6 @@ public class ImmPortController extends SpringActionController
 
                 for (FileBean file : files)
                 {
-                    LOG.info("Adding file to zip");
-                    LOG.info("File study: " + file.getStudy());
-                    LOG.info("File name: " + file.getFileName());
                     if (file.getStudy() == null || file.getFileName() == null)
                         continue;
 
@@ -475,7 +471,7 @@ public class ImmPortController extends SpringActionController
                                 + File.separator + file.getFileName());
                     }
 
-                    LOG.info("Source file: " + src.getAbsolutePath());
+                    LOG.info("Adding file to zip: " + src.getAbsolutePath());
 
                     try (InputStream in = new FileInputStream(src))
                     {
@@ -540,19 +536,19 @@ public class ImmPortController extends SpringActionController
 
                     for (String matrix : form.getMatrices())
                     {
-                        LOG.info("Adding matrix: " + matrix);
                         if (matrix.equals("gene_expression_files"))
                         {
                             folder = "exprs_matrices";
+                            matrix = "gene_expression_matrices";
 
                             ContainerFilter cf = new ContainerFilter.CurrentAndSubfolders(getUser());
-                            TableInfo tableInf = QueryService.get().getUserSchema(getUser(), container, "assay.ExpressionMatrix.matrix").getTable(test?"SelectedRuns2":"SelectedRuns");
-                            ((ContainerFilterable)tableInf).setContainerFilter(cf);
-                            TableSelector table = new TableSelector(tableInf);
-                            matrices = table.getArrayList(GeneExpressionMatricesBean.class);
-
-                            matrix = "gene_expression_matrices";
-                            LOG.info("Number of files found: " + matrices.size());
+                            TableInfo tableInf = QueryService.get().getUserSchema(getUser(), container, "assay.ExpressionMatrix.matrix").getTable("SelectedRuns");
+                            if(null != tableInf)
+                            {
+                                ((ContainerFilterable) tableInf).setContainerFilter(cf);
+                                TableSelector table = new TableSelector(tableInf);
+                                matrices = table.getArrayList(GeneExpressionMatricesBean.class);
+                            }
                         }
 
                         if(null != matrices)

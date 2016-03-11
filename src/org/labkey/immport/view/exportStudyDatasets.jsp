@@ -50,7 +50,6 @@
 
     Ext4.onReady(function () {
 
-        this.test = false;
         this.studies = [];
         this.datasets = {};
         this.queryPrefix = "ds_";
@@ -241,7 +240,7 @@
         function getGeneExpMatrices() {
             LABKEY.Query.selectRows({
                 schemaName : 'assay.ExpressionMatrix.matrix',
-                queryName : this.test?'SelectedRuns2':'SelectedRuns',
+                queryName : 'SelectedRuns',
                 includeTotalCount : true,
                 success : function(details) {
                     var record = dataStore.getById(this.datasets["gene_expression_files"].datasetId);
@@ -269,10 +268,10 @@
         function getGeneExpMatriceSizes(matrices) {
             LABKEY.Query.selectRows({
                 schemaName : 'assay.ExpressionMatrix.matrix',
-                queryName : this.test?'OutputDatas2':'OutputDatas',
+                queryName : 'OutputDatas',
                 filters : [LABKEY.Filter.create('data', matrices.join(';'), LABKEY.Filter.Types.IN)],
                 includeTotalCount : true,
-                columns : this.test?"*":"Data, Data/FileSize",
+                columns : "Data, Data/FileSize",
                 success : function(details) {
                     var record = dataStore.getById(this.datasets["gene_expression_files"].datasetId + 'm');
                     var size, totalSize = 0;

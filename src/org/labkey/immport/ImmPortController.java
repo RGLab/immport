@@ -544,15 +544,13 @@ public class ImmPortController extends SpringActionController
                         if (matrix.equals("gene_expression_files"))
                         {
                             folder = "exprs_matrices";
-                            SimpleFilter filter = new SimpleFilter();
-                            ContainerFilter cf = new ContainerFilter.CurrentAndSubfolders(getUser());
-//                            if(test)
-                                filter.addClause(cf.createFilterClause(QueryService.get().getUserSchema(getUser(), container, "assay.ExpressionMatrix.matrix").getDbSchema(), FieldKey.fromParts("Container"), container));
-//                            else
-//                                filter.addClause(cf.createFilterClause(QueryService.get().getUserSchema(getUser(), container, "assay.ExpressionMatrix.matrix").getDbSchema(), FieldKey.fromParts("Folder", "EntityId"), container));
 
-                            TableSelector table = new TableSelector(QueryService.get().getUserSchema(getUser(), container, "assay.ExpressionMatrix.matrix").getTable(test?"SelectedRuns2":"SelectedRuns"), filter, null);
+                            ContainerFilter cf = new ContainerFilter.CurrentAndSubfolders(getUser());
+                            TableInfo tableInf = QueryService.get().getUserSchema(getUser(), container, "assay.ExpressionMatrix.matrix").getTable(test?"SelectedRuns2":"SelectedRuns");
+                            ((ContainerFilterable)tableInf).setContainerFilter(cf);
+                            TableSelector table = new TableSelector(tableInf);
                             matrices = table.getArrayList(GeneExpressionMatricesBean.class);
+
                             matrix = "gene_expression_matrices";
                             LOG.info("Number of files found: " + matrices.size());
                         }

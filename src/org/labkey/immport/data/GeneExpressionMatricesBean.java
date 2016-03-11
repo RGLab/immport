@@ -5,17 +5,17 @@ package org.labkey.immport.data;
  */
 public class GeneExpressionMatricesBean implements FileBean
 {
-    String folder;
+    String Study;
     String download_link;
 
-    public String getFolder()
+    public String getStudy()
     {
-        return folder;
+        return Study;
     }
 
-    public void setFolder(String folder)
+    public void setStudy(String Study)
     {
-        this.folder = folder;
+        this.Study = Study;
     }
 
     public String getDownload_Link()
@@ -32,7 +32,5 @@ public class GeneExpressionMatricesBean implements FileBean
     {
         return this.download_link;
     }
-
-    public String getStudy() { return this.folder; }
 
 }

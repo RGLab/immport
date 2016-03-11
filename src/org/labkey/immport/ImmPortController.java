@@ -546,10 +546,10 @@ public class ImmPortController extends SpringActionController
                             folder = "exprs_matrices";
                             SimpleFilter filter = new SimpleFilter();
                             ContainerFilter cf = new ContainerFilter.CurrentAndSubfolders(getUser());
-                            if(test)
+//                            if(test)
                                 filter.addClause(cf.createFilterClause(QueryService.get().getUserSchema(getUser(), container, "assay.ExpressionMatrix.matrix").getDbSchema(), FieldKey.fromParts("Container"), container));
-                            else
-                                filter.addClause(cf.createFilterClause(QueryService.get().getUserSchema(getUser(), container, "assay.ExpressionMatrix.matrix").getDbSchema(), FieldKey.fromParts("Folder", "EntityId"), container));
+//                            else
+//                                filter.addClause(cf.createFilterClause(QueryService.get().getUserSchema(getUser(), container, "assay.ExpressionMatrix.matrix").getDbSchema(), FieldKey.fromParts("Folder", "EntityId"), container));
 
                             TableSelector table = new TableSelector(QueryService.get().getUserSchema(getUser(), container, "assay.ExpressionMatrix.matrix").getTable(test?"SelectedRuns2":"SelectedRuns"), filter, null);
                             matrices = table.getArrayList(GeneExpressionMatricesBean.class);

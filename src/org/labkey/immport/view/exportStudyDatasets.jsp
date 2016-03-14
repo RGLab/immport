@@ -307,7 +307,7 @@
         // Update file and dataset summary in panel on right hand side
         function updateSummary() {
             if(dataStore) {
-                var datasets = 0, rows = 0, files = 0, filesize = 0, record;
+                var files = 0, filesize = 0, record;
                 for (var i = 0; i < dataStore.getCount(); i++) {
                     record = dataStore.getAt(i);
                     if(record.getData().include) {
@@ -318,10 +318,6 @@
                         if (isMatrixRecord(record)) {
                             files += record.getData(false).files;
                             filesize += Number(record.getData(false).fileSize);
-                        }
-                        else {
-                            datasets++;
-                            rows += record.getData().numRows;
                         }
                     }
                 }
@@ -334,8 +330,6 @@
                     filesize = Math.round(filesize * 100)/100 + ' kB';
 
                 document.getElementById('summaryData').innerHTML =
-                        '<div style="margin-top:4px;">Datasets: ' + datasets + '</div> ' +
-                        '<div style="list-style-type:none;padding-left:1em;margin:4px;">Rows: ' + rows + '</div> ' +
                         '<div>Files: ' + files + '</div> ' +
                         '<div style="list-style-type:none;padding-left:1em;margin:4px;">Size: ' + filesize + '</div>';
             }
@@ -385,9 +379,9 @@
                     }},
                     { header: 'Name',  dataIndex: 'label', flex: 1},
                     { header: 'Type',  dataIndex: 'type', width: 150},
-                    { header: 'Rows', dataIndex: 'numRows', width:100,
+                    { header: 'Rows', dataIndex: 'numRows', width:100, align:'right',
                         renderer: function (v) { return v == -1 ? "<span class=loading-indicator></span>" : v; }},
-                    { header: 'File Size',  dataIndex: 'fileSizeDisplay', width: 100}
+                    { header: 'File Size',  dataIndex: 'fileSizeDisplay', width: 100, align:'right'}
                 ],
                 width: 850,
                 loadMask: true,

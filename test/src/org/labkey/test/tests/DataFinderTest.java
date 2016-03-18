@@ -17,6 +17,7 @@
 package org.labkey.test.tests;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -25,6 +26,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.labkey.api.view.Portal;
 import org.labkey.remoteapi.Command;
 import org.labkey.remoteapi.CommandException;
 import org.labkey.remoteapi.Connection;
@@ -47,6 +49,7 @@ import org.labkey.test.pages.study.OverviewPage;
 import org.labkey.test.util.APIContainerHelper;
 import org.labkey.test.util.AbstractContainerHelper;
 import org.labkey.test.util.DataRegionTable;
+import org.labkey.test.util.FileBrowserHelper;
 import org.labkey.test.util.LogMethod;
 import org.labkey.test.util.PortalHelper;
 import org.labkey.test.util.PostgresOnlyTest;
@@ -58,7 +61,9 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.file.FileSystem;
@@ -73,6 +78,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -690,6 +697,114 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         managePage.deleteGroup(filterName);
     }
 
+    @Test
+    public void testExportDataWithFiles() throws Exception
+    {
+        PortalHelper portalHelper = new PortalHelper(this);
+        List<String> controlFileList = Arrays.asList("Fig7_Compensation Controls_Blue E 530,2f,30 Stained Control.fcs",
+                "Fig7_Compensation Controls_Violet B 450,2f,50 Stained Control.fcs",
+                "Fig7_Compensation Controls_Unstained Control.fcs",
+                "Fig7_Compensation Controls_Red C 670,2f,14 Stained Control.fcs",
+                "Fig7_Compensation Controls_Red A 780,2f,60 Stained Control.fcs",
+                "Fig7_Compensation Controls_Violet A 550,5c,50 Stained Control.fcs",
+                "Fig7_Compensation Controls_Blue A 780,2f,60 Stained Control.fcs",
+                "Fig7_Compensation Controls_Blue B 670LP Stained Control.fcs",
+                "Fig7_Compensation Controls_Blue D 585,2f,42 Stained Control.fcs",
+                "Compensation Controls_Blue A 780,2f,60 Stained Control.fcs",
+                "Compensation Controls_Unstained Control.fcs",
+                "Compensation Controls_Violet A 550,5c,50 Stained Control.fcs",
+                "Compensation Controls_Blue D 585,2f,42 Stained Control.fcs",
+                "Compensation Controls_Red C 670,2f,14 Stained Control.fcs",
+                "Compensation Controls_Blue B 670LP Stained Control.fcs",
+                "Compensation Controls_Red A 780,2f,60 Stained Control.fcs",
+                "Compensation Controls_Violet B 450,2f,50 Stained Control.fcs",
+                "Compensation Controls_Blue E 530,2f,30 Stained Control.fcs");
+        File fl;
+
+        log("Go to study: " + STUDY_SUBFOLDERS[0]);
+        clickFolder(STUDY_SUBFOLDERS[0]);
+
+        List<String> webParts = portalHelper.getWebPartTitles();
+        if(!webParts.contains("Files"))
+        {
+            portalHelper.addWebPart("Files");
+        }
+
+        log("Check to see if an old folder is still there.");
+        try
+        {
+            _fileBrowserHelper.deleteFile("rawdata");
+        }
+        catch(NoSuchElementException nse)
+        {
+            log("No folder is there.");
+        }
+
+// Would be nice to be able to use a pipeline to populate the files.
+// However it doesn't look like export works with pipeline files.
+//        portalHelper.addWebPart("Pipeline Files");
+//        setPipelineRoot(TestFileUtils.getLabKeyRoot() + "/sampledata/HIPCFiles/");
+
+        log("Create the necessary fille folders.");
+        _fileBrowserHelper.createFolder("rawdata");
+        doubleClick(Locator.xpath("//td[@role='gridcell']//span[contains(@style, 'display:')]").withText("rawdata"));
+        _fileBrowserHelper.createFolder("flow_cytometry");
+        doubleClick(Locator.xpath("//td[@role='gridcell']//span[contains(@style, 'display:')]").withText("flow_cytometry"));
+
+        log("Upload the control files.");
+        for(String cntrlFileName : controlFileList)
+        {
+            fl = TestFileUtils.getSampleData("HIPC/downloadFiles/rawdata/flow_cytometry/" + cntrlFileName);
+            _fileBrowserHelper.uploadFile(fl);
+        }
+
+        goToProjectHome();
+        log("Limit export to the one sub folder.");
+        selectOptionByText(Locator.name("studySubsetSelect"), "ImmuneSpace studies");
+        setFormElement(Locator.id("searchTerms"), STUDY_SUBFOLDERS[0]);
+
+        log("Wait until the other study cards are gone.");
+        waitForElementToDisappear(Locator.xpath("//div[contains(@class, 'labkey-study-card')]//span[text()='" + STUDY_SUBFOLDERS[1] + "']"));
+
+        log("Export.");
+        click(Locator.linkWithText("Export Study Datasets"));
+
+        waitForElements(Locator.xpath("//td[@role='gridcell']//div").withText("File"), 2, 30000);
+
+        log("Limit the export to only the fcs control files.");
+        List<WebElement> chkBoxes = Locator.css("div.x4-grid-cell-inner-checkcolumn").findElements(getDriver());
+        chkBoxes.get(chkBoxes.size()-1).click();  // Yes this is bad, but for now the checkbox we are interested in will be at the end of the list.
+
+        log("Download the zip file.");
+        File download = clickAndWaitForDownload(Locator.xpath("//*[@id='downloadBtn']"));
+        log("download file name: " + download.getName());
+
+        log("Look at zip file and make sure the expected files are there.");
+        Set<String> filesInZip = new HashSet<>();
+        try (
+                InputStream is = new FileInputStream(download);
+                ZipInputStream zip = new ZipInputStream(is))
+        {
+            while (zip.available() != 0)
+            {
+                ZipEntry entry = zip.getNextEntry();
+                if (entry != null)
+                    filesInZip.add(entry.getName());
+            }
+        }
+
+        String folder;
+        if(SystemUtils.IS_OS_WINDOWS)
+            folder = "fcs_control_files\\";
+        else
+            folder = "fcs_control_files/";
+
+        for(int j=0; j < controlFileList.size(); j++)
+        {
+            assertTrue("Did not find file: " + controlFileList.get(j), filesInZip.contains(folder + controlFileList.get(j)));
+        }
+
+    }
 
     @LogMethod(quiet = true)
     private void assertCountsSynced(DataFinderPage finder)

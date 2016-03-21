@@ -720,6 +720,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
                 "Compensation Controls_Violet B 450,2f,50 Stained Control.fcs",
                 "Compensation Controls_Blue E 530,2f,30 Stained Control.fcs");
         File fl;
+        boolean createdFolder;
 
         log("Go to study: " + STUDY_SUBFOLDERS[0]);
         clickFolder(STUDY_SUBFOLDERS[0]);
@@ -730,32 +731,49 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
             portalHelper.addWebPart("Files");
         }
 
-        log("Check to see if an old folder is still there.");
+        // Would be nice to be able to use a pipeline to populate the files.
+        // However the export with folder feature was explicitly spec'd to look at @files and does not see the @pipeline.
+
+        log("Check to see if a rawdata folder is there, if not create it.");
         try
         {
-            _fileBrowserHelper.deleteFile("rawdata");
+            _fileBrowserHelper.checkFileBrowserFileCheckbox("rawdata");
         }
         catch(NoSuchElementException nse)
         {
-            log("No folder is there.");
+            log("No rawdata folder is there, going to create it.");
+            _fileBrowserHelper.createFolder("rawdata");
         }
 
-// Would be nice to be able to use a pipeline to populate the files.
-// However it doesn't look like export works with pipeline files.
-//        portalHelper.addWebPart("Pipeline Files");
-//        setPipelineRoot(TestFileUtils.getLabKeyRoot() + "/sampledata/HIPCFiles/");
-
-        log("Create the necessary fille folders.");
-        _fileBrowserHelper.createFolder("rawdata");
         doubleClick(Locator.xpath("//td[@role='gridcell']//span[contains(@style, 'display:')]").withText("rawdata"));
-        _fileBrowserHelper.createFolder("flow_cytometry");
+
+        log("Check to see if a flow_cytometry folder is there, if not create it.");
+        try
+        {
+            _fileBrowserHelper.checkFileBrowserFileCheckbox("flow_cytometry");
+            createdFolder = false;
+        }
+        catch(NoSuchElementException nse)
+        {
+            log("No flow_cytometry folder is there, going to create it.");
+            _fileBrowserHelper.createFolder("flow_cytometry");
+            createdFolder = true;
+        }
+
         doubleClick(Locator.xpath("//td[@role='gridcell']//span[contains(@style, 'display:')]").withText("flow_cytometry"));
 
-        log("Upload the control files.");
-        for(String cntrlFileName : controlFileList)
+        if(createdFolder)
         {
-            fl = TestFileUtils.getSampleData("HIPC/downloadFiles/rawdata/flow_cytometry/" + cntrlFileName);
-            _fileBrowserHelper.uploadFile(fl);
+            log("Had to create the folder so have to upload the control files.");
+            for (String cntrlFileName : controlFileList)
+            {
+                fl = TestFileUtils.getSampleData("HIPC/downloadFiles/rawdata/flow_cytometry/" + cntrlFileName);
+                _fileBrowserHelper.uploadFile(fl);
+            }
+        }
+        else
+        {
+            log("Didn't create any folders so going to assume the file content is there and as expected.");
         }
 
         goToProjectHome();

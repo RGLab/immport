@@ -18,6 +18,7 @@ package org.labkey.test.tests;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -570,7 +571,13 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         for (int i = 1; i < grid.getRowCount()+1; i++)
         {
             String name = (String)grid.getFieldValue(i, "name");
-            Long numRows = (Long)grid.getFieldValue(i, "numRows");
+            String fieldValue = grid.getFieldValue(i, "numRows").toString();
+            Long numRows;
+            if(NumberUtils.isNumber(fieldValue))
+                numRows = NumberUtils.createLong(fieldValue);
+            else
+                numRows = 0L;
+
             datasetCounts.put(name, numRows.intValue());
         }
 

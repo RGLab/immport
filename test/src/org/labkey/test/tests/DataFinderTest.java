@@ -25,6 +25,7 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.labkey.api.view.Portal;
@@ -547,7 +548,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
                 finderSummaryCounts.get(Dimension.SUBJECTS), studyOverviewParticipantCounts.get("Demographics"));
     }
 
-    @Test
+    @Test @Ignore("immport-exportStudyDatasets is causing the server to hang on TeamCity")
     public void testDatasetExport() throws IOException
     {
         DataFinderPage finder = DataFinderPage.goDirectlyToPage(this, getProjectName());

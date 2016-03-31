@@ -135,7 +135,6 @@ function renderExport()
                     schemaName: 'study',
                     sql: 'SELECT DISTINCT i.filesize, s.' + fileCol + ' as filename FROM study.' + ds + ' s ' +
                     'JOIN immport.' + queryPrefix + ds + ' i ON i.' + fileCol + ' = s.' + fileCol,
-    //                        sql: 'SELECT DISTINCT filesize, ' + fileCol + ' as filename FROM ' + ds,
                     sort: "filesize",
                     parameters: {
                         $STUDY: studies[i]

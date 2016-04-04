@@ -101,7 +101,7 @@
                             <li id="manageMenu" class="labkey-dropdown" ng-mouseover="openMenu($event, true)">
                                 <a href="#"><i class="fa fa-cog"></i></a>
                                 <ul class="labkey-dropdown-menu" ng-show="!isGuest">
-                                    <li class="x4-menu-item-text"><a class="menu-item-link" href="<%=new ActionURL("study", "manageParticipantCategories", getContainer()).toHString()%>">Manage Groups</a></li>
+                                    <li class="x4-menu-item-text"><a class="menu-item-link" href="<%=h(new ActionURL("study", "manageParticipantCategories", getContainer()))%>">Manage Groups</a></li>
                                 </ul>
                             </li>
                             <li id="loadMenu" class="labkey-dropdown" >

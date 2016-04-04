@@ -81,7 +81,17 @@ public class ImmPortDocumentResolver implements SearchService.ResourceResolver
         String identifiers = study_accession;
         if (StringUtils.startsWith(study_accession, "SDY"))
             identifiers += " " + study_accession.substring(3);
-        properties.put(SearchService.PROPERTY.indentifiersHi.toString(), identifiers);
+        // HACK for 16.1 and 16.2 build
+        String identifierProperty = "identifiersHi";
+        try
+        {
+            SearchService.PROPERTY.valueOf("identifiersHi");
+        }
+        catch (IllegalArgumentException x)
+        {
+            identifierProperty = "indentifiersHi";
+        }
+        properties.put(identifierProperty, identifiers);
         properties.put(SearchService.PROPERTY.categories.toString(), ImmPortModule.searchCategoryStudy.getName());
 
         StringBuilder html = new StringBuilder(4000);

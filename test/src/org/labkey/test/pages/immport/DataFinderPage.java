@@ -54,7 +54,7 @@ public class DataFinderPage extends LabKeyPage
     public ExportStudyDatasetsPage exportDatasets()
     {
         _test.clickAndWait(Locators.exportDatasets);
-        return new ExportStudyDatasetsPage(_test);
+        return new ExportStudyDatasetsPage(_test.getDriver());
     }
 
     public void showUnloadedImmPortStudies()

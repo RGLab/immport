@@ -27,6 +27,7 @@
     {
         LinkedHashSet<ClientDependency> resources = new LinkedHashSet<>();
         resources.add(ClientDependency.fromFilePath("clientapi/ext4"));
+        resources.add(ClientDependency.fromFilePath("immport/renderExport.js"));
         return resources;
     }
 %>

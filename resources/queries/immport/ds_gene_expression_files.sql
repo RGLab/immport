@@ -3,6 +3,7 @@ PARAMETERS($STUDY VARCHAR DEFAULT NULL)
 SELECT DISTINCT
 ge_links.name AS name,
 file_info_name,
+filesize,
 geo_accession,
 ge_links.expsample_accession,
 -- ParticipantId and SequenceNum required for LK  datasets
@@ -27,12 +28,14 @@ FROM (
   (CASE WHEN (gef_name IS NULL OR gef_name = '') THEN geo_name ELSE gef_name END) AS name,
   (CASE WHEN (gef_es IS NULL OR gef_es = '') THEN geo_es ELSE gef_es END) AS expsample_accession,
   file_info_name,
-  geo_name AS geo_accession
+  geo_name AS geo_accession,
+  filesize
   FROM (
     SELECT
       q_GEF.expsample_accession AS gef_es,
       q_GEF.name AS gef_name,
       q_GEF.file_info_name AS file_info_name,
+      q_GEF.filesize AS filesize,
       q_GEO.expsample_accession AS geo_es,
       q_GEO.name AS geo_name,
     FROM q_GEF FULL OUTER JOIN q_GEO ON q_GEF.name = q_GEO.name

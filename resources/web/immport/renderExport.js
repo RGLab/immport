@@ -55,6 +55,7 @@ function renderExport()
                             name: rows[i].Name,
                             label: rows[i].Label,
                             numRows: -1,
+                            fileSizeDisplay:-1,
                             final: false
                         });
 
@@ -69,6 +70,7 @@ function renderExport()
             name: "StudyProperties",
             label: "Studies",
             numRows: -1,
+            fileSizeDisplay:-1,
             final: false
         });
         getNumOfRows('StudyProperties', -1);
@@ -89,28 +91,38 @@ function renderExport()
             filterArray: filters,
             success : function(details) {
                 var record = dataStore.getById(datasetId);
-                record.set('numRows', details.rowCount);
-                record.set('type', 'Dataset (TSV)');
-                record.set('final', true);
-                if(details.rowCount > 0)
-                    record.set('include', true);
-                else
-                    record.set('include', false);
+                if(details.rowCount > 0) {
+                    record.set('numRows', details.rowCount);
+                    record.set('fileSizeDisplay', '');
+                    record.set('type', 'Dataset (TSV)');
+                    record.set('final', true);
+                    if (details.rowCount > 0)
+                        record.set('include', true);
+                    else
+                        record.set('include', false);
 
-                // Gets studies
-                if(details.queryName === "StudyProperties") {
-                    Ext4.each(details.rows, function(row){
-                        studies.push(row.Label);
-                    }, this);
-                }
-
-                // Right now these are hard coded
-                for(var i = 0; i<files.length; i++) {
-                    if (files[i].dataset == details.queryName) {
-                        datasets[details.queryName] = details;
-                        datasets[details.queryName].datasetId = datasetId;
-                        getFileData(details.queryName);
+                    // Gets studies
+                    if (details.queryName === "StudyProperties")
+                    {
+                        Ext4.each(details.rows, function (row)
+                        {
+                            studies.push(row.Label);
+                        }, this);
                     }
+
+                    // Right now these are hard coded
+                    for (var i = 0; i < files.length; i++)
+                    {
+                        if (files[i].dataset == details.queryName)
+                        {
+                            datasets[details.queryName] = details;
+                            datasets[details.queryName].datasetId = datasetId;
+                            getFileData(details.queryName);
+                        }
+                    }
+                }
+                else {  // Remove records with zero rows
+                    dataStore.remove(record);
                 }
                 enableDownloadButton();
                 updateSummary();
@@ -172,7 +184,7 @@ function renderExport()
             var record = dataStore.getById(datasets[ds].datasetId);
             var newRecord = record.copy(record.id + 'f');
             newRecord.set('type', 'File');
-            newRecord.set('numRows', -1);
+            newRecord.set('numRows', '');
             newRecord.set('files', datasets[ds].files);
             newRecord.set('fileSize', datasets[ds].fileSize);
             newRecord.set('include', false);
@@ -199,7 +211,7 @@ function renderExport()
                 var newRecord = record.copy(datasets["gene_expression_files"].datasetId + 'm');
                 newRecord.set('label', 'Gene expression microarray matrices');
                 newRecord.set('type', 'File');
-                newRecord.set('numRows', -1);
+                newRecord.set('numRows', '');
                 newRecord.set('files', details.rowCount);
                 newRecord.set('fileSize', '');
                 newRecord.set('include', false);
@@ -317,7 +329,8 @@ function renderExport()
                 { header: 'Type',  dataIndex: 'type', width: 150},
                 { header: 'Rows', dataIndex: 'numRows', width:100, align:'right',
                     renderer: function (v) { return v == -1 ? "<span class=loading-indicator></span>" : v; }},
-                { header: 'File Size',  dataIndex: 'fileSizeDisplay', width: 100, align:'right'}
+                { header: 'File Size',  dataIndex: 'fileSizeDisplay', width: 100, align:'right',
+                    renderer: function (v) { return v == -1 ? "<span class=loading-indicator></span>" : v; }}
             ],
             width: 850,
             loadMask: true,

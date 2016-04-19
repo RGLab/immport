@@ -1,7 +1,6 @@
 function renderExport()
 {
 
-    var studies = [];
     var datasets = {};
     var filesMap = {
         'fcs_control_files': 'control_file',
@@ -308,6 +307,7 @@ function renderExport()
         return ( record.id.indexOf( 'm', record.id.length - 1 ) != -1 );
     }
 
+    /* This is an extension to allow the "Select All" checkbox in the header */
     Ext4.define('Ext.ux.CheckColumnPatch', {
         override: 'Ext.ux.CheckColumn',
 

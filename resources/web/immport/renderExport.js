@@ -3,7 +3,6 @@ function renderExport()
 
     var studies = [];
     var datasets = {};
-    var queryPrefix = "ds_";
     var filesMap = {
         'fcs_control_files': 'control_file',
         'fcs_sample_files': 'file_info_name',
@@ -64,7 +63,8 @@ function renderExport()
             }, scope : this
         });
 
-        dataStore.add({
+        /* TODO why are we querying studyproperties? there doesn't seem to be much of use in there
+         dataStore.add({
             id: -1,
             name: 'StudyProperties',
             label: 'Studies',
@@ -74,41 +74,42 @@ function renderExport()
             final: false
         });
         getNumOfRows( 'StudyProperties', -1 );
-    };
+        */
+    }
 
-    function getNumOfRows( queryName, datasetId ){
-        var filters = [];
+    function getNumOfRows( queryName, datasetId )
+    {
+        var sql = "SELECT COUNT(*) as rowcount FROM " + queryName + "\n";
+
         if ( queryName == 'StudyProperties' ){
-            filters = studyPropertyFilters;
+            sql = sql + " WHERE Label LIKE 'SDY%' AND Label NOT LIKE 'SDY_template'";
         }
 
-        LABKEY.Query.selectRows({
+        LABKEY.Query.executeSql({
             schemaName : 'study',
-            queryName : queryName,
-            includeTotalCount : true,
-            showRows : 0,
-            filterArray: filters,
-            success : function ( details ){
+            sql : sql,
+            success : function ( details )
+            {
                 var record = dataStore.getById( datasetId );
-                var qn = details.queryName;
 
-                if ( details.rowCount > 0 ){
+                if ( details.rows.length > 0 && details.rows[0].rowcount > 0)
+                {
                     record.set( 'include', true );
                     record.set( 'type', 'Dataset (TSV)' );
-                    record.set( 'numRows', details.rowCount );
+                    record.set( 'numRows', details.rows[0].rowcount );
                     record.set( 'fileSize', -2 );
                     record.set( 'final', true );
 
-                    // Gets studies
-                    if ( qn === 'StudyProperties' ){
-                        Ext4.each( details.rows, function( row ){ studies.push(row.Label); }, this );
-                    }
+                    // TODO why are we querying studyproperties?
+                    // if ( qn === 'StudyProperties' ){
+                    //     Ext4.each( details.rows, function( row ){ studies.push(row.Label); }, this );
+                    //}
 
                     // Right now these are hard coded
-                        if ( filesMap[ qn ] ){
-                            datasets[ qn ] = details;
-                            datasets[ qn ].datasetId = datasetId;
-                            getFileData( qn );
+                        if ( filesMap[ queryName ] ){
+                            datasets[ queryName ] = details;
+                            datasets[ queryName ].datasetId = datasetId;
+                            getFileData( queryName );
                         }
                 }
                 else {  // Remove records with zero rows
@@ -119,30 +120,31 @@ function renderExport()
                 enableDownloadButton();
             }, scope : this
         });
-    };
+    }
 
     // Get file data for file datasets
     function getFileData( ds ){
-        if ( datasets[ ds ] ){
-            var multi = new LABKEY.MultiRequest();
+        if ( datasets[ ds ] )
+        {
 
-            for ( var i = 0; i < studies.length; i ++ ){
+            var fileCol = filesMap[ ds ];
 
-                var fileCol = filesMap[ ds ];
+            var sql =
+                    'SELECT COUNT(filename) AS filecount, SUM(filesize) AS filesize ' +
+                    ' FROM (' +
+                        '\n\tSELECT ' + fileCol + ' as filename,  MAX(filesize) as filesize' +
+                        '\n\tFROM study.' + ds +
+                        '\n\tGROUP BY ' + fileCol +
+                    ') as _';
 
-                multi.add( LABKEY.Query.executeSql, {
-                    schemaName: 'study',
-                    sql: 'SELECT DISTINCT i.filesize, s.' + fileCol + ' as filename FROM study.' + ds + ' s ' +
-                    'JOIN immport.' + queryPrefix + ds + ' i ON i.' + fileCol + ' = s.' + fileCol,
-                    sort: "filesize",
-                    parameters: {
-                        $STUDY: studies[ i ]
-                    },
-                    success: function( details ){ fileHandler.call( this, details, ds); },
-                    failure : function(){/*swallow failure*/},
-                    scope: this
-                });
-            }
+            LABKEY.Query.executeSql(
+            {
+                schemaName: 'study',
+                sql: sql,
+                success: function( details ){ fileHandler.call( this, details, ds); },
+                failure : function(){/*swallow failure*/},
+                scope: this
+            });
 
             var record = dataStore.getById( datasets[ ds ].datasetId );
             dataStore.add({
@@ -154,12 +156,11 @@ function renderExport()
                 fileSize: -1,
                 final: false
             });
-
-            multi.send( function(){ afterFiles(ds); }, this );
         }
-    };
+    }
 
-    function fileHandler( details, ds ){
+    function fileHandler( details, ds )
+    {
         var dataset = datasets[ ds ];
         if ( typeof dataset.fileSize == 'undefined' )
             dataset.fileSize = 0;
@@ -167,17 +168,17 @@ function renderExport()
         if ( typeof dataset.files == 'undefined' )
             dataset.files = 0;
 
-        for ( var i = 0; i < details.rowCount; i++ ){
-            dataset.fileSize += Math.round( details.rows[i].filesize );
-            dataset.files++;
+        for ( var i = 0; i < details.rows.length ; i++ )
+        {
+            if (details.rows[i].filesize)
+                dataset.fileSize += Math.round( details.rows[i].filesize );
+            if (details.rows[i].filecount)
+                dataset.files += details.rows[i].filecount;
         }
-    };
 
-    // Now that we have all the file data, add it up and add records for it
-    function afterFiles( ds ){
         if ( datasets[ds].fileSize ){
             var record = dataStore.getById( datasets[ ds ].datasetId + 'f' );
-            record.set( 'include', false );
+            record.set( 'include', true );
             record.set( 'type', 'File' );
             record.set( 'numRows', '' );
             record.set( 'fileSize', datasets[ds].fileSize );
@@ -191,7 +192,7 @@ function renderExport()
             updateSummary();
             enableDownloadButton();
         }
-    };
+    }
 
     function getGeneExpMatrices(){
         LABKEY.Query.selectRows({
@@ -215,7 +216,10 @@ function renderExport()
                 }
                 getGeneExpMatricesSizes( matrices );
             },
-            failure : function(){/*swallow failure*/},
+            failure : function(){
+                var record = dataStore.getById( datasets[ 'gene_expression_files' ].datasetId + 'f' );
+                dataStore.remove([record]);
+            },
             scope : this
         });
     }
@@ -231,7 +235,7 @@ function renderExport()
                 var record = dataStore.getById( datasets[ 'gene_expression_files' ].datasetId + 'm' );
 
                 var size, totalSize = 0;
-                for ( var i = 0; i < details.rowCount; i ++ ){
+                for ( var i = 0; i < details.rows.length; i ++ ){
                     size = details.rows[ i ][ 'Data/FileSize' ];
                     if ( size.slice( -2 ) === 'kB' ){
                         totalSize += Number( size.substring( 0, size.indexOf(' ') ) ) * 1000;
@@ -244,6 +248,7 @@ function renderExport()
 
                 record.set( 'type', 'File' );
                 record.set( 'numRows', '' );
+                record.set( 'files', details.rows.length );
                 record.set( 'fileSize', totalSize );  // bytes
                 record.set( 'final', true );
 
@@ -259,7 +264,8 @@ function renderExport()
             var totalFiles = 0, filesize = 0, record;
             for ( var i = 0; i < dataStore.getCount(); i ++ ){
                 record = dataStore.getAt( i );
-                if ( record.getData().include ){
+                if ( record.getData().include )
+                {
                     if ( isFileRecord( record ) ){
                         totalFiles += record.getData( false ).files;
                         filesize += Number( record.getData( false ).fileSize );
@@ -274,7 +280,7 @@ function renderExport()
                 '<div>Files number: ' + totalFiles + '</div> ' +
                 '<div>Files size: ' + Ext4.util.Format.fileSize( filesize ) + '</div>';
         }
-    };
+    }
 
     // Enable the download button once all requests have returned
     function enableDownloadButton(){
@@ -292,15 +298,15 @@ function renderExport()
 
         var btn = Ext4.getCmp( 'downloadBtn' );
         btn.setDisabled( false );
-    };
+    }
 
     function isFileRecord( record ){
         return ( record.id.indexOf( 'f', record.id.length - 1) != -1 );
-    };
+    }
 
     function isMatrixRecord( record ){
         return ( record.id.indexOf( 'm', record.id.length - 1 ) != -1 );
-    };
+    }
 
     Ext4.define('Ext.ux.CheckColumnPatch', {
         override: 'Ext.ux.CheckColumn',
@@ -515,7 +521,7 @@ function renderExport()
                     },{
                         xtype: 'button',
                         text: 'Back',
-                        handler : function(btn) {window.history.back()}
+                        handler : function() {window.history.back()}
                     }
                 ]
             }],
@@ -529,12 +535,12 @@ function renderExport()
             viewConfig: {
                 markDirty: false
             },
-            width: 850,
+            width: 850
         });
 
-    };
+    }
 
     renderListOfDatasetsTable();
     getListOfDatasets();
-};
+}
 

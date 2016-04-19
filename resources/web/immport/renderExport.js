@@ -177,7 +177,7 @@ function renderExport()
 
         if ( datasets[ds].fileSize ){
             var record = dataStore.getById( datasets[ ds ].datasetId + 'f' );
-            record.set( 'include', true );
+            record.set( 'include', false );
             record.set( 'type', 'File' );
             record.set( 'numRows', '' );
             record.set( 'fileSize', datasets[ds].fileSize );
@@ -201,7 +201,7 @@ function renderExport()
             success : function(details) {
                 var record = dataStore.getById( datasets[ 'gene_expression_files' ].datasetId );
                 var newRecord = record.copy(datasets[ 'gene_expression_files' ].datasetId + 'm' );
-                newRecord.set( 'include', false );
+                newRecord.set( 'include', true );
                 newRecord.set( 'label', 'Gene expression microarray matrices' );
                 newRecord.set( 'type', -1 );
                 newRecord.set( 'numRows', -1 );

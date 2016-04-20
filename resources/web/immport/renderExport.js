@@ -76,11 +76,11 @@ function renderExport(){
                     record.set( 'final', true );
 
                     // Right now these are hard coded
-                        if ( filesMap[ queryName ] ){
-                            datasets[ queryName ] = details;
-                            datasets[ queryName ].datasetId = datasetId;
-                            getFileData( queryName );
-                        }
+                    if ( filesMap[ queryName ] ){
+                        datasets[ queryName ] = details;
+                        datasets[ queryName ].datasetId = datasetId;
+                        getFileData( queryName );
+                    }
                 }
                 else {  // Remove records with zero rows
                     dataStore.remove( record );
@@ -102,9 +102,9 @@ function renderExport(){
             var sql =
                     'SELECT COUNT(filename) AS filecount, SUM(filesize) AS filesize ' +
                     ' FROM (' +
-                        '\n\tSELECT ' + fileCol + ' as filename,  MAX(filesize) as filesize' +
-                        '\n\tFROM study.' + ds +
-                        '\n\tGROUP BY ' + fileCol +
+                        'SELECT ' + fileCol + ' as filename,  MAX(filesize) as filesize' +
+                        ' FROM study.' + ds +
+                        ' GROUP BY ' + fileCol +
                     ') as _';
 
             LABKEY.Query.executeSql(
@@ -138,15 +138,15 @@ function renderExport(){
         if ( typeof dataset.files == 'undefined' )
             dataset.files = 0;
 
-        for ( var i = 0; i < details.rows.length ; i++ )
+        for ( var i = 0; i < details.rows.length ; i ++ )
         {
-            if (details.rows[i].filesize)
+            if ( details.rows[i].filesize )
                 dataset.fileSize += Math.round( details.rows[i].filesize );
-            if (details.rows[i].filecount)
+            if ( details.rows[i].filecount )
                 dataset.files += details.rows[i].filecount;
         }
 
-        if ( datasets[ds].fileSize ){
+        if ( datasets[ ds ].fileSize ){
             var record = dataStore.getById( datasets[ ds ].datasetId + 'f' );
             record.set( 'include', false );
             record.set( 'type', 'File' );
@@ -165,21 +165,23 @@ function renderExport(){
     }
 
     function getGeneExpMatrices(){
+        var record = dataStore.getById( datasets[ 'gene_expression_files' ].datasetId );
+        dataStore.add({
+            include: true,
+            id: record.get( 'id' ) + 'm',
+            name: record.get( 'name' ),
+            label: 'Gene expression microarray matrices',
+            type: -1,
+            numRows: -1,
+            fileSize: -1,
+            final: false
+        });
+
         LABKEY.Query.selectRows({
             schemaName : 'assay.ExpressionMatrix.matrix',
             queryName : 'SelectedRuns',
             includeTotalCount : true,
-            success : function(details) {
-                var record = dataStore.getById( datasets[ 'gene_expression_files' ].datasetId );
-                var newRecord = record.copy(datasets[ 'gene_expression_files' ].datasetId + 'm' );
-                newRecord.set( 'include', true );
-                newRecord.set( 'label', 'Gene expression microarray matrices' );
-                newRecord.set( 'type', -1 );
-                newRecord.set( 'numRows', -1 );
-                newRecord.set( 'fileSize', -1 );
-                newRecord.set( 'files', details.rowCount );
-                dataStore.add( newRecord );
-
+            success : function( details ){
                 var matrices = [];
                 for ( var i = 0; i < details.rowCount; i ++ ){
                     matrices.push( details.rows[ i ][ 'download_link' ]);
@@ -187,8 +189,9 @@ function renderExport(){
                 getGeneExpMatricesSizes( matrices );
             },
             failure : function(){
-                var record = dataStore.getById( datasets[ 'gene_expression_files' ].datasetId + 'f' );
-                dataStore.remove([record]);
+                var recordF = dataStore.getById( datasets[ 'gene_expression_files' ].datasetId + 'f' );
+                var recordM = dataStore.getById( datasets[ 'gene_expression_files' ].datasetId + 'm' );
+                dataStore.remove([ recordF, recordM ]);
             },
             scope : this
         });
@@ -218,8 +221,8 @@ function renderExport(){
 
                 record.set( 'type', 'File' );
                 record.set( 'numRows', '' );
-                record.set( 'files', details.rows.length );
                 record.set( 'fileSize', totalSize );  // bytes
+                record.set( 'files', details.rows.length );
                 record.set( 'final', true );
 
                 updateSummary();

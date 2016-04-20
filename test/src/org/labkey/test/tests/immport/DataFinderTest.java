@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.labkey.test.tests;
+package org.labkey.test.tests.immport;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
@@ -25,10 +25,8 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.labkey.api.view.Portal;
 import org.labkey.remoteapi.Command;
 import org.labkey.remoteapi.CommandException;
 import org.labkey.remoteapi.Connection;
@@ -51,7 +49,6 @@ import org.labkey.test.pages.study.OverviewPage;
 import org.labkey.test.util.APIContainerHelper;
 import org.labkey.test.util.AbstractContainerHelper;
 import org.labkey.test.util.DataRegionTable;
-import org.labkey.test.util.FileBrowserHelper;
 import org.labkey.test.util.LogMethod;
 import org.labkey.test.util.PortalHelper;
 import org.labkey.test.util.PostgresOnlyTest;
@@ -548,7 +545,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
                 finderSummaryCounts.get(Dimension.SUBJECTS), studyOverviewParticipantCounts.get("Demographics"));
     }
 
-    @Test @Ignore("immport-exportStudyDatasets is causing the server to hang on TeamCity")
+    @Test
     public void testDatasetExport() throws IOException
     {
         DataFinderPage finder = DataFinderPage.goDirectlyToPage(this, getProjectName());

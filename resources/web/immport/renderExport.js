@@ -4,17 +4,18 @@ function renderExport()
     var studies = [];
     var datasets = {};
     var queryPrefix = "ds_";
-    var files = [
-        {dataset : "fcs_control_files", fileCol : "control_file"},
-        {dataset : "fcs_sample_files", fileCol : "file_info_name"},
-        {dataset : "gene_expression_files", fileCol : "file_info_name"}];
+    var filesMap = {
+        'fcs_control_files': 'control_file',
+        'fcs_sample_files': 'file_info_name',
+        'gene_expression_files': 'file_info_name'
+    };
 
     var excludedTables = {'HM_InputSamplesQuerySnapshot':true};
 
     // Only include "SDY" studies in the StudyProperties query
     var studyPropertyFilters = [
-        LABKEY.Filter.create("Label", "SDY", LABKEY.Filter.Types.STARTS_WITH),
-        LABKEY.Filter.create("Label", "SDY_template", LABKEY.Filter.Types.NEQ)
+        LABKEY.Filter.create( 'Label', 'SDY', LABKEY.Filter.Types.STARTS_WITH ),
+        LABKEY.Filter.create( 'Label', 'SDY_template', LABKEY.Filter.Types.NEQ )
     ];
 
     var studyFilterWebPart = LABKEY.WebPart({
@@ -26,8 +27,8 @@ function renderExport()
 
     var dataStore = Ext4.create('Ext.data.Store', {
         storeId:'dataSets',
-        fields:['id', 'name', 'include', 'label', 'numRows', 'type', 'fileSize', 'fileSizeDisplay', 'files', 'final'],
-        data: {'items': []},
+        fields:[ 'id', 'name', 'include', 'label', 'type', 'numRows', 'fileSize', 'files', 'final' ],
+        data: { 'items': [] },
         proxy: {
             type: 'memory',
             reader: {
@@ -37,8 +38,7 @@ function renderExport()
         }
     });
 
-    function getListOfDatasets()
-    {
+    function getListOfDatasets(){
         LABKEY.Query.selectRows({
             schemaName : 'study',
             queryName : 'Datasets',
@@ -46,20 +46,19 @@ function renderExport()
             success : function (details) {
                 var rows = details.rows;
 
-                for (var i = 0; i < rows.length; i++)
-                {
-                    if(!excludedTables.hasOwnProperty(rows[i].Name))
-                    {
+                for ( var i = 0; i < rows.length; i ++ ){
+                    if ( ! excludedTables.hasOwnProperty( rows[i].Name ) ){
                         dataStore.add({
                             id: rows[i].DataSetId,
                             name: rows[i].Name,
                             label: rows[i].Label,
+                            type: -1,
                             numRows: -1,
-                            fileSizeDisplay:-1,
+                            fileSize: -1,
                             final: false
                         });
 
-                        getNumOfRows(rows[i].Name, rows[i].DataSetId);
+                        getNumOfRows( rows[i].Name, rows[i].DataSetId );
                     }
                 }
             }, scope : this
@@ -67,19 +66,19 @@ function renderExport()
 
         dataStore.add({
             id: -1,
-            name: "StudyProperties",
-            label: "Studies",
+            name: 'StudyProperties',
+            label: 'Studies',
+            type: -1,
             numRows: -1,
-            fileSizeDisplay:-1,
+            fileSize: -1,
             final: false
         });
-        getNumOfRows('StudyProperties', -1);
-    }
+        getNumOfRows( 'StudyProperties', -1 );
+    };
 
-    function getNumOfRows(queryName, datasetId)
-    {
+    function getNumOfRows( queryName, datasetId ){
         var filters = [];
-        if (queryName == "StudyProperties") {
+        if ( queryName == 'StudyProperties' ){
             filters = studyPropertyFilters;
         }
 
@@ -89,169 +88,165 @@ function renderExport()
             includeTotalCount : true,
             showRows : 0,
             filterArray: filters,
-            success : function(details) {
-                var record = dataStore.getById(datasetId);
-                if(details.rowCount > 0) {
-                    record.set('numRows', details.rowCount);
-                    record.set('fileSizeDisplay', '');
-                    record.set('type', 'Dataset (TSV)');
-                    record.set('final', true);
-                    if (details.rowCount > 0)
-                        record.set('include', true);
-                    else
-                        record.set('include', false);
+            success : function ( details ){
+                var record = dataStore.getById( datasetId );
+                var qn = details.queryName;
+
+                if ( details.rowCount > 0 ){
+                    record.set( 'include', true );
+                    record.set( 'type', 'Dataset (TSV)' );
+                    record.set( 'numRows', details.rowCount );
+                    record.set( 'fileSize', -2 );
+                    record.set( 'final', true );
 
                     // Gets studies
-                    if (details.queryName === "StudyProperties")
-                    {
-                        Ext4.each(details.rows, function (row)
-                        {
-                            studies.push(row.Label);
-                        }, this);
+                    if ( qn === 'StudyProperties' ){
+                        Ext4.each( details.rows, function( row ){ studies.push(row.Label); }, this );
                     }
 
                     // Right now these are hard coded
-                    for (var i = 0; i < files.length; i++)
-                    {
-                        if (files[i].dataset == details.queryName)
-                        {
-                            datasets[details.queryName] = details;
-                            datasets[details.queryName].datasetId = datasetId;
-                            getFileData(details.queryName);
+                        if ( filesMap[ qn ] ){
+                            datasets[ qn ] = details;
+                            datasets[ qn ].datasetId = datasetId;
+                            getFileData( qn );
                         }
-                    }
                 }
                 else {  // Remove records with zero rows
-                    dataStore.remove(record);
+                    dataStore.remove( record );
                 }
-                enableDownloadButton();
+
                 updateSummary();
+                enableDownloadButton();
             }, scope : this
         });
-    }
+    };
 
     // Get file data for file datasets
-    function getFileData(ds) {
-        if(datasets[ds]) {
+    function getFileData( ds ){
+        if ( datasets[ ds ] ){
             var multi = new LABKEY.MultiRequest();
 
-            for (var i = 0; i < studies.length; i++) {
+            for ( var i = 0; i < studies.length; i ++ ){
 
-                var fileCol = "file_info_name";
-                for(var t=0; t < files.length; t++) {
-                    if (files[t].dataset == ds) {
-                        fileCol = files[t].fileCol;
-                    }
-                }
-                multi.add(LABKEY.Query.executeSql, {
+                var fileCol = filesMap[ ds ];
+
+                multi.add( LABKEY.Query.executeSql, {
                     schemaName: 'study',
                     sql: 'SELECT DISTINCT i.filesize, s.' + fileCol + ' as filename FROM study.' + ds + ' s ' +
                     'JOIN immport.' + queryPrefix + ds + ' i ON i.' + fileCol + ' = s.' + fileCol,
                     sort: "filesize",
                     parameters: {
-                        $STUDY: studies[i]
+                        $STUDY: studies[ i ]
                     },
-                    success: function (details) {fileHandler.call(this, details, ds)},
+                    success: function( details ){ fileHandler.call( this, details, ds); },
                     failure : function(){/*swallow failure*/},
                     scope: this
                 });
             }
 
-            multi.send(function() {afterFiles(ds);}, this);
-        }
-    }
+            var record = dataStore.getById( datasets[ ds ].datasetId );
+            dataStore.add({
+                id: record.get( 'id' ) + 'f',
+                name: record.get( 'name' ),
+                label: record.get( 'label' ),
+                type: -1,
+                numRows: -1,
+                fileSize: -1,
+                final: false
+            });
 
-    function fileHandler(details, ds) {
-        var dataset = datasets[ds];
-        if(typeof dataset.fileSize == "undefined")
+            multi.send( function(){ afterFiles(ds); }, this );
+        }
+    };
+
+    function fileHandler( details, ds ){
+        var dataset = datasets[ ds ];
+        if ( typeof dataset.fileSize == 'undefined' )
             dataset.fileSize = 0;
 
-        if(typeof dataset.fileSizeDisplay == "undefined")
-            dataset.fileSizeDisplay = "";
-
-        if(typeof dataset.files == "undefined")
+        if ( typeof dataset.files == 'undefined' )
             dataset.files = 0;
 
-        for (var i = 0; i < details.rowCount; i++) {
-            dataset.fileSize += Math.round(details.rows[i].filesize);
+        for ( var i = 0; i < details.rowCount; i++ ){
+            dataset.fileSize += Math.round( details.rows[i].filesize );
             dataset.files++;
         }
-    }
+    };
 
     // Now that we have all the file data, add it up and add records for it
-    function afterFiles(ds) {
-        if(datasets[ds].fileSize) {
-            var record = dataStore.getById(datasets[ds].datasetId);
-            var newRecord = record.copy(record.id + 'f');
-            newRecord.set('type', 'File');
-            newRecord.set('numRows', '');
-            newRecord.set('files', datasets[ds].files);
-            newRecord.set('fileSize', datasets[ds].fileSize);
-            newRecord.set('include', false);
-            newRecord.set('final', true);
-            newRecord.set('fileSizeDisplay', Ext4.util.Format.fileSize(datasets[ds].fileSize));
-            dataStore.add(newRecord);
+    function afterFiles( ds ){
+        if ( datasets[ds].fileSize ){
+            var record = dataStore.getById( datasets[ ds ].datasetId + 'f' );
+            record.set( 'include', false );
+            record.set( 'type', 'File' );
+            record.set( 'numRows', '' );
+            record.set( 'fileSize', datasets[ds].fileSize );
+            record.set( 'files', datasets[ds].files );
+            record.set( 'final', true );
         }
 
-        if(ds == "gene_expression_files") {
+        if ( ds == 'gene_expression_files' ){
             getGeneExpMatrices();
         } else {
             updateSummary();
+            enableDownloadButton();
         }
-        enableDownloadButton();
-    }
+    };
 
-    function getGeneExpMatrices() {
+    function getGeneExpMatrices(){
         LABKEY.Query.selectRows({
             schemaName : 'assay.ExpressionMatrix.matrix',
             queryName : 'SelectedRuns',
             includeTotalCount : true,
             success : function(details) {
-                var record = dataStore.getById(datasets["gene_expression_files"].datasetId);
-                var newRecord = record.copy(datasets["gene_expression_files"].datasetId + 'm');
-                newRecord.set('label', 'Gene expression microarray matrices');
-                newRecord.set('type', 'File');
-                newRecord.set('numRows', '');
-                newRecord.set('files', details.rowCount);
-                newRecord.set('fileSize', '');
-                newRecord.set('include', false);
-                dataStore.add(newRecord);
+                var record = dataStore.getById( datasets[ 'gene_expression_files' ].datasetId );
+                var newRecord = record.copy(datasets[ 'gene_expression_files' ].datasetId + 'm' );
+                newRecord.set( 'include', false );
+                newRecord.set( 'label', 'Gene expression microarray matrices' );
+                newRecord.set( 'type', -1 );
+                newRecord.set( 'numRows', -1 );
+                newRecord.set( 'fileSize', -1 );
+                newRecord.set( 'files', details.rowCount );
+                dataStore.add( newRecord );
 
                 var matrices = [];
-                for(var i=0; i<details.rowCount; i++) {
-                    matrices.push(details.rows[i]['download_link'])
+                for ( var i = 0; i < details.rowCount; i ++ ){
+                    matrices.push( details.rows[ i ][ 'download_link' ]);
                 }
-                getGeneExpMatriceSizes(matrices);
+                getGeneExpMatricesSizes( matrices );
             },
             failure : function(){/*swallow failure*/},
             scope : this
         });
     }
 
-    function getGeneExpMatriceSizes(matrices) {
+    function getGeneExpMatricesSizes( matrices ){
         LABKEY.Query.selectRows({
             schemaName : 'assay.ExpressionMatrix.matrix',
             queryName : 'OutputDatas',
-            filters : [LABKEY.Filter.create('data', matrices.join(';'), LABKEY.Filter.Types.IN)],
+            filters : [ LABKEY.Filter.create('data', matrices.join(';'), LABKEY.Filter.Types.IN) ],
             includeTotalCount : true,
-            columns : "Data, Data/FileSize",
-            success : function(details) {
-                var record = dataStore.getById(datasets["gene_expression_files"].datasetId + 'm');
+            columns : 'Data, Data/FileSize',
+            success : function( details ){
+                var record = dataStore.getById( datasets[ 'gene_expression_files' ].datasetId + 'm' );
+
                 var size, totalSize = 0;
-                for(var i=0; i<details.rowCount; i++) {
-                    size = details.rows[i]["Data/FileSize"];
-                    if(size.slice(-2) === "kB") {
-                        totalSize += Number(size.substring(0, size.indexOf(" "))) * 1000;
-                    } else if(size.slice(-2) === "MB") {
-                        totalSize += Number(size.substring(0, size.indexOf(" "))) * 1000000;
-                    } else if(size.slice(-2) === "GB") {
-                        totalSize += Number(size.substring(0, size.indexOf(" "))) * 1000000000;
+                for ( var i = 0; i < details.rowCount; i ++ ){
+                    size = details.rows[ i ][ 'Data/FileSize' ];
+                    if ( size.slice( -2 ) === 'kB' ){
+                        totalSize += Number( size.substring( 0, size.indexOf(' ') ) ) * 1000;
+                    } else if ( size.slice( -2 ) === 'MB' ){
+                        totalSize += Number( size.substring( 0, size.indexOf(' ') ) ) * 1000000;
+                    } else if ( size.slice( -2 ) === 'GB' ){
+                        totalSize += Number( size.substring( 0, size.indexOf(' ') ) ) * 1000000000;
                     }
                 }
 
-                record.set('fileSize', totalSize);  //bytes
-                record.set('fileSizeDisplay', Ext4.util.Format.fileSize(totalSize));
-                record.set('final', true);
+                record.set( 'type', 'File' );
+                record.set( 'numRows', '' );
+                record.set( 'fileSize', totalSize );  // bytes
+                record.set( 'final', true );
+
                 updateSummary();
                 enableDownloadButton();
             }, scope : this
@@ -259,88 +254,216 @@ function renderExport()
     }
 
     // Update file and dataset summary in panel on right hand side
-    function updateSummary() {
-        if(dataStore && document.getElementById('summaryData')) {
+    function updateSummary(){
+        if ( dataStore && document.getElementById( 'summaryData' ) ){
             var totalFiles = 0, filesize = 0, record;
-            for (var i = 0; i < dataStore.getCount(); i++) {
-                record = dataStore.getAt(i);
-                if(record.getData().include) {
-                    if (isFileRecord(record)) {
-                        totalFiles += record.getData(false).files;
-                        filesize += Number(record.getData(false).fileSize);
+            for ( var i = 0; i < dataStore.getCount(); i ++ ){
+                record = dataStore.getAt( i );
+                if ( record.getData().include ){
+                    if ( isFileRecord( record ) ){
+                        totalFiles += record.getData( false ).files;
+                        filesize += Number( record.getData( false ).fileSize );
                     }
-                    if (isMatrixRecord(record)) {
-                        totalFiles += record.getData(false).files;
-                        filesize += Number(record.getData(false).fileSize);
+                    if ( isMatrixRecord( record ) ){
+                        totalFiles += record.getData( false ).files;
+                        filesize += Number( record.getData( false ).fileSize );
                     }
                 }
             }
-            document.getElementById('summaryData').innerHTML =
-                    '<div>Files: ' + totalFiles + '</div> ' +
-                    '<div style="list-style-type:none;padding-left:1em;margin:4px;">Size: '
-                    + Ext4.util.Format.fileSize(filesize) + '</div>';
+            document.getElementById( 'summaryData' ).innerHTML =
+                '<div>Files number: ' + totalFiles + '</div> ' +
+                '<div>Files size: ' + Ext4.util.Format.fileSize( filesize ) + '</div>';
         }
-    }
+    };
 
     // Enable the download button once all requests have returned
-    function enableDownloadButton()
-    {
+    function enableDownloadButton(){
         var store = Ext4.data.StoreManager.lookup('dataSets');
 
         // Check that we've added the datasets to the store before checking the min numRows
         var count = store.getCount();
-        if (count <= 1)
+        if ( count <= 1 )
             return;
 
         // Check that all numRows have been returned
-        var min = store.min("final");
-        if (min == false) {
+        var min = store.min( 'final' );
+        if ( min == false )
             return;
+
+        var btn = Ext4.getCmp( 'downloadBtn' );
+        btn.setDisabled( false );
+    };
+
+    function isFileRecord( record ){
+        return ( record.id.indexOf( 'f', record.id.length - 1) != -1 );
+    };
+
+    function isMatrixRecord( record ){
+        return ( record.id.indexOf( 'm', record.id.length - 1 ) != -1 );
+    };
+
+    Ext4.define('Ext.ux.CheckColumnPatch', {
+        override: 'Ext.ux.CheckColumn',
+
+        /**
+        * @cfg {Boolean} [columnHeaderCheckbox=false]
+        * True to enable check/uncheck all rows
+        */
+        columnHeaderCheckbox: false,
+
+        constructor: function (config) {
+            var me = this;
+            me.callParent(arguments);
+
+            me.addEvents('beforecheckallchange', 'checkallchange');
+
+            if (me.columnHeaderCheckbox) {
+                me.on('headerclick', function () {
+                    this.updateAllRecords();
+                }, me);
+
+                me.on('render', function (comp) {
+                    var grid = comp.up('grid');
+                    this.mon(grid, 'reconfigure', function () {
+                        if (this.isVisible()) {
+                            this.bindStore();
+                        }
+                    }, this);
+
+                    if (this.isVisible()) {
+                        this.bindStore();
+                    }
+
+                    this.on('show', function () {
+                        this.bindStore();
+                    });
+                    this.on('hide', function () {
+                        this.unbindStore();
+                    });
+                }, me);
+            }
+        },
+
+        onStoreDataUpdate: function () {
+            var allChecked,
+                image;
+
+            if (!this.updatingAll) {
+                allChecked = this.getStoreIsAllChecked();
+                if (allChecked !== this.allChecked) {
+                    this.allChecked = allChecked;
+                    image = this.getHeaderCheckboxImage(allChecked);
+                    this.setText(image);
+                }
+            }
+        },
+
+        getStoreIsAllChecked: function () {
+            var me = this,
+                allChecked = true;
+            me.store.each(function (record) {
+                if (!record.get(this.dataIndex)) {
+                    allChecked = false;
+                    return false;
+                }
+            }, me);
+            return allChecked;
+        },
+
+        bindStore: function () {
+            var me = this,
+                grid = me.up('grid'),
+                store = grid.getStore();
+
+            me.store = store;
+
+            me.mon(store, 'datachanged', function () {
+                this.onStoreDataUpdate();
+            }, me);
+            me.mon(store, 'update', function () {
+                this.onStoreDataUpdate();
+            }, me);
+
+            me.onStoreDataUpdate();
+        },
+
+        unbindStore: function () {
+            var me = this,
+                store = me.store;
+
+            me.mun(store, 'datachanged');
+            me.mun(store, 'update');
+        },
+
+        updateAllRecords: function () {
+            var me = this,
+                allChecked = !me.allChecked;
+
+            if (me.fireEvent('beforecheckallchange', me, allChecked) !== false) {
+                this.updatingAll = true;
+                me.store.suspendEvents();
+                me.store.each(function (record) {
+                    record.set(this.dataIndex, allChecked);
+                }, me);
+                me.store.resumeEvents();
+                me.up('grid').getView().refresh();
+                this.updatingAll = false;
+                this.onStoreDataUpdate();
+                me.fireEvent('checkallchange', me, allChecked);
+            }
+        },
+
+        getHeaderCheckboxImage: function (allChecked) {
+            return '<img class="x4-grid-checkcolumn ' + ( allChecked ? 'x4-grid-checkcolumn-checked' : '' ) + '">';
         }
+    });
 
-        console.debug("all data loaded");
-        var btn = Ext4.getCmp("downloadBtn");
-        btn.setDisabled(false);
-    }
-
-    function isFileRecord(record) {
-        return (record.id.indexOf('f', record.id.length - 1) != -1);
-    }
-
-    function isMatrixRecord(record) {
-        return (record.id.indexOf('m', record.id.length - 1) != -1);
-    }
-
-    function renderListOfDatasetsTable()
-    {
+    function renderListOfDatasetsTable(){
         this.grid = Ext4.create('Ext.grid.Panel', {
-            id: 'datasets',
-            title: 'Datasets',
-            margin: '0px 20px 0px 20px',
-            store: Ext4.data.StoreManager.lookup('dataSets'),
-            viewConfig: {
-                markDirty: false
-            },
+            columnLines: true,
             columns: [
-                { xtype: 'checkcolumn', dataIndex: 'include', width: 30, showHeaderCheckbox: true, listeners: {
-                    checkchange: updateSummary
-                }},
-                { header: 'Name',  dataIndex: 'label', flex: 1},
-                { header: 'Type',  dataIndex: 'type', width: 150},
-                { header: 'Rows', dataIndex: 'numRows', width:100, align:'right',
-                    renderer: function (v) { return v == -1 ? "<span class=loading-indicator></span>" : v; }},
-                { header: 'File Size',  dataIndex: 'fileSizeDisplay', width: 100, align:'right',
-                    renderer: function (v) { return v == -1 ? "<span class=loading-indicator></span>" : v; }}
+                {
+                    columnHeaderCheckbox: true,
+                    dataIndex: 'include',
+                    hideable: false,
+                    listeners: { checkchange: updateSummary },
+                    menuDisabled: true,
+                    resizable: false,
+                    sortable: false,
+                    width: 30,
+                    xtype: 'checkcolumn'
+                },{
+                    dataIndex: 'label',
+                    flex: 1,
+                    header: 'Name',
+                    hideable: false
+                },{
+                    dataIndex: 'type',
+                    header: 'Type',
+                    renderer: function ( v ){ return v == -1 ? '<span class=loading-indicator></span>' : v; },
+                    width: 150
+                },{
+                    align: 'right',
+                    dataIndex: 'numRows',
+                    header: 'Rows',
+                    renderer: function ( v ){ return v == -1 ? '<span class=loading-indicator></span>' : v; },
+                    width: 100
+                },{
+                    align: 'right',
+                    dataIndex: 'fileSize',
+                    header: 'File Size',
+                    renderer: function ( v ){
+                        return v == -1 ? '<span class=loading-indicator></span>' : v == -2 ? '' : Ext4.util.Format.fileSize( v );
+                    },
+                    width: 100
+                }
             ],
-            width: 850,
-            loadMask: true,
-            renderTo: 'datasetsPanel',
             dockedItems: [{
                 xtype: 'toolbar',
                 dock: 'bottom',
                 cls: 'labkey-main',
                 ui: 'footer',
-                defaults: {minWidth: 20},
+                defaults: { minWidth: 20 },
                 items: [
                     {   xtype: 'component', flex: 1 },
                     {   xtype: 'button',
@@ -348,37 +471,45 @@ function renderExport()
                         text: 'Download',
                         margin: '5 5 5 20',
                         disabled: true,
-                        handler: function() {
-                            var schemaQueries = {"study" : []};
+                        handler: function (){
+                            var schemaQueries = { 'study' : [] };
                             var record, downloadFiles = [], matrices = [];
-                            for (var i = 0; i < dataStore.getCount(); i++) {
-                                record = dataStore.getAt(i);
-                                if(record.getData().include || record.get('name') === "StudyProperties") {
-                                    if (isFileRecord(record)) {
-                                        downloadFiles.push(record.get('name'));
+                            for ( var i = 0; i < dataStore.getCount(); i ++ ){
+                                record = dataStore.getAt( i );
+                                if ( record.getData().include || record.get( 'name' ) === 'StudyProperties' ){
+                                    if ( isFileRecord( record ) ){
+                                        downloadFiles.push( record.get('name') );
                                     }
-                                    else if (isMatrixRecord(record)) {
-                                        matrices.push(record.get('name'));
+                                    else if ( isMatrixRecord( record ) ){
+                                        matrices.push( record.get( 'name' ) );
                                     }
                                     else {
-                                        var o = { queryName : record.get('name')};
+                                        var o = { queryName : record.get( 'name' ) };
 
-                                        if (o.queryName == "StudyProperties") {
+                                        if ( o.queryName == 'StudyProperties' ){
                                             var jsonFilters = {};
-                                            for(var f = 0; f<studyPropertyFilters.length; f++) {
-                                                jsonFilters[studyPropertyFilters[f].getURLParameterName()] = studyPropertyFilters[f].getURLParameterValue();
+                                            for ( var f = 0; f < studyPropertyFilters.length; f ++ ){
+                                                jsonFilters[ studyPropertyFilters[f].getURLParameterName() ] = studyPropertyFilters[ f ].getURLParameterValue();
                                             }
                                             o.filters = jsonFilters;
                                         }
 
-                                        schemaQueries.study.push(o);
+                                        schemaQueries.study.push( o );
                                     }
                                 }
                             }
 
-                            window.location = LABKEY.ActionURL.buildURL('immport', 'exportTables', LABKEY.container.path,
-                                    {'schemas': JSON.stringify(schemaQueries), 'files': downloadFiles, 'matrices': matrices,
-                                        'headerType': 'Caption'});
+                            window.location = LABKEY.ActionURL.buildURL(
+                                'immport',
+                                'exportTables',
+                                LABKEY.container.path,
+                                {
+                                    'schemas': JSON.stringify( schemaQueries ),
+                                    'files': downloadFiles,
+                                    'matrices': matrices,
+                                    'headerType': 'Caption'
+                                }
+                            );
 
                         }
                     },{
@@ -387,11 +518,23 @@ function renderExport()
                         handler : function(btn) {window.history.back()}
                     }
                 ]
-            }]
+            }],
+            id: 'datasets',
+            loadMask: true,
+            margin: '0px 20px 0px 20px',
+            renderTo: 'datasetsPanel',
+            store: Ext4.data.StoreManager.lookup( 'dataSets' ),
+            stripeRows: true,
+            title: 'Datasets',
+            viewConfig: {
+                markDirty: false
+            },
+            width: 850,
         });
 
-    }
+    };
 
     renderListOfDatasetsTable();
     getListOfDatasets();
-}
+};
+

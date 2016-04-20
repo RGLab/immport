@@ -1,13 +1,11 @@
-SPAN.hipc-label
-{
+SPAN.hipc-label {
     border-radius: 10px;
     border: solid 1px #AAAAAA;
     background: #FFFFFF;
     padding: 6px;
 }
 
-DIV.hipc-label
-{
+DIV.hipc-label {
     width:100%;
     position:absolute;
     bottom:0;
@@ -15,9 +13,9 @@ DIV.hipc-label
     text-align:center;
 }
 
-.immport-highlight
-{
+.immport-highlight {
     color:#cc541f;
     font-size:120%;
     font-variant:small-caps;
 }
+

@@ -1,20 +1,13 @@
-function renderExport()
-{
+function renderExport(){
 
     var datasets = {};
     var filesMap = {
-        'fcs_control_files': 'control_file',
-        'fcs_sample_files': 'file_info_name',
-        'gene_expression_files': 'file_info_name'
+        'fcs_control_files':        'control_file',
+        'fcs_sample_files':         'file_info_name',
+        'gene_expression_files':    'file_info_name'
     };
 
-    var excludedTables = {'HM_InputSamplesQuerySnapshot':true};
-
-    // Only include "SDY" studies in the StudyProperties query
-    var studyPropertyFilters = [
-        LABKEY.Filter.create( 'Label', 'SDY', LABKEY.Filter.Types.STARTS_WITH ),
-        LABKEY.Filter.create( 'Label', 'SDY_template', LABKEY.Filter.Types.NEQ )
-    ];
+    var excludedTables = { 'HM_InputSamplesQuerySnapshot': true };
 
     var studyFilterWebPart = LABKEY.WebPart({
         partName: 'Shared Study Filter',
@@ -61,28 +54,11 @@ function renderExport()
                 }
             }, scope : this
         });
-
-        /* TODO why are we querying studyproperties? there doesn't seem to be much of use in there
-         dataStore.add({
-            id: -1,
-            name: 'StudyProperties',
-            label: 'Studies',
-            type: -1,
-            numRows: -1,
-            fileSize: -1,
-            final: false
-        });
-        getNumOfRows( 'StudyProperties', -1 );
-        */
     }
 
     function getNumOfRows( queryName, datasetId )
     {
         var sql = "SELECT COUNT(*) as rowcount FROM " + queryName + "\n";
-
-        if ( queryName == 'StudyProperties' ){
-            sql = sql + " WHERE Label LIKE 'SDY%' AND Label NOT LIKE 'SDY_template'";
-        }
 
         LABKEY.Query.executeSql({
             schemaName : 'study',
@@ -98,11 +74,6 @@ function renderExport()
                     record.set( 'numRows', details.rows[0].rowcount );
                     record.set( 'fileSize', -2 );
                     record.set( 'final', true );
-
-                    // TODO why are we querying studyproperties?
-                    // if ( qn === 'StudyProperties' ){
-                    //     Ext4.each( details.rows, function( row ){ studies.push(row.Label); }, this );
-                    //}
 
                     // Right now these are hard coded
                         if ( filesMap[ queryName ] ){
@@ -482,7 +453,7 @@ function renderExport()
                             var record, downloadFiles = [], matrices = [];
                             for ( var i = 0; i < dataStore.getCount(); i ++ ){
                                 record = dataStore.getAt( i );
-                                if ( record.getData().include || record.get( 'name' ) === 'StudyProperties' ){
+                                if ( record.getData().include ){
                                     if ( isFileRecord( record ) ){
                                         downloadFiles.push( record.get('name') );
                                     }
@@ -490,17 +461,7 @@ function renderExport()
                                         matrices.push( record.get( 'name' ) );
                                     }
                                     else {
-                                        var o = { queryName : record.get( 'name' ) };
-
-                                        if ( o.queryName == 'StudyProperties' ){
-                                            var jsonFilters = {};
-                                            for ( var f = 0; f < studyPropertyFilters.length; f ++ ){
-                                                jsonFilters[ studyPropertyFilters[f].getURLParameterName() ] = studyPropertyFilters[ f ].getURLParameterValue();
-                                            }
-                                            o.filters = jsonFilters;
-                                        }
-
-                                        schemaQueries.study.push( o );
+                                        schemaQueries.study.push( { queryName : record.get( 'name' ) } );
                                     }
                                 }
                             }
@@ -543,4 +504,3 @@ function renderExport()
     renderListOfDatasetsTable();
     getListOfDatasets();
 }
-

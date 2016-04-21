@@ -234,18 +234,14 @@ function renderExport(){
     // Update file and dataset summary in panel on right hand side
     function updateSummary(){
         if ( dataStore && document.getElementById( 'summaryData' ) ){
-            var totalFiles = 0, filesize = 0, record;
+            var totalFiles = 0, filesize = 0, data;
             for ( var i = 0; i < dataStore.getCount(); i ++ ){
-                record = dataStore.getAt( i );
-                if ( record.getData().include )
+                data = dataStore.getAt( i ).getData();
+                if ( data.include && data.final )
                 {
-                    if ( isFileRecord( record ) ){
-                        totalFiles += record.getData( false ).files;
-                        filesize += Number( record.getData( false ).fileSize );
-                    }
-                    if ( isMatrixRecord( record ) ){
-                        totalFiles += record.getData( false ).files;
-                        filesize += Number( record.getData( false ).fileSize );
+                    if ( isFileRecord( data ) && data.fileSize >= 0 ){
+                        totalFiles += data.files;
+                        filesize += Number( data.fileSize );
                     }
                 }
             }
@@ -273,12 +269,12 @@ function renderExport(){
         btn.setDisabled( false );
     }
 
-    function isFileRecord( record ){
-        return ( record.id.indexOf( 'f', record.id.length - 1) != -1 );
-    }
-
-    function isMatrixRecord( record ){
-        return ( record.id.indexOf( 'm', record.id.length - 1 ) != -1 );
+    function isFileRecord( data ){
+        var id = data.id.toString();
+        return (
+            ( id.indexOf( 'f', id.length - 1 ) != -1 ) || 
+            ( id.indexOf( 'm', id.length - 1 ) != -1 )
+        );
     }
 
     /* This is an extension to allow the "Select All" checkbox in the header */

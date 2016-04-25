@@ -1,4 +1,4 @@
-function dataFinder(studyData, loadedStudies, dataFinderAppId)
+function dataFinder(studyData, loadedStudies, sentGroupId, dataFinderAppId)
 {
 //
 // study detail pop-up window
@@ -123,9 +123,10 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
         $scope.currentGroup = $scope.unsavedGroup;
         $scope.saveOptions = [ {id: 'update', label : "Save", isActive: false}, {id : "saveNew", label : "Save As", isActive: true} ];
 
-        $scope.saveSubjectGroup = function(option, $event) {
+        $scope.saveSubjectGroup = function(option, goToSendAfterSave, $event) {
 
-            $scope.closeMenu($event);
+            if ($event)
+                $scope.closeMenu($event);
 
             var groupLabel = "";
             if (option == "update") {
@@ -144,7 +145,32 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
                     url: (LABKEY.ActionURL.buildURL("participant-group", 'updateParticipantGroup.api')),
                     method: 'POST',
                     jsonData : groupData,
-                    scope : this,
+                    scope : $scope,
+                    success : function(response)
+                    {
+                        var res = Ext4.decode(response.responseText);
+                        if (res.success)
+                        {
+                            // find and replace the record's filters in the groupList
+                            var updatedFilters = res.group.filters == undefined ? [] : Ext4.decode(res.group.filters);
+                            Ext4.each($scope.groupList, function(listGroup)
+                            {
+                                if (listGroup.id == res.group.rowId)
+                                {
+                                    listGroup.filters = updatedFilters;
+                                    $scope.applySubjectGroupFilter(listGroup);
+                                    return false; // break;
+                                }
+                            });
+
+                            if (goToSendAfterSave)
+                                $scope.goToSend($scope.currentGroup.id);
+                            else
+                                $scope.currentGroupHasChanges = false;
+                        }
+
+
+                    },
                     failure : function(response, options)
                     {
                         LABKEY.Utils.displayAjaxErrorResponse(response, options, false, "An error occurred trying to save:  ");
@@ -157,13 +183,14 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
                         nounPlural: 'Subjects',
                         nounColumnName: 'ParticipantId'
                     },
-                    groupLabel: groupLabel,
+                    groupLabel: $scope.sentGroupLabel || groupLabel,
                     participantIds: $scope.subjects,
-                    filters: $scope.localStorageService.get("filterSet")
+                    filters: $scope.localStorageService.get("filterSet"),
+                    goToSendAfterSave: goToSendAfterSave
                 });
 
                 // Save the new participant group rowId as the session filter
-                win.on('aftersave', function (data)
+                win.on('aftersave', function (data, goToSend)
                 {
                     $scope.$apply(function ()
                     {
@@ -189,6 +216,11 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
                                 $scope.groupList.push(group);
                                 $scope.updateCurrentGroup(group);
                                 $scope.updateSaveOptions();
+
+                                if (goToSend)
+                                    $scope.goToSend(group.id);
+                                else
+                                    $scope.currentGroupHasChanges = false;
                             }
                         }
                     });
@@ -199,15 +231,27 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
 
         $scope.applySubjectGroupFilter = function(group, $event)
         {
-            $scope.closeMenu($event);
+            if ($event)
+                $scope.closeMenu($event);
 
             $scope.clearAllFilters(false);
+            $scope._applyGroupFilters(group.filters);
 
-            for (var f in group.filters)
+            $scope.updateCountsAsync(true);
+            $scope.saveFilterState();
+            $scope.updateCurrentGroup(group);
+            $scope.currentGroupHasChanges = false;
+
+            $scope.clearSentGroupInfo();
+        };
+
+        $scope._applyGroupFilters = function(filters)
+        {
+            for (var f in filters)
             {
-                if (group.filters.hasOwnProperty(f))
+                if (filters.hasOwnProperty(f))
                 {
-                    var filter = group.filters[f];
+                    var filter = filters[f];
 
                     if (filter.name == "Study" && $scope.filterByLevel == "[Study].[Name]")
                         continue;
@@ -235,9 +279,13 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
                     }
                 }
             }
-            $scope.updateCountsAsync(true);
-            $scope.saveFilterState();
-            $scope.updateCurrentGroup(group);
+        };
+
+        $scope.clearSentGroupInfo = function()
+        {
+            sentGroupId = null;
+            $scope.sentGroupLabel = null;
+            // TODO remove the sentGroupId URL parameters
         };
 
         $scope.openMenu = function($event, isConfig)
@@ -335,11 +383,87 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
                     }
                 }
             });
+
             var savedGroup = $scope.localStorageService.get("group");
-            if (savedGroup != null) {
-                $scope.updateCurrentGroup(savedGroup);
+            if (sentGroupId != null)
+            {
+                $scope.loadParticpiantGroupFiltersFromId(sentGroupId);
+            }
+            else if (savedGroup != null)
+            {
+                $scope.applySubjectGroupFilter(savedGroup);
             }
         };
+
+        $scope.loadParticpiantGroupFiltersFromId = function(groupId)
+        {
+            LABKEY.Ajax.request({
+                url: LABKEY.ActionURL.buildURL('participant-group', 'browseParticipantGroups.api'),
+                method: 'POST',
+                jsonData : {
+                    type : 'participantGroup',
+                    groupId: groupId
+                },
+                scope: $scope,
+                success : function(res)
+                {
+                    var json = Ext4.decode(res.responseText);
+                    if (json.success && json.groups.length == 1)
+                    {
+                        // stash the sent group label so we can use it in Save As
+                        $scope.sentGroupLabel = json.groups[0].label;
+
+                        // parse the sent groups filters, but explicitly remove the Study members
+                        // as this user might have different study/container permissions
+                        var groupFilters = Ext4.decode(json.groups[0].filters);
+                        delete groupFilters['Study'];
+
+                        $scope.clearAllFilters(false);
+                        $scope._applyGroupFilters(groupFilters);
+                        $scope.updateCountsAsync();
+                        $scope.saveFilterState();
+                    }
+                }
+            });
+        };
+
+        $scope.sendSubjectGroup = function()
+        {
+            if ($scope.currentGroup.id == null || $scope.currentGroupHasChanges)
+            {
+                var allowSave = $scope.saveOptions[0].isActive;
+
+                Ext4.Msg.show({
+                    title: 'Save Group Before Sending',
+                    msg: 'You must save a group before you can send a copy.',
+                    icon: Ext4.Msg.INFO,
+                    buttons: allowSave ? Ext4.Msg.YESNOCANCEL : Ext4.Msg.OKCANCEL,
+                    buttonText: allowSave ? {yes: 'Save', no: 'Save As'} : {ok: 'Save'},
+                    fn: function(buttonId)
+                    {
+                        if (buttonId == 'yes')
+                            $scope.saveSubjectGroup("update", true);
+                        else if (buttonId == 'no' || buttonId == 'ok')
+                            $scope.saveSubjectGroup("saveNew", true);
+                    }
+                });
+            }
+            else
+            {
+                $scope.goToSend($scope.currentGroup.id);
+            }
+        };
+
+        $scope.goToSend = function(groupId)
+        {
+            if (groupId != null)
+            {
+                window.location = LABKEY.ActionURL.buildURL('study', 'sendParticipantGroup', null, {
+                    rowId: groupId,
+                    returnUrl: LABKEY.ActionURL.buildURL('immport', 'dataFinder')
+                });
+            }
+        },
 
         $scope.groupsAvailable = function ()
         {
@@ -386,7 +510,8 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
         });
 
         $scope.$on("cubeReady", function(event) {
-            $scope.loadSubjectGroups();
+            if (!$scope.groupsAvailable())
+                $scope.loadSubjectGroups();
         });
 
         $scope.$on("filterSelectionCleared", function(event, hasFilters) {
@@ -396,6 +521,13 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
             }
         });
 
+        $scope.$on("updateCountsAsync", function() {
+            $scope.currentGroupHasChanges = true;
+        });
+
+        $scope.$on("clearAllClicked", function() {
+            $scope.clearSentGroupInfo();
+        });
     }]);
 
 
@@ -512,7 +644,6 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
             {
                 $scope.mdx = m;
                 $scope.initCubeMetaData();
-                $scope.loadFilterState();
 
                 // init study list according to studySubset
                 if (loaded_study_list.length == 0)
@@ -708,6 +839,12 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
                 $event.stopPropagation();
         };
 
+        $scope.clearAllClick = function()
+        {
+            $scope.clearAllFilters(true);
+            $scope.$broadcast("clearAllClicked");
+        };
+
         $scope.clearAllFilters = function (updateCounts)
         {
             for (var d in dataspace.dimensions)
@@ -875,6 +1012,8 @@ function dataFinder(studyData, loadedStudies, dataFinderAppId)
                 countDistinctLevel: '[Subject].[Subject]'
             };
             $scope.mdx.query(config);
+
+            $scope.$broadcast("updateCountsAsync");
         };
 
         $scope.updateCountsZero = function ()

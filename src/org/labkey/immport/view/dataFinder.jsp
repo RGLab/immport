@@ -116,7 +116,7 @@
                                 <a ng-class="{'labkey-text-link' : loadedStudiesShown(), 'labkey-disabled-text-link': !loadedStudiesShown()} " class="no-arrow" style="margin-right: 0.8em" href="#" ng-mouseover="openMenu($event, false)" ng-mouseleave="closeMenu($event)">Save <i class="fa fa-caret-down"></i> </a>
                                 <ul class="labkey-dropdown-menu" ng-if="!isGuest && loadedStudiesShown()">
                                     <li class="x4-menu-item-text" ng-repeat="opt in saveOptions" ng-class="{'inactive' : !opt.isActive}">
-                                        <a class="menu-item-link" ng-class="{'inactive' : !opt.isActive}" ng-click="saveSubjectGroup(opt.id, $event)">{{opt.label}}</a>
+                                        <a class="menu-item-link" ng-class="{'inactive' : !opt.isActive}" ng-click="saveSubjectGroup(opt.id, false, $event)">{{opt.label}}</a>
                                     </li>
                                 </ul>
                                 <ul class="labkey-dropdown-menu" ng-if="isGuest">
@@ -125,8 +125,11 @@
                                     </li>
                                 </ul>
                             </li>
+                            <li id="sendMenu" class="labkey-dropdown">
+                                <a ng-class="{'labkey-text-link' : !isGuest && loadedStudiesShown(), 'labkey-disabled-text-link': isGuest || !loadedStudiesShown()} " class="no-arrow" href="#" ng-click="sendSubjectGroup($event)">Send</a>
+                            </li>
                         </ul>
-                        <span class="clear-filter active" ng-show="hasFilters()" ng-click="clearAllFilters(true);">[clear all]</span>
+                        <span class="clear-filter active" ng-show="hasFilters()" ng-click="clearAllClick();">[clear all]</span>
                     </div>
 
                 </div>
@@ -322,7 +325,7 @@ if (!c.isRoot())
 };
 
 
-new dataFinder(studyData, loaded_studies, "dataFinderApp");
+new dataFinder(studyData, loaded_studies, <%=me.getSentGroupId()%>, "dataFinderApp");
 
 
 LABKEY.help.Tour.register({

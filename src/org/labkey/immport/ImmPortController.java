@@ -28,8 +28,8 @@ import org.labkey.api.action.NullSafeBindException;
 import org.labkey.api.action.RedirectAction;
 import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
+import org.labkey.api.admin.notification.NotificationService;
 import org.labkey.api.data.ColumnHeaderType;
-import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.ContainerFilterable;
@@ -58,6 +58,7 @@ import org.labkey.api.security.RequiresSiteAdmin;
 import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.services.ServiceRegistry;
+import org.labkey.api.study.ParticipantCategory;
 import org.labkey.api.util.CSRFUtil;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
@@ -725,12 +726,19 @@ public class ImmPortController extends SpringActionController
 
 
     @RequiresPermission(ReadPermission.class)
-    public class DataFinderAction extends SimpleViewAction
+    public class DataFinderAction extends SimpleViewAction<SentGroupForm>
     {
-        public ModelAndView getView(Object o, BindException errors) throws Exception
+        public ModelAndView getView(SentGroupForm form, BindException errors) throws Exception
         {
+            // if the user is viewing a sent participant group, remove any notifications related to it
+            if (form.getSentGroupId() != null)
+            {
+                NotificationService.get().removeNotifications(getContainer(), ""+form.getSentGroupId(),
+                    Collections.singletonList(ParticipantCategory.SEND_PARTICIPANT_GROUP_TYPE), getUser().getUserId());
+            }
+
             setTitle("Data Finder");
-            DataFinderWebPart wp = new DataFinderWebPart(getContainer());
+            DataFinderWebPart wp = new DataFinderWebPart(getContainer(), form);
             wp.setIsAutoResize(true);
             return wp;
         }
@@ -738,6 +746,21 @@ public class ImmPortController extends SpringActionController
         public NavTree appendNavTrail(NavTree root)
         {
             return root;
+        }
+    }
+
+    public static class SentGroupForm
+    {
+        private Integer _sentGroupId;
+
+        public Integer getSentGroupId()
+        {
+            return _sentGroupId;
+        }
+
+        public void setSentGroupId(Integer sentGroupId)
+        {
+            _sentGroupId = sentGroupId;
         }
     }
 

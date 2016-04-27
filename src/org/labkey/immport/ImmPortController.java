@@ -731,9 +731,9 @@ public class ImmPortController extends SpringActionController
         public ModelAndView getView(SentGroupForm form, BindException errors) throws Exception
         {
             // if the user is viewing a sent participant group, remove any notifications related to it
-            if (form.getSentGroupId() != null)
+            if (form.getGroupId() != null)
             {
-                NotificationService.get().removeNotifications(getContainer(), ""+form.getSentGroupId(),
+                NotificationService.get().removeNotifications(getContainer(), ""+form.getGroupId(),
                     Collections.singletonList(ParticipantCategory.SEND_PARTICIPANT_GROUP_TYPE), getUser().getUserId());
             }
 
@@ -751,16 +751,16 @@ public class ImmPortController extends SpringActionController
 
     public static class SentGroupForm
     {
-        private Integer _sentGroupId;
+        private Integer _groupId;
 
-        public Integer getSentGroupId()
+        public Integer getGroupId()
         {
-            return _sentGroupId;
+            return _groupId;
         }
 
-        public void setSentGroupId(Integer sentGroupId)
+        public void setGroupId(Integer groupId)
         {
-            _sentGroupId = sentGroupId;
+            _groupId = groupId;
         }
     }
 

@@ -94,7 +94,10 @@
         <tr>
             <td>
                 <div ng-controller="SubjectGroupController" id="filterArea">
-                    <div class="labkey-group-label">{{currentGroup.id != null ? "Saved group: ": ""}}{{currentGroup.label}}</div>
+                    <div class="labkey-group-label">
+                        {{currentGroup.id != null ? "Saved group: ": ""}}{{currentGroup.label}}
+                        <span ng-if="isGroupNotFound()" class="fa fa-exclamation-circle" data-qtip="{{currentGroup.groupNotFound}}"></span>
+                    </div>
 
                     <div class="navbar navbar-default ">
                         <ul class="nav navbar-nav">
@@ -325,7 +328,7 @@ if (!c.isRoot())
 };
 
 
-new dataFinder(studyData, loaded_studies, <%=me.getSentGroupId()%>, "dataFinderApp");
+new dataFinder(studyData, loaded_studies, <%=me.getGroupId()%>, "dataFinderApp");
 
 
 LABKEY.help.Tour.register({

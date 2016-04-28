@@ -371,11 +371,20 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                         {
                             if (json.groups[i].filters != undefined)
                             {
+                                var groupFilters = Ext4.decode(json.groups[i].filters);
+
+                                // remove duplicates from the filters members array
+                                Ext4.Object.each(groupFilters, function(key, value)
+                                {
+                                    if (Ext4.isArray(value.members))
+                                        groupFilters[key].members = Ext4.Array.unique(value.members);
+                                });
+
                                 groups.push({
                                     "id": json.groups[i].id,
                                     "label": json.groups[i].label,
                                     "selected": false,
-                                    "filters": Ext4.decode(json.groups[i].filters)
+                                    "filters": groupFilters
                                 });
                             }
                         }
@@ -668,6 +677,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
             {
                 $scope.mdx = m;
                 $scope.initCubeMetaData();
+                $scope.loadFilterState();
 
                 // init study list according to studySubset
                 if (loaded_study_list.length == 0)
@@ -891,6 +901,11 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                     $scope.updateCountsAsync();
                 }
             }
+            else
+            {
+                $scope.searchTerms = null;
+            }
+
             $scope.$broadcast("filterSelectionCleared", false);
         };
 

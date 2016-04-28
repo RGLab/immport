@@ -122,6 +122,12 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
         $scope.unsavedGroup = { id: null, label : "Unsaved Group"};
         $scope.currentGroup = $scope.unsavedGroup;
         $scope.saveOptions = [ {id: 'update', label : "Save", isActive: false}, {id : "saveNew", label : "Save As", isActive: true} ];
+        $scope.studySubject = {
+                    nounSingular: 'Subject',
+                    nounPlural: 'Subjects',
+                    tableName: 'Participant',
+                    columnName: 'ParticipantId'
+                }; // TODO: should this use LABKEY.getModuleContext('study').subject?
 
         $scope.saveSubjectGroup = function(option, goToSendAfterSave, $event) {
 
@@ -178,11 +184,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                 });
             } else {
                 var win = Ext4.create('Study.window.ParticipantGroup', {
-                    subject: {
-                        nounSingular: 'Subject',
-                        nounPlural: 'Subjects',
-                        nounColumnName: 'ParticipantId'
-                    },
+                    subject: $scope.studySubject,
                     groupLabel: $scope.loadGroupLabel || groupLabel,
                     participantIds: $scope.subjects,
                     filters: $scope.localStorageService.get("filterSet"),
@@ -449,7 +451,8 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                     }
                     else
                     {
-                        $scope.unsavedGroup.groupNotFound = "Participant group could not be found for the ID provided: " + groupId + ".";
+                        $scope.unsavedGroup.groupNotFound = $scope.studySubject.nounSingular
+                                + " group could not be found for the ID provided: " + groupId + ".";
                     }
                 }
             });

@@ -199,9 +199,12 @@ Ext4.define('Study.window.ParticipantGroup', {
                         position: 'none',
                         includeStandardButtons: false
                     },
+                    success : function(wpDataRegion) {
+                        // issue 26329: don't use header locking for a QWP in an Ext dialog window
+                        wpDataRegion.disableHeaderLock();
+                    },
                     scope : this
                 });
-
             }, this);
 
         }, this);

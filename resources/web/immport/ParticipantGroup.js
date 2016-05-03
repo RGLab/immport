@@ -110,8 +110,6 @@ Ext4.define('Study.window.ParticipantGroup', {
         this.callParent(arguments);
         if (this.participantIds.length > 0)
             this.displayQueryWebPart('Demographics');
-        //This class exists for testing purposes (e.g. ReportTest)
-        this.cls = "doneLoadingTestMarker";
     },
 
 

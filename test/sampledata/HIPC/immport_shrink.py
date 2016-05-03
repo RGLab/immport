@@ -13,7 +13,7 @@ def main(argv):
 	try:
 		opts, args = getopt.getopt(argv,"i:o:d")
 	except getopt.GetoptError:
-		print 'test.py [-i <src_archive_dir>] [-o <dest_archive_dir>] [-d]'
+		print 'immport_shrink.py [-i <src_archive_dir>] [-o <dest_archive_dir>] [-d]'
 		sys.exit(2)
 
 	for opt, arg in opts:
@@ -54,10 +54,11 @@ def main(argv):
 	# These are the studies used by StudyFinderTest
 	animal_studies = [99, 139, 147, 208, 215, 217]
 	junction_file_sep = "_2_"
+	special_junction_files = ["study_2_panel.txt"] # No 'panel.txt', treat like a normal data file to filter study accessions
 
 	file_names = [f for f in listdir(source_mysql_dir) if isfile(join(source_mysql_dir,f))]
-	data_file_names = [f for f in file_names if junction_file_sep not in f]
-	junction_file_names = [f for f in file_names if junction_file_sep in f]
+	data_file_names = [f for f in file_names if junction_file_sep not in f or f in special_junction_files]
+	junction_file_names = [f for f in file_names if junction_file_sep in f and f not in special_junction_files]
 	skipped_data_file_names = []
 
 	for data_file_name in data_file_names:
@@ -228,7 +229,7 @@ def main(argv):
 			if left_accession_str in left_data and right_accession_str in right_data:
 				dest_file.write(junction_data_line + line_sep)
 				included_count += 1
-		print '  Included ' + str(included_count) + ' of ' + str(len(junction_data_lines)) + ' junction rows'
+		print '  Included ' + str(included_count) + ' of ' + str(len(junction_data_lines) - 1) + ' junction rows'
 
 
 def get_table_fields(file_path):

@@ -2,6 +2,7 @@ package org.labkey.test.pages.immport;
 
 import com.google.common.base.Predicate;
 import org.apache.commons.lang3.SystemUtils;
+import org.apache.tika.sax.Link;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.WebTestHelper;
@@ -89,11 +90,25 @@ public class DataFinderPage extends LabKeyPage
             studySearch(" ");
     }
 
+    public void saveGroup()
+    {
+        waitForElement(Locator.css("div.x4-window td.labkey-dataregion-msgbox div.labkey-dataregion-msg span"));
+        _test.clickButtonContainingText("Save", BaseWebDriverTest.WAIT_FOR_EXT_MASK_TO_DISSAPEAR);
+        waitForGroupUpdate();
+    }
+
     public void saveGroup(String name)
     {
+        waitForElement(Locator.css("div.x4-window td.labkey-dataregion-msgbox div.labkey-dataregion-msg span"));
         _test.setFormElement(Locators.groupLabelInput, name);
         _test.clickButtonContainingText("Save", BaseWebDriverTest.WAIT_FOR_EXT_MASK_TO_DISSAPEAR);
         waitForGroupUpdate();
+    }
+
+    public String getGroupNameFromForm()
+    {
+        waitForElement(Locator.css("div.x4-window td.labkey-dataregion-msgbox div.labkey-dataregion-msg span"));
+        return _test.getFormElement(Locators.groupLabelInput);
     }
 
     public String getGroupLabel()
@@ -194,11 +209,27 @@ public class DataFinderPage extends LabKeyPage
 
     public void clearAllFilters()
     {
-        final WebElement clearAll = Locators.clearAll.findElement(_test.getDriver());
-        if (clearAll.isDisplayed())
+        if(isElementPresent(Locators.clearAll))
         {
-            _test.doAndWaitForPageSignal(clearAll::click, COUNT_SIGNAL);
+            final WebElement clearAll = Locators.clearAll.findElement(_test.getDriver());
+            if (clearAll.isDisplayed())
+            {
+                _test.doAndWaitForPageSignal(clearAll::click, COUNT_SIGNAL);
+            }
         }
+    }
+
+    public void loadSavedGroup(String groupName)
+    {
+        click(Locators.loadMenu);
+        waitForElement(Locators.savedGroups.append(" a").containing(groupName));
+        click(Locators.savedGroups.append(" a").containing(groupName));
+    }
+
+    public SendParticipantPage clickSend(BaseWebDriverTest test)
+    {
+        clickAndWait(Locators.sendMenu);
+        return new SendParticipantPage(test);
     }
 
     public void dismissTour()
@@ -247,7 +278,11 @@ public class DataFinderPage extends LabKeyPage
         public static final Locator.NameLocator groupLabelInput = Locator.name("groupLabel");
         public static final Locator.CssLocator saveMenu = Locator.css("#saveMenu");
         public static final Locator.CssLocator loadMenu = Locator.css("#loadMenu");
+        public static final Locator.CssLocator sendMenu = Locator.css("#sendMenu");
         public static final Locator.IdLocator manageMenu = Locator.id("manageMenu");
+        public static final Locator.CssLocator savedGroups = loadMenu.append(" ul.labkey-dropdown-menu-active");
+        public static final Locator.XPathLocator save = Locator.xpath("//li[contains(@ng-repeat, 'saveOptions')][not(contains(@class, 'inactive'))]").append(Locator.linkWithText("Save"));
+        public static final Locator.XPathLocator saveAs = Locator.xpath("//li[contains(@ng-repeat, 'saveOptions')][not(contains(@class, 'inactive'))]").append(Locator.linkWithText("Save As"));
 
     }
 

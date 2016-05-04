@@ -74,7 +74,7 @@ Ext4.define('Study.window.ParticipantGroup', {
                 },
                 {
                     xtype : 'button',
-                    text : "Save",
+                    text : this.goToSendAfterSave ? "Save and Send" : "Save",
                     margin: '3 3 3 0',
                     hidden : false,
                     handler : this.saveCategory
@@ -141,7 +141,7 @@ Ext4.define('Study.window.ParticipantGroup', {
             method : 'POST',
             success : LABKEY.Utils.getCallbackWrapper(function(data) {
                 this.getEl().unmask();
-                me.fireEvent('aftersave', data);
+                me.fireEvent('aftersave', data, me.goToSendAfterSave);
                 if(me.grid){
                     me.grid.getStore().load();
                 }
@@ -199,9 +199,12 @@ Ext4.define('Study.window.ParticipantGroup', {
                         position: 'none',
                         includeStandardButtons: false
                     },
+                    success : function(wpDataRegion) {
+                        // issue 26329: don't use header locking for a QWP in an Ext dialog window
+                        wpDataRegion.disableHeaderLock();
+                    },
                     scope : this
                 });
-
             }, this);
 
         }, this);

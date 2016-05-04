@@ -13,6 +13,7 @@ import org.labkey.immport.ImmPortController;
 public class DataFinderWebPart extends JspView
 {
     boolean isAutoResize = false;
+    Integer groupId;
 
     public boolean isAutoResize()
     {
@@ -24,15 +25,28 @@ public class DataFinderWebPart extends JspView
         this.isAutoResize = isAutoResize;
     }
 
-    public DataFinderWebPart(Container c)
+    public Integer getGroupId()
+    {
+        return groupId;
+    }
+
+    public void setGroupId(Integer groupId)
+    {
+        this.groupId = groupId;
+    }
+
+    public DataFinderWebPart(Container c, ImmPortController.SentGroupForm form)
     {
         super("/org/labkey/immport/view/dataFinder.jsp");
         setTitle("Data Finder");
         setTitleHref(new ActionURL(ImmPortController.DataFinderAction.class, c));
+
+        if (form != null)
+            setGroupId(form.getGroupId());
     }
     public DataFinderWebPart(ViewContext v)
     {
-        this(v.getContainer());
+        this(v.getContainer(), null);
     }
 
     @Override

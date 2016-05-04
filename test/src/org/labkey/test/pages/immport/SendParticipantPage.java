@@ -53,7 +53,7 @@ public class SendParticipantPage extends LabKeyPage
 
     public String getMessageLink()
     {
-        return getText(Locator.xpath("//form//b[contains(text(), 'Message link:')]//following-sibling::div[1]"));
+        return getText(Locators.linkText);
     }
 
     public void clickSubmit()
@@ -77,6 +77,7 @@ public class SendParticipantPage extends LabKeyPage
         public static final Locator.CssLocator recipientsList = bodyPanel.append(" #recipientList");
         public static final Locator.CssLocator messageSubject = bodyPanel.append(" #messageSubject");
         public static final Locator.CssLocator messageBody = bodyPanel.append(" #messageBody");
+        public static final Locator.XPathLocator linkText = Locator.xpath("//form//b[contains(text(), 'Message link:')]//following-sibling::div[1]");
         public static final Locator.CssLocator previewLink = bodyPanel.append(" div a.labkey-text-link");
         public static final Locator.CssLocator errorMessage = bodyPanel.append(" div.labkey-error");
     }

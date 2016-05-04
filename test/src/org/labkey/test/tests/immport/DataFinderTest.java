@@ -39,6 +39,7 @@ import org.labkey.test.categories.External;
 import org.labkey.test.categories.Git;
 import org.labkey.test.components.ParticipantListWebPart;
 import org.labkey.test.components.dumbster.EmailRecordTable;
+import org.labkey.test.components.ext4.Window;
 import org.labkey.test.components.immport.StudySummaryWindow;
 import org.labkey.test.components.study.StudyOverviewWebPart;
 import org.labkey.test.pages.immport.DataFinderPage;
@@ -96,6 +97,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
     private static File TEMPLATE_ARCHIVE = TestFileUtils.getSampleData("HIPC/SDY_template.zip");
     private static String[] ANIMAL_STUDIES = {"SDY99", "SDY139", "SDY147", "SDY208", "SDY215", "SDY217"};
     private static String[] STUDY_SUBFOLDERS = {"SDY139", "SDY147", "SDY208", "SDY217"};
+    private static String USER2_FOLDER = "SDY139";
     private static String USER1 = "user1@foo.com";
     private static String USER2 = "user2@foo.com";
     private static String USER3 = "user3@foo.com";
@@ -201,6 +203,25 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         createUserWithPermissions(USER1, getProjectName(), "Project Administrator");
         createUserWithPermissions(USER2, getProjectName(), "Reader");
         createUser(USER3, null);
+
+        // Assign users permissions to the various folders.
+        log("Assign User1 Folder Administrator permissions to all of the sub folders.");
+        goToProjectHome();
+        goToFolderPermissions();
+        for(String subFolder : STUDY_SUBFOLDERS)
+        {
+            click(Locator.linkWithText(subFolder));
+            waitForElement(Locator.permissionRendered());
+            _permissionsHelper.setUserPermissions(USER1, "Folder Administrator");
+        }
+
+        log("Assign User2 Read permissions to just one of the folders: " + USER2_FOLDER);
+        goToProjectHome();
+        clickProject(getProjectName());
+        clickFolder(USER2_FOLDER);
+        _permissionsHelper.enterPermissionsUI();
+        waitForElement(Locator.permissionRendered());
+        _permissionsHelper.setUserPermissions(USER2, "Reader");
 
     }
 
@@ -727,23 +748,18 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
     @Test
     public void testSend() throws MalformedURLException
     {
-        String filter = "Immune Response", groupName, returnedString, messageSubject, previewURL;
+        String filter, groupName, returnedString, messageSubject, previewURL;
         DataFinderPage finder;
         Map<Dimension, String> selectedFacets = new HashMap<>();
         List<DataFinderPage.DimensionMember> filters;
-        DataFinderPage.GroupMenu saveMenu;
+        DataFinderPage.GroupMenu saveMenu, sendMenu;
         List<String> recipients;
+        Map<Dimension, DataFinderPage.DimensionPanel> dimensionPanels;
+        SendParticipantPage sendPage;
 
         goToProjectHome();
 
-        // Is this the best way to limit access?
-        log("Assign User2 Read permissions to just one of the studies.");
-        clickProject(getProjectName());
-        clickFolder("SDY139");
-        _permissionsHelper.enterPermissionsUI();
-        waitForElement(Locator.permissionRendered());
-        _permissionsHelper.setUserPermissions(USER2, "Reader");
-
+        filter = "Immune Response";
         selectedFacets.put(Dimension.CATEGORY, filter);
         groupName = "group" + System.currentTimeMillis();
         createGroup(groupName, selectedFacets);
@@ -759,7 +775,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
 
         log("Go get the url from the email message.");
         String url = getSharedLinks(messageSubject, USER1);
-        assertTrue("URL in email message not same as preview URl. URL from message: '" + url + "' Preview: '" + previewURL + "'", previewURL.equals(url));
+        assertTrue("URL in email message not same as preview URL. URL from message: '" + url + "' Preview: '" + previewURL + "'", previewURL.equals(url));
         URL sharedUrl = new URL(url);
 
         log("Impersonate one of the recepients and validate that the link works as expected.");
@@ -795,8 +811,11 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         assertEquals("Count of filters is not as expected.", 1, filters.size());
         assertTrue("Filter name not as expected. Expected: '" + filter + "' found: '" + filters.get(0).getName() + "'", filters.get(0).getName().equals(filter));
 
-        log("Validate card count."); // Not going to look at cards because filtering is tested elsewhere.
+        log("Validate card count.");
         assertEquals("Count of cards not as expected.", 1, finder.getStudyCards().size());
+
+        log("Validate that the card shown to User2 is the only one they are allowed to see.");
+        Assert.assertTrue("Study card shown was not limited to the one User2 can see '" + USER2_FOLDER + "'.", finder.getStudyCards().get(0).getAccession().equals(USER2_FOLDER));
 
         log("Validate this user can save the group.");
         saveMenu = finder.getMenu(DataFinderPage.Locators.saveMenu);
@@ -822,8 +841,10 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         log("Clear any filters that are currently applied and create a new filter.");
         finder.clearAllFilters();
 
+        filter = "Immune Response";
         selectedFacets.put(Dimension.CATEGORY, filter);
         groupName = "group" + System.currentTimeMillis();
+        log("Group name: " + groupName);
         createGroup(groupName, selectedFacets);
 
         recipients = new ArrayList<>();
@@ -832,19 +853,67 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         String errorMessage = sendGroup(recipients, groupName, true);
         Assert.assertTrue("Error message not as expected.", errorMessage.equals("User does not have permissions to this container: " + USER3));
 
-        log("Error message was as expected, we are odne, going home now.");
+        log("Error message was as expected. Cancel out of this form.");
+        clickButton("Cancel");
+        goToProjectHome();
+
+        sleep(1000); // Yes I know this is ugly, but running out of time and need to move on. Works around an issue where DataFinder page isn't completely loaded before clearAllFilters is called.
+
+        finder = new DataFinderPage(this);
+
+        log("Clear any filters that are currently applied and create a new filter looking at Condition\\Influenza.");
+        finder.clearAllFilters();
+
+        filter = "Influenza";
+        selectedFacets.clear();
+        selectedFacets.put(Dimension.CONDITION, filter);
+        dimensionPanels = finder.getAllDimensionPanels();
+        for(Map.Entry<Dimension, String> entry : selectedFacets.entrySet())
+        {
+            log("For '" + entry.getKey().toString() + "' select '" + entry.getValue() + "'");
+            dimensionPanels.get(entry.getKey()).selectMember(entry.getValue());
+        }
+
+        log("Try to send the filter without saving first.");
+        sendMenu = finder.getMenu(DataFinderPage.Locators.sendMenu);
+        sendMenu.toggleMenu();
+
+        assertElementVisible(Locator.css("div.x4-message-box"));
+        Window window = new Window("Save Group Before Sending", getDriver());
+        assertTrue("Text in Message Box not as expected.", window.getBody().contains("You must save a group before you can send a copy."));
+
+        log("Choose 'Save' to dismiss the dialog.");
+        clickButton("Save", "Save and Send");
+
+        log("Now save and send the group.");
+        groupName = "group" + System.currentTimeMillis();
+        log("Group name: " + groupName);
+        finder.saveAndSendGroup(groupName);
+
+        recipients = new ArrayList<>();
+        recipients.add(USER1);
+
+        log("Fill out the 'Send Participant Group' form.");
+        sendPage = new SendParticipantPage(this);
+        sendPage.setRecipients(recipients);
+        sendPage.setMessageSubject(sendPage.getMessageSubject() + " named: " + groupName);
+        sendPage.clickSubmit();
+
+        log("Validate that the send did not error.");
+        validateSendDidNotError();
+
+        log("We are done, going home now.");
 
         goToHome();
 
     }
 
-    private void createGroup(String groupName, Map<Dimension, String> x)
+    private void createGroup(String groupName, Map<Dimension, String> facets)
     {
         DataFinderPage finder;
         Map<Dimension, DataFinderPage.DimensionPanel> dimensionPanels;
         DataFinderPage.GroupMenu saveMenu;
 
-        goToProjectHome();
         finder = new DataFinderPage(this);
 
         log("Clear any filters that are currently applied.");
@@ -852,7 +921,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         dimensionPanels = finder.getAllDimensionPanels();
 
         log("Apply the filters.");
-        for(Map.Entry<Dimension, String> entry : x.entrySet())
+        for(Map.Entry<Dimension, String> entry : facets.entrySet())
         {
             log("For '" + entry.getKey().toString() + "' select '" + entry.getValue() + "'");
             dimensionPanels.get(entry.getKey()).selectMember(entry.getValue());
@@ -888,14 +957,9 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         }
         else
         {
+            // Might be nicer if in the future this returns an object with values set and not a string to be split.
             returnString = msgSubject + ";" + sharedLink;
-
-            // If send worked you should be on another page now.
-            if(getURL().getPath().contains("study-sendParticipantGroup.view?"))
-            {
-                assertFalse("An error was shown on the send page. Error message is: " + sendPage.getErrorMessage(), isElementPresent(SendParticipantPage.Locators.errorMessage));
-                assertAlert("Did not navigate away from 'study-sendParticipantGroup.view' after clicking send (should have). And no error message was shown on the page (and there should have been).");
-            }
+            validateSendDidNotError();
         }
 
         return returnString;
@@ -915,10 +979,23 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         msg.setTo(emailTo);
         msg.setSubject(msgSubject);
         emailRecordTable.clickMessage(msg);
-        url = getAttribute(Locator.css("a[href*='immport-dataFinder.view?groupId=']"), "href");
+        url = getAttribute(Locator.css("a[href*='dataFinder.view?groupId=']"), "href");
 
         return url;
 
+    }
+
+    private void validateSendDidNotError()
+    {
+        SendParticipantPage sendPage;
+
+        // If send worked you should be on another page now.
+        if(getURL().getPath().contains("sendParticipantGroup.view?"))
+        {
+            sendPage = new SendParticipantPage(this);
+            assertFalse("An error was shown on the send page. Error message is: " + sendPage.getErrorMessage(), isElementPresent(SendParticipantPage.Locators.errorMessage));
+            assertAlert("Did not navigate away from 'study-sendParticipantGroup.view' after clicking send (should have). And no error message was shown on the page (and there should have been).");
+        }
     }
 
     @Test

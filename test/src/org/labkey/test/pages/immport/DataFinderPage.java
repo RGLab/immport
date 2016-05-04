@@ -92,22 +92,30 @@ public class DataFinderPage extends LabKeyPage
 
     public void saveGroup()
     {
-        waitForElement(Locator.css("div.x4-window td.labkey-dataregion-msgbox div.labkey-dataregion-msg span"));
+        waitForElement(Locators.saveGroupMsgBoxRegion);
         _test.clickButtonContainingText("Save", BaseWebDriverTest.WAIT_FOR_EXT_MASK_TO_DISSAPEAR);
         waitForGroupUpdate();
     }
 
     public void saveGroup(String name)
     {
-        waitForElement(Locator.css("div.x4-window td.labkey-dataregion-msgbox div.labkey-dataregion-msg span"));
+        waitForElement(Locators.saveGroupMsgBoxRegion);
         _test.setFormElement(Locators.groupLabelInput, name);
         _test.clickButtonContainingText("Save", BaseWebDriverTest.WAIT_FOR_EXT_MASK_TO_DISSAPEAR);
         waitForGroupUpdate();
     }
 
+    public void saveAndSendGroup(String name)
+    {
+        waitForElement(Locators.saveGroupMsgBoxRegion);
+        _test.setFormElement(Locators.groupLabelInput, name);
+        _test.clickButtonContainingText("Save and Send", BaseWebDriverTest.WAIT_FOR_EXT_MASK_TO_DISSAPEAR);
+        waitForText("Message link:");
+    }
+
     public String getGroupNameFromForm()
     {
-        waitForElement(Locator.css("div.x4-window td.labkey-dataregion-msgbox div.labkey-dataregion-msg span"));
+        waitForElement(Locators.saveGroupMsgBoxRegion);
         return _test.getFormElement(Locators.groupLabelInput);
     }
 
@@ -217,6 +225,18 @@ public class DataFinderPage extends LabKeyPage
                 _test.doAndWaitForPageSignal(clearAll::click, COUNT_SIGNAL);
             }
         }
+        else
+        {
+            // If that element is not present see if the 'alternative element' is.
+            if(isElementPresent(Locators.clearAllFilters))
+            {
+                final WebElement clearAllFilters = Locators.clearAllFilters.findElement(_test.getDriver());
+                if (clearAllFilters.isDisplayed())
+                {
+                    _test.doAndWaitForPageSignal(clearAllFilters::click, COUNT_SIGNAL);
+                }
+            }
+        }
     }
 
     public void loadSavedGroup(String groupName)
@@ -274,6 +294,7 @@ public class DataFinderPage extends LabKeyPage
         public static final Locator.CssLocator summaryArea = selectionPanel.append(Locator.css("#summaryArea"));
         public static final Locator.CssLocator selection = facetPanel.append(Locator.css(" .selected-member"));
         public static final Locator.CssLocator clearAll = Locator.css("span[ng-click='clearAllFilters(true);']");
+        public static final Locator.CssLocator clearAllFilters = Locator.css("span[ng-click='clearAllClick();']");
         public static final Locator.CssLocator groupLabel = Locator.css(".labkey-group-label");
         public static final Locator.NameLocator groupLabelInput = Locator.name("groupLabel");
         public static final Locator.CssLocator saveMenu = Locator.css("#saveMenu");
@@ -283,7 +304,7 @@ public class DataFinderPage extends LabKeyPage
         public static final Locator.CssLocator savedGroups = loadMenu.append(" ul.labkey-dropdown-menu-active");
         public static final Locator.XPathLocator save = Locator.xpath("//li[contains(@ng-repeat, 'saveOptions')][not(contains(@class, 'inactive'))]").append(Locator.linkWithText("Save"));
         public static final Locator.XPathLocator saveAs = Locator.xpath("//li[contains(@ng-repeat, 'saveOptions')][not(contains(@class, 'inactive'))]").append(Locator.linkWithText("Save As"));
-
+        public static final Locator.CssLocator  saveGroupMsgBoxRegion = Locator.css("div.x4-window td.labkey-dataregion-msgbox div.labkey-dataregion-msg span");
     }
 
     public enum Dimension

@@ -465,6 +465,9 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
 
         $scope.sendSubjectGroup = function()
         {
+            if (!$scope.loadedStudiesShown())
+                return;
+
             if ($scope.currentGroup.id == null || $scope.currentGroupHasChanges)
             {
                 var allowSave = $scope.saveOptions[0].isActive;

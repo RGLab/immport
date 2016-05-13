@@ -139,7 +139,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         if (init.needsSetup())
             init.setupProject();
 
-        init.createUsers();
+//        init.createUsers();
     }
 
     @Override
@@ -937,12 +937,12 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
 
         UserNotificationsPanel notificationsPanel;
         UserNotificationsPage notificationsPage;
-        int noticeIndex, activeNotifications, recipientCountBefore, recipientCountAfter;
-        ArrayList<studyGroupInfo> groupsSent = new ArrayList<>();
+        int unreadNotifications, recipientCountBefore, recipientCountAfter;
+        ArrayList<studyGroupInfo> groupsSent;
         URL previewUrl;
-        ExperimentalFeaturesHelper efh;
 
         // These are indexes to messages in groupsSent. The index indicates the test it is used for.
+        final int TOTAL_NOTIFICATIONS_TO_SEND = 8;
         final int SENT_CLICK_IN_PANEL = 0;
         final int SENT_VISIT_URL = 1;
         final int SENT_MARK_AS_READ = 2;
@@ -962,9 +962,9 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
 
         log("Create several different study groups that will cause notifications to be sent.");
         goToProjectHome();
-        // I create several different groups because the last test run validates the "Clear All" functionality.
-        groupsSent = createAllStudyGroupsForNotificationTest();
-        activeNotifications = groupsSent.size();
+        // I create several different groups/notifications because the last test run validates the "Clear All" functionality.
+        groupsSent = createAllStudyGroupsForNotificationTest(TOTAL_NOTIFICATIONS_TO_SEND);
+        unreadNotifications = groupsSent.size();
 
         log("Go home so we don't accidentally visit the page and cause a notification to disappear");
         goToHome();
@@ -974,108 +974,95 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
 
         recipientCountAfter = Integer.parseInt(UserNotificationsPanel.getInboxCount(this));
         log("Message count on inbox: " + recipientCountAfter);
-        Assert.assertEquals("Notification count for the inbox is not as expected.", (recipientCountBefore + activeNotifications), recipientCountAfter);
+        Assert.assertEquals("Notification count for the inbox is not as expected.", (recipientCountBefore + unreadNotifications), recipientCountAfter);
 
         notificationsPanel = UserNotificationsPanel.clickInbox(this);
         log("Message count in panel: " + notificationsPanel.getNotificationCount());
-        Assert.assertEquals("Count of notifications in the panel is not as expected.", (recipientCountBefore + activeNotifications), notificationsPanel.getNotificationCount());
+        Assert.assertEquals("Count of notifications in the panel is not as expected.", (recipientCountBefore + unreadNotifications), notificationsPanel.getNotificationCount());
 
         log("Find the notification that is for the study group: " + groupsSent.get(SENT_CLICK_IN_PANEL).groupName);
-        final List<NotificationPanelItem> notificationItemList1 = notificationsPanel.getNotificationOfType(UserNotificationsPanel.NotificationTypes.STUDY);
-        noticeIndex = findNotificationInPanelList(notificationItemList1, groupsSent.get(SENT_CLICK_IN_PANEL).groupName);
 
-        assertTrue("Did not find a notice with the group name '" + groupsSent.get(SENT_CLICK_IN_PANEL).groupName + "' in it.", noticeIndex > -1);
-        assertTrue("Item in panel did not have the expected created by.", notificationItemList1.get(noticeIndex).getCreatedBy().contains("Today -"));
-        assertTrue("Item in panel did not have the expected body.", notificationItemList1.get(noticeIndex).getBody().contains("A participant group has been sent: " + groupsSent.get(SENT_CLICK_IN_PANEL).groupName));
-        assertTrue("Icon for item in panel not as expected.", notificationItemList1.get(noticeIndex).getIconType().equals("fa-users"));
+        final NotificationPanelItem notificationPanelItem = notificationsPanel.findNotificationInList(groupsSent.get(SENT_CLICK_IN_PANEL).groupName, UserNotificationsPanel.NotificationTypes.STUDY);
+
+        assertTrue("Did not find a notice with the group name '" + groupsSent.get(SENT_CLICK_IN_PANEL).groupName + "' in it.", notificationPanelItem != null);
+        assertTrue("Item in panel did not have the expected created by.", notificationPanelItem.getCreatedBy().contains("Today -"));
+        assertTrue("Item in panel did not have the expected body.", notificationPanelItem.getBody().contains("A participant group has been sent: " + groupsSent.get(SENT_CLICK_IN_PANEL).groupName));
+        assertTrue("Icon for item in panel not as expected.", notificationPanelItem.getIconType().equals("fa-users"));
 
         log("Click on the item in the list and validate we go to the correct page.");
-        final int lambdaInt1 = noticeIndex;
-        doAndWaitForPageToLoad(() -> notificationItemList1.get(lambdaInt1).click());
+        doAndWaitForPageToLoad(() -> notificationPanelItem.click());
 
         assertTrue("URL for page is not as expected. We should be at dataFinder.view", getURL().getPath().contains("dataFinder.view"));
-        activeNotifications--;
+        unreadNotifications--;
 
         log("Validate that the notification count has gone down.");
         recipientCountAfter = Integer.parseInt(UserNotificationsPanel.getInboxCount(this));
-        assertEquals("Count after clicking the item in the panel was not as expected.", (recipientCountBefore + activeNotifications), recipientCountAfter);
+        assertEquals("Count after clicking the item in the panel was not as expected.", (recipientCountBefore + unreadNotifications), recipientCountAfter);
 
         log("Visit the url link for a different group and confirm that this causes the notification count to go down.");
         previewUrl = new URL(groupsSent.get(SENT_VISIT_URL).sharedURL);
         goToURL(previewUrl, 10000);
-        activeNotifications--;
+        unreadNotifications--;
 
         recipientCountAfter = Integer.parseInt(UserNotificationsPanel.getInboxCount(this));
-        assertEquals("Count after was not as expected.",  (recipientCountBefore + activeNotifications), recipientCountAfter);
+        assertEquals("Count after was not as expected.",  (recipientCountBefore + unreadNotifications), recipientCountAfter);
 
         log("Go home, kind of resetting.");
         goToHome();
 
         notificationsPanel = UserNotificationsPanel.clickInbox(this);
 
-        log("Find the notification that is for the group: " + groupsSent.get(SENT_MARK_AS_READ).groupName);
-        List<NotificationPanelItem> notificationItemList2 = notificationsPanel.getNotificationOfType(UserNotificationsPanel.NotificationTypes.STUDY);
-        noticeIndex = findNotificationInPanelList(notificationItemList2, groupsSent.get(SENT_MARK_AS_READ).groupName);
+        NotificationPanelItem notificationPanelItem2 = notificationsPanel.findNotificationInList(groupsSent.get(SENT_MARK_AS_READ).groupName, UserNotificationsPanel.NotificationTypes.STUDY);
 
-        assertTrue("Did not find a notice with the group name '" + groupsSent.get(SENT_MARK_AS_READ).groupName + "' in it.", noticeIndex > -1);
+        assertTrue("Did not find a notice with the group name '" + groupsSent.get(SENT_MARK_AS_READ).groupName + "' in it.", notificationPanelItem2 != null);
 
         log("Expand the notification. Why? Just because we can, and make sure no errors occur.");
-        notificationItemList2.get(noticeIndex).toggleExpand();
+        notificationPanelItem2.toggleExpand();
 
         // Wait for the expand automation.
         sleep(500);
 
         log("Mark the notification as being read.");
-        notificationItemList2.get(noticeIndex).markAsRead();
+        notificationPanelItem2.markAsRead();
 
         // Wait for the notification to be removed from the list.
         sleep(500);
+        unreadNotifications--;
 
         recipientCountAfter = notificationsPanel.getNotificationCount();
-        // The expected count is recipientCountBefore + activeNotifications - 1 because we still have an active notification (one that has been read), but it should not appear in the panel.
-        assertEquals("Count of notifications in the panel not as expected after marking one as read.", (recipientCountBefore + activeNotifications - 1), recipientCountAfter);
+        assertEquals("Count of notifications in the panel not as expected after marking one as read.", recipientCountBefore + unreadNotifications, recipientCountAfter);
 
         log("Go view all notifications.");
         notificationsPanel.elements().viewAll.click();
 
         notificationsPage = new UserNotificationsPage(getDriver());
 
-        // Has to be marked as final because it is used in a lambda.
-        final List<UserNotificationsPage.NotificationItem> pageNotificationItemsLambda = notificationsPage.getNotificationsOfType(UserNotificationsPage.NotificationTypes.STUDY);
         log("Find the notification that was marked as read and confirm it is read.");
-        noticeIndex = findNotificationInPage(pageNotificationItemsLambda, groupsSent.get(SENT_MARK_AS_READ).groupName);
-
-        assertTrue("Did not find the 'Read' notification in the list of all notifications.", noticeIndex > -1);
-        assertTrue("The 'Read' notification is not marked as read in the list.", pageNotificationItemsLambda.get(noticeIndex).isRead());
-        assertTrue("Text for the 'Read On:' is not as expected.", pageNotificationItemsLambda.get(noticeIndex).getReadOnText().equals("Read On: Today"));
+        UserNotificationsPage.NotificationItem pageNotificationItem = notificationsPage.findNotificationInPage(groupsSent.get(SENT_MARK_AS_READ).groupName, UserNotificationsPage.NotificationTypes.STUDY);
+        assertTrue("Did not find the 'Read' notification in the list of all notifications.", pageNotificationItem != null);
+        assertTrue("The 'Read' notification is not marked as read in the list.", pageNotificationItem.isRead());
+        assertTrue("Text for the 'Read On:' is not as expected.", pageNotificationItem.getReadOnText().equals("Read On: Today"));
 
         log("Find another notification for group that was sent and validate that the 'view' links takes you to the expected page.");
-        noticeIndex = findNotificationInPage(pageNotificationItemsLambda, groupsSent.get(SENT_CLICK_VIEW_LINK).groupName);
-
-        assertTrue("Did not find the notification for group '" + groupsSent.get(SENT_CLICK_VIEW_LINK).groupName + "' in the list of all notifications.", noticeIndex > -1);
+        final UserNotificationsPage.NotificationItem pageNotificationItem2 = notificationsPage.findNotificationInPage(groupsSent.get(SENT_CLICK_VIEW_LINK).groupName, UserNotificationsPage.NotificationTypes.STUDY);
+        assertTrue("Did not find the 'going to view' notification in the list of all notifications.", pageNotificationItem2 != null);
         log("Click the 'view' link.");
-        final int lambdaInt2 = noticeIndex;
-        doAndWaitForPageToLoad(() -> pageNotificationItemsLambda.get(lambdaInt2).clickView());
-
+        doAndWaitForPageToLoad(() -> pageNotificationItem2.clickView());
         assertTrue("URL for page is not as expected. We should be at dataFinder.view", getURL().getPath().contains("dataFinder.view"));
 
         log("Go back to the notifications page and click the 'Mark As Read' link.");
         notificationsPanel = UserNotificationsPanel.clickInbox(this);
         notificationsPanel.elements().viewAll.click();
 
+        log("Find yet another notification that was sent and validate that the 'Mark As Read' links works as expected.");
         // Get a new instance of the notifications page.
         notificationsPage = new UserNotificationsPage(getDriver());
-        List<UserNotificationsPage.NotificationItem> pageNotificationItems = notificationsPage.getNotificationsOfType(UserNotificationsPage.NotificationTypes.STUDY);
-
-        log("Find yet another notification that was sent and validate that the 'Mark As Read' links works as expected.");
-        noticeIndex = findNotificationInPage(pageNotificationItems, groupsSent.get(SENT_CLICK_MARK_AS_READ).groupName);
-        assertTrue("Did not find the notification for group '" + groupsSent.get(SENT_CLICK_MARK_AS_READ).groupName + "' in the list of all notifications.", noticeIndex > -1);
-
+        pageNotificationItem = notificationsPage.findNotificationInPage(groupsSent.get(SENT_CLICK_MARK_AS_READ).groupName, UserNotificationsPage.NotificationTypes.STUDY);
+        assertTrue("Did not find the notification for group '" + groupsSent.get(SENT_CLICK_MARK_AS_READ).groupName + "' in the list of all notifications.", pageNotificationItem != null);
         log("Click 'Mark As Read'.");
-        pageNotificationItems.get(noticeIndex).clickMarkAsRead();
-
-        assertTrue("The notification is not marked as read in the list.", pageNotificationItems.get(noticeIndex).isRead());
-        assertTrue("Text for the 'Read On:' is not as expected.", pageNotificationItems.get(noticeIndex).getReadOnText().equals("Read On: Today"));
+        pageNotificationItem.clickMarkAsRead();
+        assertTrue("The notification is not marked as read in the list.", pageNotificationItem.isRead());
+        assertTrue("Text for the 'Read On:' is not as expected.", pageNotificationItem.getReadOnText().equals("Read On: Today"));
 
         log("Finally, from the panel click the 'Clear All' link and validate all messages are now marked as read.");
         notificationsPanel = UserNotificationsPanel.clickInbox(this);
@@ -1093,10 +1080,9 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         log("The 'View All' link should still be valid.");
         notificationsPanel.elements().viewAll.click();
 
-        notificationsPage = new UserNotificationsPage(getDriver());
-
         log("Validate that all items on the page are marked as read.");
-        pageNotificationItems = notificationsPage.getAllNotifications();
+        notificationsPage = new UserNotificationsPage(getDriver());
+        List<UserNotificationsPage.NotificationItem> pageNotificationItems = notificationsPage.getNotificationsOfType(UserNotificationsPage.NotificationTypes.STUDY);
         for(UserNotificationsPage.NotificationItem pageItem : pageNotificationItems)
         {
             assertTrue("The notification '" + pageItem.getHeaderText() + "' is not marked as read in the list.", pageItem.isRead());
@@ -1105,12 +1091,12 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         stopImpersonating();
 
         log("We are done, turn off the experimental feature and go home");
-        ExperimentalFeaturesHelper.setExperimentalFeature(cn, "experimental-notificationmenu", false);
+//        ExperimentalFeaturesHelper.setExperimentalFeature(cn, "experimental-notificationmenu", false);
 
         goToHome();
     }
 
-    private ArrayList<studyGroupInfo> createAllStudyGroupsForNotificationTest()
+    private ArrayList<studyGroupInfo> createAllStudyGroupsForNotificationTest(int noticeCount)
     {
         String filter, studyGroupName, previewURL;
         Map<Dimension, String> selectedFacets = new HashMap<>();
@@ -1120,6 +1106,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         recipients = new ArrayList<>();
         recipients.add(USER1);
 
+        // Create one study group to start.
         filter = "Mus musculus";
         selectedFacets.put(Dimension.SPECIES, filter);
         sleep(500); // Need to slow down, the UI stumbles and tries to create a group with the same name.
@@ -1132,113 +1119,20 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
 
         groupsSent.add(new studyGroupInfo(studyGroupName, previewURL));
 
-        sleep(500); // Need to slow down, the UI stumbles and tries to create a group with the same name.
-        studyGroupName = "group" + System.currentTimeMillis();
-        saveStudyGroup(studyGroupName);
-        previewURL = sendStudyGroup(recipients, studyGroupName, false)
-                .split(";")[1].replace(" ", "%20");
+        // Using the same filter just change the group name and send it.
+        for(int i=2; i <= noticeCount; i++)
+        {
+            sleep(500); // Need to slow down, the UI stumbles and tries to create a group with the same name.
+            studyGroupName = "group" + System.currentTimeMillis();
+            saveStudyGroup(studyGroupName);
+            previewURL = sendStudyGroup(recipients, studyGroupName, false)
+                    .split(";")[1].replace(" ", "%20");
 
-        groupsSent.add(new studyGroupInfo(studyGroupName, previewURL));
-
-        sleep(500); // Need to slow down, the UI stumbles and tries to create a group with the same name.
-        studyGroupName = "group" + System.currentTimeMillis();
-        saveStudyGroup(studyGroupName);
-        previewURL = sendStudyGroup(recipients, studyGroupName, false)
-                .split(";")[1].replace(" ", "%20");
-        groupsSent.add(new studyGroupInfo(studyGroupName, previewURL));
-
-        sleep(500); // Need to slow down, the UI stumbles and tries to create a group with the same name.
-        studyGroupName = "group" + System.currentTimeMillis();
-        saveStudyGroup(studyGroupName);
-        previewURL = sendStudyGroup(recipients, studyGroupName, false)
-                .split(";")[1].replace(" ", "%20");
-        groupsSent.add(new studyGroupInfo(studyGroupName, previewURL));
-
-        sleep(500); // Need to slow down, the UI stumbles and tries to create a group with the same name.
-        studyGroupName = "group" + System.currentTimeMillis();
-        saveStudyGroup(studyGroupName);
-        previewURL = sendStudyGroup(recipients, studyGroupName, false)
-                .split(";")[1].replace(" ", "%20");
-        groupsSent.add(new studyGroupInfo(studyGroupName, previewURL));
-
-        sleep(500); // Need to slow down, the UI stumbles and tries to create a group with the same name.
-        studyGroupName = "group" + System.currentTimeMillis();
-        saveStudyGroup(studyGroupName);
-        previewURL = sendStudyGroup(recipients, studyGroupName, false)
-                .split(";")[1].replace(" ", "%20");
-        groupsSent.add(new studyGroupInfo(studyGroupName, previewURL));
-
-        sleep(500); // Need to slow down, the UI stumbles and tries to create a group with the same name.
-        studyGroupName = "group" + System.currentTimeMillis();
-        saveStudyGroup(studyGroupName);
-        previewURL = sendStudyGroup(recipients, studyGroupName, false)
-                .split(";")[1].replace(" ", "%20");
-        groupsSent.add(new studyGroupInfo(studyGroupName, previewURL));
-
-        sleep(500); // Need to slow down, the UI stumbles and tries to create a group with the same name.
-        studyGroupName = "group" + System.currentTimeMillis();
-        saveStudyGroup(studyGroupName);
-        previewURL = sendStudyGroup(recipients, studyGroupName, false)
-                .split(";")[1].replace(" ", "%20");
-        groupsSent.add(new studyGroupInfo(studyGroupName, previewURL));
+            groupsSent.add(new studyGroupInfo(studyGroupName, previewURL));
+        }
 
         return groupsSent;
 
-    }
-
-    private int findNotificationInPanelList(List<NotificationPanelItem> notificationItemList, String searchString)
-    {
-        int noticeIndex;
-        boolean noticeFound;
-
-        noticeIndex = 0;
-        noticeFound = false;
-        for(NotificationPanelItem ni : notificationItemList)
-        {
-            if(ni.getBody().contains(searchString))
-            {
-                noticeFound = true;
-                break;
-            }
-            else
-            {
-                noticeIndex++;
-            }
-
-        }
-
-        if(!noticeFound)
-            noticeIndex = -1;
-
-        return noticeIndex;
-    }
-
-    private int findNotificationInPage(List<UserNotificationsPage.NotificationItem> pageNotificationItems, String searchString)
-    {
-        int noticeIndex;
-        boolean noticeFound = false;
-
-        noticeIndex = 0;
-        noticeFound = false;
-        for(UserNotificationsPage.NotificationItem ni : pageNotificationItems)
-        {
-
-            if(ni.getBodyText().contains(searchString))
-            {
-                noticeFound = true;
-                break;
-            }
-            else
-            {
-                noticeIndex++;
-            }
-
-        }
-
-        if(!noticeFound)
-            noticeIndex = -1;
-
-        return noticeIndex;
     }
 
     private void createAndSaveStudyGroup(String groupName, Map<Dimension, String> facets)

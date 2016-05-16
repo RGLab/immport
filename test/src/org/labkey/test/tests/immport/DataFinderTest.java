@@ -139,7 +139,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         if (init.needsSetup())
             init.setupProject();
 
-//        init.createUsers();
+        init.createUsers();
     }
 
     @Override
@@ -1091,7 +1091,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         stopImpersonating();
 
         log("We are done, turn off the experimental feature and go home");
-//        ExperimentalFeaturesHelper.setExperimentalFeature(cn, "experimental-notificationmenu", false);
+        ExperimentalFeaturesHelper.setExperimentalFeature(cn, "experimental-notificationmenu", false);
 
         goToHome();
     }

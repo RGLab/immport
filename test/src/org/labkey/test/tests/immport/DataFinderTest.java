@@ -139,7 +139,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         if (init.needsSetup())
             init.setupProject();
 
-        init.createUsers();
+//        init.createUsers();
     }
 
     @Override
@@ -948,6 +948,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         final int SENT_MARK_AS_READ = 2;
         final int SENT_CLICK_VIEW_LINK = 3;
         final int SENT_CLICK_MARK_AS_READ = 4;
+        final int SENT_CLICK_DISMISS_LINK = 5;
 
         log("Turn on the experimental feature.");
         Connection cn = createDefaultConnection(true);
@@ -1037,13 +1038,13 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
 
         notificationsPage = new UserNotificationsPage(getDriver());
 
-        log("Find the notification that was marked as read and confirm it is read.");
+        log("Find the notification '" + groupsSent.get(SENT_MARK_AS_READ).groupName + "' and confirm it is read.");
         UserNotificationsPage.NotificationItem pageNotificationItem = notificationsPage.findNotificationInPage(groupsSent.get(SENT_MARK_AS_READ).groupName, UserNotificationsPage.NotificationTypes.STUDY);
         assertTrue("Did not find the 'Read' notification in the list of all notifications.", pageNotificationItem != null);
         assertTrue("The 'Read' notification is not marked as read in the list.", pageNotificationItem.isRead());
         assertTrue("Text for the 'Read On:' is not as expected.", pageNotificationItem.getReadOnText().equals("Read On: Today"));
 
-        log("Find another notification for group that was sent and validate that the 'view' links takes you to the expected page.");
+        log("Find notification for group '" + groupsSent.get(SENT_CLICK_VIEW_LINK).groupName + "' that was sent and validate that the 'view' links takes you to the expected page.");
         final UserNotificationsPage.NotificationItem pageNotificationItem2 = notificationsPage.findNotificationInPage(groupsSent.get(SENT_CLICK_VIEW_LINK).groupName, UserNotificationsPage.NotificationTypes.STUDY);
         assertTrue("Did not find the 'going to view' notification in the list of all notifications.", pageNotificationItem2 != null);
         log("Click the 'view' link.");
@@ -1054,7 +1055,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         notificationsPanel = UserNotificationsPanel.clickInbox(this);
         notificationsPanel.elements().viewAll.click();
 
-        log("Find yet another notification that was sent and validate that the 'Mark As Read' links works as expected.");
+        log("Find notification that was sent and validate that the 'Mark As Read' links works as expected.");
         // Get a new instance of the notifications page.
         notificationsPage = new UserNotificationsPage(getDriver());
         pageNotificationItem = notificationsPage.findNotificationInPage(groupsSent.get(SENT_CLICK_MARK_AS_READ).groupName, UserNotificationsPage.NotificationTypes.STUDY);
@@ -1063,6 +1064,17 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         pageNotificationItem.clickMarkAsRead();
         assertTrue("The notification is not marked as read in the list.", pageNotificationItem.isRead());
         assertTrue("Text for the 'Read On:' is not as expected.", pageNotificationItem.getReadOnText().equals("Read On: Today"));
+
+        log("Find notification '" + groupsSent.get(SENT_CLICK_DISMISS_LINK).groupName + "' that was sent and validate that the 'Dismiss' links works as expected.");
+        // Get a new instance of the notifications page.
+        notificationsPage = new UserNotificationsPage(getDriver());
+        pageNotificationItem = notificationsPage.findNotificationInPage(groupsSent.get(SENT_CLICK_DISMISS_LINK).groupName, UserNotificationsPage.NotificationTypes.STUDY);
+        assertTrue("Did not find the notification for group '" + groupsSent.get(SENT_CLICK_DISMISS_LINK).groupName + "' in the list of all notifications.", pageNotificationItem != null);
+        log("Click 'Delete'.");
+        pageNotificationItem.clickDelete();
+        sleep(500);
+        pageNotificationItem = notificationsPage.findNotificationInPage(groupsSent.get(SENT_CLICK_DISMISS_LINK).groupName, UserNotificationsPage.NotificationTypes.STUDY);
+        assertTrue("Found the notification for group '" + groupsSent.get(SENT_CLICK_DISMISS_LINK).groupName + "' in the list of all notifications. It should not be there.", pageNotificationItem == null);
 
         log("Finally, from the panel click the 'Clear All' link and validate all messages are now marked as read.");
         notificationsPanel = UserNotificationsPanel.clickInbox(this);
@@ -1088,10 +1100,64 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
             assertTrue("The notification '" + pageItem.getHeaderText() + "' is not marked as read in the list.", pageItem.isRead());
         }
 
+        log("Get the new unread count for this user (should be 0) and stop impersonating.");
+        recipientCountBefore = Integer.parseInt(UserNotificationsPanel.getInboxCount(this));
+
+        stopImpersonating();
+
+        log("Create a few more study groups and then validate that 'Mark All As Read' and 'Delete All' works as expected from the notification page.");
+        goToProjectHome();
+        unreadNotifications = 2;
+        groupsSent = createAllStudyGroupsForNotificationTest(unreadNotifications);
+        unreadNotifications = groupsSent.size();
+
+        log("Go home again so we don't accidentally visit the page and cause a notification to disappear");
+        goToHome();
+
+        log("Again impersonate the recipient and validate that they see notifications.");
+        impersonate(USER1);
+
+        recipientCountAfter = Integer.parseInt(UserNotificationsPanel.getInboxCount(this));
+        log("Message count on inbox: " + recipientCountAfter);
+        Assert.assertEquals("Notification count for the inbox is not as expected.", (recipientCountBefore + unreadNotifications), recipientCountAfter);
+
+        notificationsPanel = UserNotificationsPanel.clickInbox(this);
+        log("Message count in panel: " + notificationsPanel.getNotificationCount());
+        Assert.assertEquals("Count of notifications in the panel is not as expected.", (recipientCountBefore + unreadNotifications), notificationsPanel.getNotificationCount());
+
+        log("Go view all notifications.");
+        notificationsPanel.elements().viewAll.click();
+
+        notificationsPage = new UserNotificationsPage(getDriver());
+
+        log("Validate that the 'Mark All As read' and 'Delete All' links are presnet at the top of the page.");
+        assertElementVisible(UserNotificationsPage.Locators.markAllAsRead);
+        assertElementVisible(UserNotificationsPage.Locators.deleteAll);
+
+        log("Validate that the new notification is unread.");
+        UserNotificationsPage.NotificationItem pageNotificationItemLastOne = notificationsPage.findNotificationInPage(groupsSent.get(0).groupName, UserNotificationsPage.NotificationTypes.STUDY);
+        assertFalse("The new notificaiton with group id: " + groupsSent.get(0).groupName + " is marked as read, it should not be.", pageNotificationItemLastOne.isRead());
+
+        log("Validate that the 'Mark All As Read' link does what it says it will do.");
+        click(UserNotificationsPage.Locators.markAllAsRead);
+        sleep(500);
+
+        log("Again loop through the list of notifications and validate that they are all marked as read.");
+        pageNotificationItems = notificationsPage.getNotificationsOfType(UserNotificationsPage.NotificationTypes.STUDY);
+        for(UserNotificationsPage.NotificationItem pageItem : pageNotificationItems)
+        {
+            assertTrue("The notification '" + pageItem.getHeaderText() + "' is not marked as read in the list.", pageItem.isRead());
+        }
+
+        log("Validate that the 'Delete All' link does what it says it will do.");
+        click(UserNotificationsPage.Locators.deleteAll);
+        sleep(500);
+        assertEquals("Count of notifications in page not as expected.", 0, notificationsPage.getNotificationCount());
+
         stopImpersonating();
 
         log("We are done, turn off the experimental feature and go home");
-        ExperimentalFeaturesHelper.setExperimentalFeature(cn, "experimental-notificationmenu", false);
+//        ExperimentalFeaturesHelper.setExperimentalFeature(cn, "experimental-notificationmenu", false);
 
         goToHome();
     }

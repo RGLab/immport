@@ -102,7 +102,7 @@ function renderExport(){
             var sql =
                     'SELECT COUNT(filename) AS filecount, SUM(filesize) AS filesize ' +
                     ' FROM (' +
-                        'SELECT ' + fileCol + ' as filename,  MAX(filesize) as filesize' +
+                        'SELECT ' + fileCol + ' as filename, CAST(MAX(IFDEFINED(filesize)) AS INTEGER) as filesize' +
                         ' FROM study.' + ds +
                         ' GROUP BY ' + fileCol +
                     ') as _';

@@ -2,6 +2,7 @@
 SELECT
   regexp_replace (file_info.name, '.CEL$', '', 'g') AS name,
   file_info.name AS file_info_name,
+  file_info.filesize_bytes as filesize,
   purpose,
   expsample_2_file_info.expsample_accession
 FROM

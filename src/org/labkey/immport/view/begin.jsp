@@ -35,15 +35,26 @@ To load new ImmPort (archive)<br>
 <%=textLink("Public/Restricted Studies", new ActionURL(ImmPortController.RestrictedStudiesAction.class, c))%>
 </p>
 <p>
+Load or refresh data in a new study:<br>
 <%=textLink("Copy datasets for one study in this folder", new ActionURL("immport", "copyImmPortStudy", c))%>
 </p>
 <p>
+Reload all data (should be executed from the /Studies container):<br>
 <%=textLink("Copy datasets for multiple child studies", new ActionURL("immport", "reimportStudies", c))%>
 </p>
+<%--
 <p>
 To create a gender subject_groups<br>
 <%=textLink("Create gender subject groups", new ActionURL("immport", "createSubjectGroup", c))%>
 </p>
 <p>
 <%=textLink("Download Specimens",exportSpecimens)%>&nbsp;&nbsp;<%=textLink("Upload Specimens",importSpecimens)%>
+</p>
+--%>
+<p>
+  <hr>
+  Post loading tasks:<br>
+  <%=textLink("Hide empty datasets", new ActionURL("study", "datasetVisibility", c))%>
+  <%=textLink("Highligh study", new ActionURL("study", "manageStudyProperties", c))%>
+  <%=textLink("Update modules", new ActionURL("admin", "folderManagement", c))%>
 </p>

@@ -74,7 +74,7 @@ Ext4.define('Study.window.ParticipantGroup', {
                 },
                 {
                     xtype : 'button',
-                    text : "Save",
+                    text : this.goToSendAfterSave ? "Save and Send" : "Save",
                     margin: '3 3 3 0',
                     hidden : false,
                     handler : this.saveCategory
@@ -102,14 +102,15 @@ Ext4.define('Study.window.ParticipantGroup', {
 
         if (this.participantIds) {
             simplePanel.queryById('participantIdentifiers').setValue(this.participantIds);
+
+            if (this.participantIds.length > 0)
+                simplePanel.on('render', function (){ this.displayQueryWebPart('Demographics'); }, this);
         }
         if (this.groupLabel) {
             simplePanel.queryById('groupLabel').setValue(this.groupLabel);
         }
         simplePanel.on('closewindow', this.close, this);
         this.callParent(arguments);
-        if (this.participantIds.length > 0)
-            this.displayQueryWebPart('Demographics');
         //This class exists for testing purposes (e.g. ReportTest)
         this.cls = "doneLoadingTestMarker";
     },
@@ -141,7 +142,7 @@ Ext4.define('Study.window.ParticipantGroup', {
             method : 'POST',
             success : LABKEY.Utils.getCallbackWrapper(function(data) {
                 this.getEl().unmask();
-                me.fireEvent('aftersave', data);
+                me.fireEvent('aftersave', data, me.goToSendAfterSave);
                 if(me.grid){
                     me.grid.getStore().load();
                 }
@@ -178,33 +179,26 @@ Ext4.define('Study.window.ParticipantGroup', {
     },
 
     displayQueryWebPart : function(queryName) {
-
-        //QueryWebPart is an Ext 3 based component, so we need to include Ext 3 here.
-        LABKEY.requiresExt3ClientAPI(function() {
-
-            Ext.onReady(function() {
-
-                var me = this;
-                var wp = new LABKEY.QueryWebPart({
-                    renderTo: this.selectionGrid.id,
-                    autoScroll : true,
-                    dataRegionName : this.dataRegionName,
-                    schemaName: 'study',
-                    queryName: queryName,
-                    frame : 'none',
-                    border : false,
-                    showRecordSelectors : false,
-                    showUpdateColumn : false,
-                    buttonBar : {
-                        position: 'none',
-                        includeStandardButtons: false
-                    },
-                    scope : this
-                });
-
-            }, this);
-
-        }, this);
+        var wp = new LABKEY.QueryWebPart({
+            renderTo: this.selectionGrid.id,
+            autoScroll : true,
+            dataRegionName : this.dataRegionName,
+            schemaName: 'study',
+            queryName: queryName,
+            frame : 'none',
+            border : false,
+            showRecordSelectors : false,
+            showUpdateColumn : false,
+            buttonBar : {
+                position: 'none',
+                includeStandardButtons: false
+            },
+            success : function(wpDataRegion) {
+                // issue 26329: don't use header locking for a QWP in an Ext dialog window
+                wpDataRegion.disableHeaderLock();
+            },
+            scope : this
+        });
     }
 
 });

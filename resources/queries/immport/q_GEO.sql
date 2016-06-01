@@ -5,4 +5,5 @@ SELECT
 FROM
   expsample_public_repository
 WHERE
-  repository_name = 'GEO'
+  repository_name = 'GEO' AND
+  STARTSWITH(repository_accession, 'GSM')

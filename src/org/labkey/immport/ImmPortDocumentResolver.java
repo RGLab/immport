@@ -40,7 +40,7 @@ import java.util.Map;
  *
  * Resulve resoruces starting with "immport", eg. "immport:study:SDY161"
  */
-public class ImmPortDocumentResolver implements SearchService.ResourceResolver
+public class ImmPortDocumentResolver extends SearchService.ResourceResolver
 {
     @Override
     public WebdavResource resolve(@NotNull String resourceIdentifier)

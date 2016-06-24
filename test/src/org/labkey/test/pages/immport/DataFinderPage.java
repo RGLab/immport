@@ -526,7 +526,7 @@ public class DataFinderPage extends LabKeyPage
         public void deselectMember(String memberName)
         {
             WebElement member = findElement(elements.member.containing(memberName));
-            WebElement check = member.findElement(By.cssSelector(elements.selectedMemberCheck.getLocatorString()));
+            WebElement check = elements.selectedMemberCheck.findElement(member);
             select(check);
         }
 

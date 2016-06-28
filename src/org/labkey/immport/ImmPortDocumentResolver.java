@@ -15,7 +15,7 @@
  */
 package org.labkey.immport;
 
-import org.apache.commons.collections15.IteratorUtils;
+import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.Container;
@@ -40,7 +40,7 @@ import java.util.Map;
  *
  * Resulve resoruces starting with "immport", eg. "immport:study:SDY161"
  */
-public class ImmPortDocumentResolver extends SearchService.ResourceResolver
+public class ImmPortDocumentResolver implements SearchService.ResourceResolver
 {
     @Override
     public WebdavResource resolve(@NotNull String resourceIdentifier)

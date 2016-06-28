@@ -19,6 +19,8 @@
                 <file name="dataintegration.module" />
                 <file name="microarray.module" />
                 <file name="immport.module" />
+                <file name="docker.module" />
+                <file name="rstudio.module" />
             </filelist>
         </copy>
     </target>

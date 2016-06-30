@@ -1106,6 +1106,7 @@ public class DataLoader extends PipelineJob
         try
         {
             _run();
+            ImmPortDocumentProvider.reindex();
         }
         catch (CancelledException e)
         {

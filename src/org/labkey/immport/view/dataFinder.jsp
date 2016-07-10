@@ -44,7 +44,7 @@
 <%@ page import="java.util.TreeMap" %>
 <%@ page extends="org.labkey.api.jsp.JspBase"%>
 <%!
-    public LinkedHashSet<ClientDependency> getClientDependencies()
+    public LinkedHashSet<ClientDependency> addClientDependencies()
     {
         LinkedHashSet<ClientDependency> resources = new LinkedHashSet<>();
         resources.add(ClientDependency.fromPath("internal/jQuery"));

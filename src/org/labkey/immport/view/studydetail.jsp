@@ -38,7 +38,7 @@
 <%@ page import="java.util.LinkedHashSet" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%!
-    public LinkedHashSet<ClientDependency> getClientDependencies()
+    public LinkedHashSet<ClientDependency> addClientDependencies()
     {
         LinkedHashSet<ClientDependency> resources = new LinkedHashSet<>();
 

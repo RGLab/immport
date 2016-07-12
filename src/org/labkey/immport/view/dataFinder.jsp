@@ -21,6 +21,7 @@
 <%@ page import="org.labkey.api.data.ContainerFilterable" %>
 <%@ page import="org.labkey.api.data.ContainerManager" %>
 <%@ page import="org.labkey.api.data.DbSchema" %>
+<%@ page import="org.labkey.api.data.DbSchemaType" %>
 <%@ page import="org.labkey.api.data.SqlSelector" %>
 <%@ page import="org.labkey.api.data.TableInfo" %>
 <%@ page import="org.labkey.api.data.TableSelector" %>
@@ -42,6 +43,7 @@
 <%@ page import="java.util.TreeMap" %>
 <%@ page extends="org.labkey.api.jsp.JspBase"%>
 <%!
+    @Override
     public void addClientDependencies(ClientDependencies dependencies)
     {
         dependencies.add("internal/jQuery");
@@ -58,7 +60,7 @@
 <%
     DataFinderWebPart me = (DataFinderWebPart)HttpView.currentView();
     ViewContext context = HttpView.currentContext();
-    ArrayList<StudyBean> studies = new SqlSelector(DbSchema.get("immport"),"SELECT study.*, P.title as program_title, pi.pi_names\n" +
+    ArrayList<StudyBean> studies = new SqlSelector(DbSchema.get("immport", DbSchemaType.Module),"SELECT study.*, P.title as program_title, pi.pi_names\n" +
             "FROM immport.study " +
             "LEFT OUTER JOIN immport.workspace W ON study.workspace_id = W.workspace_id\n" +
             "LEFT OUTER JOIN immport.contract_grant C ON W.contract_id = C.contract_grant_id\n" +

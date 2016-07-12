@@ -37,6 +37,7 @@
 <%@ page import="java.util.Map" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%!
+    @Override
     public void addClientDependencies(ClientDependencies dependencies)
     {
         dependencies.add("dataFinder.css");
@@ -125,7 +126,7 @@
 
     <%=textLink("ImmPort","https://immport.niaid.nih.gov/immportWeb/clinical/study/displayStudyDetails.do?itemList=" + details.study.getStudy_accession(), null, null, linkProps)%><br>
     <% if (null != studyUrl) { %>
-        <%= textLink("View study " + details.study.getStudy_accession(), studyUrl.toString(), null, null, linkProps)%><br>
+        <%= textLink("View study " + details.study.getStudy_accession(), studyUrl, null, null, linkProps)%><br>
     <% } %>
 </div>
 </div>

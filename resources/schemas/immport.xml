@@ -641,6 +641,7 @@
             <column columnName="population_description"/>
             <column columnName="population_percent"/>
             <column columnName="population_cell_number_unit"/>
+            <column columnName="pop_cell_number_unit_preferred"/>
             <column columnName="population_definition_reported"/>
             <column columnName="population_definition_preferred"/>
             <column columnName="population_name_reported"/>

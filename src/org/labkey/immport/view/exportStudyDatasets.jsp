@@ -19,16 +19,13 @@
 <%@ page import="org.labkey.api.data.Container" %>
 <%@ page import="org.labkey.api.view.HttpView" %>
 <%@ page import="org.labkey.api.view.ViewContext" %>
-<%@ page import="org.labkey.api.view.template.ClientDependency" %>
-<%@ page import="java.util.LinkedHashSet" %>
+<%@ page import="org.labkey.api.view.template.ClientDependencies" %>
 <%@ page extends="org.labkey.api.jsp.JspBase"%>
 <%!
-    public LinkedHashSet<ClientDependency> addClientDependencies()
+    public void addClientDependencies(ClientDependencies dependencies)
     {
-        LinkedHashSet<ClientDependency> resources = new LinkedHashSet<>();
-        resources.add(ClientDependency.fromFilePath("clientapi/ext4"));
-        resources.add(ClientDependency.fromFilePath("immport/renderExport.js"));
-        return resources;
+        dependencies.add("clientapi/ext4");
+        dependencies.add("immport/renderExport.js");
     }
 %>
 <%

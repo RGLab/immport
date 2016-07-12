@@ -42,22 +42,20 @@
 <%@ page import="java.util.LinkedHashSet" %>
 <%@ page import="java.util.Map" %>
 <%@ page import="java.util.TreeMap" %>
+<%@ page import="org.labkey.api.view.template.ClientDependencies" %>
 <%@ page extends="org.labkey.api.jsp.JspBase"%>
 <%!
-    public LinkedHashSet<ClientDependency> addClientDependencies()
+    public void addClientDependencies(ClientDependencies dependencies)
     {
-        LinkedHashSet<ClientDependency> resources = new LinkedHashSet<>();
-        resources.add(ClientDependency.fromPath("internal/jQuery"));
-        resources.add(ClientDependency.fromPath("Ext4"));
-        resources.add(ClientDependency.fromPath("clientapi/ext4"));
-        resources.add(ClientDependency.fromPath("query/olap.js"));
-        resources.add(ClientDependency.fromPath("angular"));
-        resources.add(ClientDependency.fromPath("dataFinder.css"));
-        resources.add(ClientDependency.fromPath("immport/dataFinder.js"));
-        resources.add(ClientDependency.fromPath("immport/ParticipantGroup.js"));
-        resources.add(ClientDependency.fromPath("immport/hipc.css"));
-
-        return resources;
+        dependencies.add("internal/jQuery");
+        dependencies.add("Ext4");
+        dependencies.add("clientapi/ext4");
+        dependencies.add("query/olap.js");
+        dependencies.add("angular");
+        dependencies.add("dataFinder.css");
+        dependencies.add("immport/dataFinder.js");
+        dependencies.add("immport/ParticipantGroup.js");
+        dependencies.add("immport/hipc.css");
     }
 %>
 <%

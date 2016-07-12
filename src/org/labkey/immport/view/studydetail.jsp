@@ -28,24 +28,19 @@
 <%@ page import="org.labkey.api.view.HttpView" %>
 <%@ page import="org.labkey.api.view.JspView" %>
 <%@ page import="org.labkey.api.view.ViewContext" %>
+<%@ page import="org.labkey.api.view.template.ClientDependencies" %>
 <%@ page import="org.labkey.immport.ImmPortController" %>
 <%@ page import="org.labkey.immport.data.StudyPersonnelBean" %>
 <%@ page import="org.labkey.immport.data.StudyPubmedBean" %>
 <%@ page import="java.util.Collection" %>
 <%@ page import="java.util.HashMap" %>
 <%@ page import="java.util.Map" %>
-<%@ page import="org.labkey.api.view.template.ClientDependency" %>
-<%@ page import="java.util.LinkedHashSet" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%!
-    public LinkedHashSet<ClientDependency> addClientDependencies()
+    public void addClientDependencies(ClientDependencies dependencies)
     {
-        LinkedHashSet<ClientDependency> resources = new LinkedHashSet<>();
-
-        resources.add(ClientDependency.fromPath("dataFinder.css"));
-        resources.add(ClientDependency.fromPath("immport/hipc.css"));
-
-        return resources;
+        dependencies.add("dataFinder.css");
+        dependencies.add("immport/hipc.css");
     }
 %>
 <%

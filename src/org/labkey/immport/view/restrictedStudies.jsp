@@ -17,23 +17,22 @@
 %>
 <%@ taglib prefix="labkey" uri="http://www.labkey.org/taglib" %>
 <%@ page import="org.labkey.api.data.DbSchema" %>
+<%@ page import="org.labkey.api.data.DbSchemaType" %>
 <%@ page import="org.labkey.api.data.JdbcType" %>
 <%@ page import="org.labkey.api.data.SqlSelector" %>
-<%@ page import="org.labkey.api.view.template.ClientDependency" %>
-<%@ page import="java.util.LinkedHashSet" %>
+<%@ page import="org.labkey.api.view.template.ClientDependencies" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.Map" %>
 <%@ page extends="org.labkey.api.jsp.JspBase"%>
 <%!
-    public LinkedHashSet<ClientDependency> getClientDependencies()
+    @Override
+    public void addClientDependencies(ClientDependencies dependencies)
     {
-        LinkedHashSet<ClientDependency> resources = new LinkedHashSet<>();
-        resources.add(ClientDependency.fromPath("Ext4"));
-        return resources;
+        dependencies.add("Ext4");
     }
 %>
 <%
-    List<Map<String,Object>> list = (List<Map<String,Object>>)(List)new SqlSelector(DbSchema.get("immport").getScope(),
+    List<Map<String,Object>> list = (List<Map<String,Object>>)(List)new SqlSelector(DbSchema.get("immport", DbSchemaType.Module).getScope(),
             "SELECT study_accession, restricted, brief_title " +
             "FROM immport.study " +
             "ORDER BY CASE WHEN study_accession LIKE 'SDY%' THEN CAST(SUBSTR(study_accession,4) AS INTEGER) ELSE 0 END, study_accession"
@@ -49,7 +48,7 @@
     {
         Boolean restricted = (Boolean)JdbcType.BOOLEAN.convert(map.get("restricted"));
     %>
-        <tr><td nowrap align="right"><input type="checkbox" name="studies" value="<%=h(map.get("study_accession"))%>" <%=text(restricted ? "checked":"")%>></td><td><%=h(map.get("study_accession"))%>&nbsp;</td><td><%=h(map.get("brief_title"))%></td></tr>
+        <tr><td nowrap align="right"><input type="checkbox" name="studies" value="<%=h(map.get("study_accession"))%>" <%=text(restricted ? "checked":"")%> title="studies"></td><td><%=h(map.get("study_accession"))%>&nbsp;</td><td><%=h(map.get("brief_title"))%></td></tr>
     <%
     }
 %></table>

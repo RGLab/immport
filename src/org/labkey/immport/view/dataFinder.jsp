@@ -21,6 +21,7 @@
 <%@ page import="org.labkey.api.data.ContainerFilterable" %>
 <%@ page import="org.labkey.api.data.ContainerManager" %>
 <%@ page import="org.labkey.api.data.DbSchema" %>
+<%@ page import="org.labkey.api.data.DbSchemaType" %>
 <%@ page import="org.labkey.api.data.SqlSelector" %>
 <%@ page import="org.labkey.api.data.TableInfo" %>
 <%@ page import="org.labkey.api.data.TableSelector" %>
@@ -30,8 +31,7 @@
 <%@ page import="org.labkey.api.view.ActionURL" %>
 <%@ page import="org.labkey.api.view.HttpView" %>
 <%@ page import="org.labkey.api.view.ViewContext" %>
-<%@ page import="org.labkey.api.view.WebPartView" %>
-<%@ page import="org.labkey.api.view.template.ClientDependency" %>
+<%@ page import="org.labkey.api.view.template.ClientDependencies" %>
 <%@ page import="org.labkey.immport.ImmPortController" %>
 <%@ page import="org.labkey.immport.data.StudyBean" %>
 <%@ page import="org.labkey.immport.view.DataFinderWebPart" %>
@@ -39,31 +39,28 @@
 <%@ page import="java.util.Collection" %>
 <%@ page import="java.util.Collections" %>
 <%@ page import="java.util.Date" %>
-<%@ page import="java.util.LinkedHashSet" %>
 <%@ page import="java.util.Map" %>
 <%@ page import="java.util.TreeMap" %>
 <%@ page extends="org.labkey.api.jsp.JspBase"%>
 <%!
-    public LinkedHashSet<ClientDependency> getClientDependencies()
+    @Override
+    public void addClientDependencies(ClientDependencies dependencies)
     {
-        LinkedHashSet<ClientDependency> resources = new LinkedHashSet<>();
-        resources.add(ClientDependency.fromPath("internal/jQuery"));
-        resources.add(ClientDependency.fromPath("Ext4"));
-        resources.add(ClientDependency.fromPath("clientapi/ext4"));
-        resources.add(ClientDependency.fromPath("query/olap.js"));
-        resources.add(ClientDependency.fromPath("angular"));
-        resources.add(ClientDependency.fromPath("dataFinder.css"));
-        resources.add(ClientDependency.fromPath("immport/dataFinder.js"));
-        resources.add(ClientDependency.fromPath("immport/ParticipantGroup.js"));
-        resources.add(ClientDependency.fromPath("immport/hipc.css"));
-
-        return resources;
+        dependencies.add("internal/jQuery");
+        dependencies.add("Ext4");
+        dependencies.add("clientapi/ext4");
+        dependencies.add("query/olap.js");
+        dependencies.add("angular");
+        dependencies.add("dataFinder.css");
+        dependencies.add("immport/dataFinder.js");
+        dependencies.add("immport/ParticipantGroup.js");
+        dependencies.add("immport/hipc.css");
     }
 %>
 <%
     DataFinderWebPart me = (DataFinderWebPart)HttpView.currentView();
     ViewContext context = HttpView.currentContext();
-    ArrayList<StudyBean> studies = new SqlSelector(DbSchema.get("immport"),"SELECT study.*, P.title as program_title, pi.pi_names\n" +
+    ArrayList<StudyBean> studies = new SqlSelector(DbSchema.get("immport", DbSchemaType.Module),"SELECT study.*, P.title as program_title, pi.pi_names\n" +
             "FROM immport.study " +
             "LEFT OUTER JOIN immport.workspace W ON study.workspace_id = W.workspace_id\n" +
             "LEFT OUTER JOIN immport.contract_grant C ON W.contract_id = C.contract_grant_id\n" +

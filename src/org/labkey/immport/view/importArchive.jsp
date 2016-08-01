@@ -18,16 +18,14 @@
 <%@ taglib prefix="labkey" uri="http://www.labkey.org/taglib" %>
 <%@ page import="org.apache.commons.lang3.StringUtils" %>
 <%@ page import="org.labkey.api.view.HttpView" %>
-<%@ page import="org.labkey.api.view.template.ClientDependency" %>
+<%@ page import="org.labkey.api.view.template.ClientDependencies" %>
 <%@ page import="org.labkey.immport.ImmPortController" %>
-<%@ page import="java.util.LinkedHashSet" %>
 <%@ page extends="org.labkey.api.jsp.JspBase"%>
 <%!
-    public LinkedHashSet<ClientDependency> getClientDependencies()
+    @Override
+    public void addClientDependencies(ClientDependencies dependencies)
     {
-        LinkedHashSet<ClientDependency> resources = new LinkedHashSet<>();
-        resources.add(ClientDependency.fromPath("Ext4"));
-        return resources;
+        dependencies.add("Ext4");
     }
 %>
 <%
@@ -38,9 +36,9 @@
 <labkey:errors/>
 <labkey:form name="importArchive" method="POST" onsubmit="Ext4.getBody().mask();true;;">
 Copy from mysql archive -&gt; labkey.immport<br>
-<input style='width:640px;' name=path value="<%=h(form.getPath())%>"><br>
-<input type="checkbox" name="restricted">restricted</input><br>
-<input type=submit>
+<input style='width:640px;' name="path" title="Absolute path on server" value="<%=h(form.getPath())%>"><br>
+<input type="checkbox" name="restricted" title="restricted">restricted<br>
+<input type="submit">
 </labkey:form>
 <p></p>
 <pre><%=h(log)%></pre>

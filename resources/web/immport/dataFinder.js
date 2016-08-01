@@ -675,7 +675,8 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
             configId: 'ImmPort:/StudyCube',
             schemaName: 'ImmPort',
             name: 'StudyCube',
-            deferLoad: false
+            deferLoad: false,
+            memberExclusionFields:["[Subject].[Subject]"]
         });
         $scope.cube.onReady(function (m)
         {
@@ -709,6 +710,8 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                 // using the cube objects directly makes angularjs debugging hard because of the pointers 'up' to level/hierarchy
                 // so I'll copy them instead
                 //        dim.members = dim.level.members;
+                if (!dim.level.members)
+                    continue;
                 for (var m = 0; m < dim.level.members.length; m++)
                 {
                     var src = dim.level.members[m];

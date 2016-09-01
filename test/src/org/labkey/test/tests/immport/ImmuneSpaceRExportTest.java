@@ -121,17 +121,21 @@ public class ImmuneSpaceRExportTest extends BaseWebDriverTest implements Postgre
 
     private void assertImmuneSpaceRScriptContents(String rScript, String noun, String connContainerName, String datasetName, String filterColName)
     {
+        // some browsers return script with ">" and "<" and some with "&gt;" and "&lt;"
+        rScript = rScript.replaceAll("&gt;", ">");
+        rScript = rScript.replaceAll("&lt;", "<");
+
         assertTrue("Script is missing ImmuneSpaceR library", rScript.contains("library(ImmuneSpaceR)"));
-        assertTrue("Script is missing CreateConnection call", rScript.contains(noun + " &lt;- CreateConnection(\"" + connContainerName + "\")"));
+        assertTrue("Script is missing CreateConnection call", rScript.contains(noun + " <- CreateConnection(\"" + connContainerName + "\")"));
         if (filterColName != null)
         {
             assertTrue("Script is missing Rlabkey library", rScript.contains("library(Rlabkey)"));
-            assertTrue("", rScript.contains("colFilter &lt;- makeFilter(c(\"" + filterColName + "\", \"EQUAL\", \"foo\"))"));
-            assertTrue("Script is missing getDataset call", rScript.contains("dataset &lt;- " + noun + "$getDataset(\"" + datasetName + "\", colFilter = colFilter)"));
+            assertTrue("", rScript.contains("colFilter <- makeFilter(c(\"" + filterColName + "\", \"EQUAL\", \"foo\"))"));
+            assertTrue("Script is missing getDataset call", rScript.contains("dataset <- " + noun + "$getDataset(\"" + datasetName + "\", colFilter = colFilter)"));
         }
         else
         {
-            assertTrue("Script is missing getDataset call", rScript.contains("dataset &lt;- " + noun + "$getDataset(\"" + datasetName + "\")"));
+            assertTrue("Script is missing getDataset call", rScript.contains("dataset <- " + noun + "$getDataset(\"" + datasetName + "\")"));
         }
     }
 

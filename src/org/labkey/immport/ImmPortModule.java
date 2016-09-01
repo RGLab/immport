@@ -21,6 +21,8 @@ import org.labkey.api.data.Container;
 import org.labkey.api.module.DefaultModule;
 import org.labkey.api.module.FolderTypeManager;
 import org.labkey.api.module.ModuleContext;
+import org.labkey.api.query.QueryView;
+import org.labkey.api.query.RExportScriptFactory;
 import org.labkey.api.search.SearchService;
 import org.labkey.api.security.roles.RoleManager;
 import org.labkey.api.services.ServiceRegistry;
@@ -75,6 +77,9 @@ public class ImmPortModule extends DefaultModule
     {
         addController("immport", ImmPortController.class);
         RoleManager.registerRole(new ImmPortAdminRole());
+
+        // override the base RExportScriptFactory to use a script based on the ImmuneSpaceR package
+        QueryView.register(new ImmuneSpaceRExportScriptFactory(), true);
     }
 
     @Override

@@ -40,16 +40,16 @@ import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.data.UpdateableTableInfo;
-import org.labkey.api.etl.DataIterator;
-import org.labkey.api.etl.DataIteratorBuilder;
-import org.labkey.api.etl.DataIteratorContext;
-import org.labkey.api.etl.FilterDataIterator;
-import org.labkey.api.etl.Pump;
-import org.labkey.api.etl.ResultSetDataIterator;
-import org.labkey.api.etl.SimpleTranslator;
-import org.labkey.api.etl.StandardETL;
-import org.labkey.api.etl.StatementDataIterator;
-import org.labkey.api.etl.WrapperDataIterator;
+import org.labkey.api.dataiterator.DataIterator;
+import org.labkey.api.dataiterator.DataIteratorBuilder;
+import org.labkey.api.dataiterator.DataIteratorContext;
+import org.labkey.api.dataiterator.FilterDataIterator;
+import org.labkey.api.dataiterator.Pump;
+import org.labkey.api.dataiterator.ResultSetDataIterator;
+import org.labkey.api.dataiterator.SimpleTranslator;
+import org.labkey.api.dataiterator.StandardDataIteratorBuilder;
+import org.labkey.api.dataiterator.StatementDataIterator;
+import org.labkey.api.dataiterator.WrapperDataIterator;
 import org.labkey.api.exp.list.ListImportProgress;
 import org.labkey.api.pipeline.CancelledException;
 import org.labkey.api.pipeline.PipelineJob;
@@ -98,7 +98,7 @@ public class DataLoader extends PipelineJob
 
     ArrayList<String> studyAccessions = new ArrayList<>();
 
-    static class CopyConfig extends org.labkey.api.etl.CopyConfig
+    static class CopyConfig extends org.labkey.api.dataiterator.CopyConfig
     {
         final QueryUpdateService.InsertOption option;
 
@@ -155,7 +155,7 @@ public class DataLoader extends PipelineJob
     static int copy(final DataIteratorContext context, DataIteratorBuilder from, TableInfo to, Container c, User user, final DataLoader dl)
             throws IOException, BatchValidationException
     {
-        StandardETL etl = StandardETL.forInsert(to, from, c, user, context);
+        StandardDataIteratorBuilder etl = StandardDataIteratorBuilder.forInsert(to, from, c, user, context);
         DataIteratorBuilder insert = ((UpdateableTableInfo)to).persistRows(etl, context);
         Pump pump = new Pump(insert, context);
         pump.setProgress(new ListImportProgress()
@@ -324,7 +324,7 @@ public class DataLoader extends PipelineJob
                 }
             }
 
-            StandardETL etl = StandardETL.forInsert(targetTableInfo, from, c, user, context);
+            StandardDataIteratorBuilder etl = StandardDataIteratorBuilder.forInsert(targetTableInfo, from, c, user, context);
             //DataIteratorBuilder insert = ((UpdateableTableInfo)targetTableInfo).persistRows(etl, context);
             DataIterator insert = new _StatementDataIterator(etl.getDataIterator(context),getParameterMap(),context);
             Pump pump = new Pump(insert, context);

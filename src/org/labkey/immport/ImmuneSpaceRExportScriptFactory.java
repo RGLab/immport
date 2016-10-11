@@ -66,8 +66,21 @@ public class ImmuneSpaceRExportScriptFactory extends RExportScriptFactory
                 colFilterStr = ", colFilter = colFilter";
             }
 
-            // use the ImmuneSpaceR getDataset function for the specified query/dataset name and apply any column filters
-            sb.append("dataset <- ").append(noun).append("$getDataset(\"").append(getQueryName()).append("\"").append(colFilterStr).append(")");
+            // add any column sort
+            String colSortStr = "";
+            String sort = getSort();
+            if (sort != null)
+            {
+                sb.append("colSort <- ").append(doubleQuote(getSort())).append("\n");
+                colSortStr = ", colSort = colSort";
+            }
+
+            // use the ImmuneSpaceR getDataset function for the specified query/dataset name and apply any column filters / sorts
+            sb.append("dataset <- ").append(noun)
+                    .append("$getDataset(\"").append(getQueryName()).append("\"")
+                    .append(colFilterStr)
+                    .append(colSortStr)
+                    .append(")");
 
             return sb.toString();
         }

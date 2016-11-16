@@ -146,15 +146,13 @@ function renderExport(){
                 dataset.files += details.rows[i].filecount;
         }
 
-        if ( datasets[ ds ].fileSize ){
-            var record = dataStore.getById( datasets[ ds ].datasetId + 'f' );
-            record.set( 'include', false );
-            record.set( 'type', 'File' );
-            record.set( 'numRows', '' );
-            record.set( 'fileSize', datasets[ds].fileSize );
-            record.set( 'files', datasets[ds].files );
-            record.set( 'final', true );
-        }
+        var record = dataStore.getById( datasets[ ds ].datasetId + 'f' );
+        record.set( 'include', false );
+        record.set( 'type', 'File' );
+        record.set( 'numRows', '' );
+        record.set( 'fileSize', datasets[ds].fileSize );
+        record.set( 'files', datasets[ds].files );
+        record.set( 'final', true );
 
         if ( ds == 'gene_expression_files' ){
             getGeneExpMatrices();

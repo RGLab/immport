@@ -23,6 +23,7 @@ import org.labkey.api.module.FolderTypeManager;
 import org.labkey.api.module.ModuleContext;
 import org.labkey.api.query.QueryView;
 import org.labkey.api.query.RExportScriptFactory;
+import org.labkey.api.rstudio.RStudioService;
 import org.labkey.api.search.SearchService;
 import org.labkey.api.security.roles.RoleManager;
 import org.labkey.api.services.ServiceRegistry;
@@ -31,6 +32,7 @@ import org.labkey.api.view.WebPartFactory;
 import org.labkey.immport.security.ImmPortAdminRole;
 import org.labkey.immport.view.DataFinderWebPart;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -95,6 +97,19 @@ public class ImmPortModule extends DefaultModule
         }
 
     	FolderTypeManager.get().registerFolderType(this, new ImmPortFolderType(this));
+
+        RStudioService rstudio = ServiceRegistry.get(RStudioService.class);
+        if (null != rstudio)
+        {
+            try
+            {
+                rstudio.getClass().getMethod("addRequiredLibrary", String.class).invoke(rstudio,"ImmuneSpaceR");
+            }
+            catch (NoSuchMethodException|SecurityException|IllegalAccessException|InvocationTargetException x)
+            {
+                // pass
+            }
+        }
     }
 
     @NotNull

@@ -103,20 +103,24 @@ public class ImmuneSpaceRExportTest extends BaseWebDriverTest implements Postgre
         // test default exported script - no filter
         DataRegionTable dataRegion = new DataRegionTable(dataRegionName, getDriver());
         DataRegionExportHelper exportHelper = new DataRegionExportHelper(dataRegion);
-        String rScript = exportHelper.exportScript(DataRegionExportHelper.ScriptExportType.R);
-        if (isImmPort)
-            assertImmuneSpaceRScriptContents(rScript, noun, containerName, queryName, null);
-        else
-            assertRScriptContents(rScript, schemaName, queryName, null);
+        exportHelper.exportAndVerifyScript(DataRegionExportHelper.ScriptExportType.R, rScript ->
+        {
+            if (isImmPort)
+                assertImmuneSpaceRScriptContents(rScript, noun, containerName, queryName, null);
+            else
+                assertRScriptContents(rScript, schemaName, queryName, null);
+        });
 
         // test exported script - with filter
         dataRegion.setFilter(filterColName, "Equals", "foo");
         exportHelper = new DataRegionExportHelper(dataRegion);
-        rScript = exportHelper.exportScript(DataRegionExportHelper.ScriptExportType.R);
-        if (isImmPort)
-            assertImmuneSpaceRScriptContents(rScript, noun, containerName, queryName, filterColName);
-        else
-            assertRScriptContents(rScript, schemaName, queryName, filterColName);
+        exportHelper.exportAndVerifyScript(DataRegionExportHelper.ScriptExportType.R, rScript ->
+        {
+            if (isImmPort)
+                assertImmuneSpaceRScriptContents(rScript, noun, containerName, queryName, filterColName);
+            else
+                assertRScriptContents(rScript, schemaName, queryName, filterColName);
+        });
     }
 
     private void assertImmuneSpaceRScriptContents(String rScript, String noun, String connContainerName, String datasetName, String filterColName)

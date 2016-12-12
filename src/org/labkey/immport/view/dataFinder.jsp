@@ -41,6 +41,9 @@
 <%@ page import="java.util.Date" %>
 <%@ page import="java.util.Map" %>
 <%@ page import="java.util.TreeMap" %>
+<%@ page import="org.labkey.api.rstudio.RStudioService" %>
+<%@ page import="org.labkey.api.services.ServiceRegistry" %>
+<%@ page import="org.labkey.api.util.URLHelper" %>
 <%@ page extends="org.labkey.api.jsp.JspBase"%>
 <%!
     @Override
@@ -153,7 +156,16 @@
 		</div>
 		<div class="help-links">
                 <%=textLink("quick help", "#", "start_tutorial()", "showTutorial")%>
-                <%=textLink("Export Study Datasets", ImmPortController.ExportStudyDatasetsAction.class)%><br>
+                <%=textLink("Export Study Datasets", ImmPortController.ExportStudyDatasetsAction.class)%>
+                <%
+                URLHelper startRstudio = null;
+                RStudioService rstudio = ServiceRegistry.get(RStudioService.class);
+                if (null != rstudio)
+                    startRstudio = rstudio.getRStudioLink(context.getUser());
+                if (null != startRstudio)
+                {
+                    %><%=textLink("RStudio", new ActionURL("rstudio","start",ContainerManager.getRoot()))%><%
+                } %>
                 </div>
             </td>
         </tr>

@@ -132,14 +132,17 @@ public class DataLoader extends PipelineJob
             assert this.getTargetSchema().getParts().size()==1;
             DbSchema targetSchema = DbSchema.get(this.getTargetSchema().getName());
             TableInfo targetTableInfo = targetSchema.getTable(getTargetQuery());
+            updateInsertOptionBeforeCopy(context, targetTableInfo);
+            return copy(context, from, targetTableInfo, c, u, dl);
+        }
 
+        protected void updateInsertOptionBeforeCopy(DataIteratorContext context, TableInfo targetTableInfo)
+        {
             if (context.getInsertOption() == QueryUpdateService.InsertOption.MERGE && null != targetTableInfo)
             {
                 if (!(new TableSelector(targetTableInfo).exists()))
                     context.setInsertOption(QueryUpdateService.InsertOption.IMPORT);
             }
-
-            return copy(context, from, targetTableInfo, c, u, dl);
         }
 
         public void deleteFromTarget(PipelineJob job, List<String> studies) throws IOException, SQLException
@@ -397,10 +400,10 @@ public class DataLoader extends PipelineJob
             Parameter reagent_accession = new Parameter("reagent_accession", JdbcType.VARCHAR);
             Parameter experiment_accession = new Parameter("experiment_accession", JdbcType.VARCHAR);
             SQLFragment insert = new SQLFragment(
-                    "INSERT INTO immport.expsample_2_file_info (expsample_accession, reagent_accession, experiment_accession)\n" +
+                    "INSERT INTO immport.expsample_2_reagent (expsample_accession, reagent_accession, experiment_accession)\n" +
                             "SELECT ?, ?, ?\n",
                     expsample_accession, reagent_accession, experiment_accession);
-            SQLFragment update = new SQLFragment("UPDATE immport.expsample_2_file_info SET expsample_accession=?, reagent_accession=?, experiment_accession=?\n" +
+            SQLFragment update = new SQLFragment("UPDATE immport.expsample_2_reagent SET expsample_accession=?, reagent_accession=?, experiment_accession=?\n" +
                     "WHERE expsample_accession=? AND reagent_accession=?\n",
                     expsample_accession, reagent_accession, experiment_accession, expsample_accession, reagent_accession);
             SQLFragment sqlf = new SQLFragment();
@@ -426,10 +429,10 @@ public class DataLoader extends PipelineJob
             Parameter treatment_accession = new Parameter("treatment_accession", JdbcType.VARCHAR);
             Parameter experiment_accession = new Parameter("experiment_accession", JdbcType.VARCHAR);
             SQLFragment insert = new SQLFragment(
-                    "INSERT INTO immport.expsample_2_file_info (expsample_accession, treatment_accession, experiment_accession)\n" +
+                    "INSERT INTO immport.expsample_2_treatment (expsample_accession, treatment_accession, experiment_accession)\n" +
                             "SELECT ?, ?, ?\n",
                     expsample_accession, treatment_accession, experiment_accession);
-            SQLFragment update = new SQLFragment("UPDATE immport.expsample_2_file_info SET expsample_accession=?, treatment_accession=?, experiment_accession=?\n" +
+            SQLFragment update = new SQLFragment("UPDATE immport.expsample_2_treatment SET expsample_accession=?, treatment_accession=?, experiment_accession=?\n" +
                     "WHERE expsample_accession=? AND treatment_accession=?\n",
                     expsample_accession, treatment_accession, experiment_accession, expsample_accession, treatment_accession);
             SQLFragment sqlf = new SQLFragment();
@@ -688,13 +691,36 @@ public class DataLoader extends PipelineJob
         new StudyCopyConfig("study_pubmed"),
         new StudyCopyConfig("subject_measure_definition"),
         new StudyCopyConfig("substance_merge"),
-        new SharedCopyConfig("contract_grant"),
+            // lots of duplicates in contract_grant, is this only the test data???
+            // force using merge by override updateInsertOptionBeforeCopy()
+        new SharedCopyConfig("contract_grant")
+        {
+            @Override
+            protected void updateInsertOptionBeforeCopy(DataIteratorContext context, TableInfo targetTableInfo)
+            {
+            }
+        },
         new SharedCopyConfig("program"),
 
         new SharedCopyConfig("fcs_annotation"),
         new SharedCopyConfig("fcs_analyzed_result_marker"),
-        new SharedCopyConfig("fcs_header_marker"),
-        new SharedCopyConfig("fcs_header"),
+
+            // force using merge by override updateInsertOptionBeforeCopy()
+        new SharedCopyConfig("fcs_header_marker")
+        {
+            @Override
+            protected void updateInsertOptionBeforeCopy(DataIteratorContext context, TableInfo targetTableInfo)
+            {
+            }
+        },
+            // force using merge by override updateInsertOptionBeforeCopy()
+        new SharedCopyConfig("fcs_header")
+        {
+            @Override
+            protected void updateInsertOptionBeforeCopy(DataIteratorContext context, TableInfo targetTableInfo)
+            {
+            }
+        },
 
             // results
         new StudyCopyConfig("elisa_result"),

@@ -1,5 +1,5 @@
  /*
- * Copyright (c) 2013-2015 LabKey Corporation
+ * Copyright (c) 2013-2017 LabKey Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -91,8 +91,8 @@ SELECT
    END as assay,
    arm_or_cohort.arm_accession,
    biosample.biosample_accession,
-   biosample_2_expsample.expsample_accession,
-   biosample_2_expsample.experiment_accession,
+   expsample_2_biosample.expsample_accession,
+   expsample.experiment_accession,
    biosample.study_accession,
    biosample.study_time_collected,
    biosample.study_time_collected_unit,
@@ -100,8 +100,9 @@ SELECT
    biosample.workspace_id
 FROM
   immport.biosample
-  JOIN immport.biosample_2_expsample ON biosample.biosample_accession = biosample_2_expsample.biosample_accession
-  JOIN immport.expsample_2_file_info ON biosample_2_expsample.expsample_accession = expsample_2_file_info.expsample_accession
+  JOIN immport.expsample_2_biosample ON biosample.biosample_accession = expsample_2_biosample.biosample_accession
+  JOIN immport.expsample ON expsample_2_biosample.expsample_accession = expsample.expsample_accession
+  JOIN immport.expsample_2_file_info ON expsample_2_biosample.expsample_accession = expsample_2_file_info.expsample_accession
   JOIN immport.file_info ON expsample_2_file_info.file_info_id = file_info.file_info_id
   JOIN immport.arm_2_subject ON biosample.subject_accession = arm_2_subject.subject_accession
   JOIN immport.arm_or_cohort ON arm_2_subject.arm_accession = arm_or_cohort.arm_accession AND biosample.study_accession = arm_or_cohort.study_accession

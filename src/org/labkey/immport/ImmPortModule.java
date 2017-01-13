@@ -22,7 +22,6 @@ import org.labkey.api.module.DefaultModule;
 import org.labkey.api.module.FolderTypeManager;
 import org.labkey.api.module.ModuleContext;
 import org.labkey.api.query.QueryView;
-import org.labkey.api.query.RExportScriptFactory;
 import org.labkey.api.rstudio.RStudioService;
 import org.labkey.api.search.SearchService;
 import org.labkey.api.security.roles.RoleManager;
@@ -54,7 +53,7 @@ public class ImmPortModule extends DefaultModule
     @Override
     public double getVersion()
     {
-        return 16.21;
+        return 16.32;
     }
 
     @Override

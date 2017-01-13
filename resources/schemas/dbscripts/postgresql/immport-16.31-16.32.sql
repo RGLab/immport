@@ -410,7 +410,7 @@ CREATE TABLE immport.file_info
 (
 file_info_id INT NOT NULL,
 detail VARCHAR(100) NOT NULL,
-filesize_bytes INT NOT NULL,
+filesize_bytes INT8 NOT NULL,                                     -- CHANGED INT -> INT8
 name VARCHAR(250) NOT NULL,
 original_file_name VARCHAR(250) NOT NULL,
 purpose VARCHAR(100) NOT NULL,
@@ -783,7 +783,7 @@ CREATE TABLE immport.lk_public_repository
 (
 name VARCHAR(50) NOT NULL,
 description VARCHAR(1000),
-link VARCHAR(100),
+link VARCHAR(2000),                           -- CHANGED FROM VARCHAR(100) in original DDL
 PRIMARY KEY (name)
 );
 CREATE TABLE immport.lk_race
@@ -1282,7 +1282,7 @@ PRIMARY KEY (study_link_id)
 CREATE TABLE immport.study_personnel
 (
 person_accession VARCHAR(15) NOT NULL,
-site_name VARCHAR(100) NOT NULL,
+site_name VARCHAR(100) NULL,                -- CHANGED FROM "NOT NULL" to "NULL"
 email VARCHAR(40),
 first_name VARCHAR(40),
 honorific VARCHAR(20),

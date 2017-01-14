@@ -360,14 +360,14 @@ BEGIN
   FROM immport.v_results_union
   ORDER BY study_accession, sortorder;
 
-
+/*
   -- summarySubjectAssayStudy
   DELETE FROM immport.summarySubjectAssayStudy;
   INSERT INTO  immport.summarySubjectAssayStudy (subject_accession, assay, study_accession)
   SELECT DISTINCT subject_accession, assay, study_accession
   FROM immport.v_results_union
   WHERE subject_accession IS NOT NULL AND assay IS NOT NULL AND study_accession IS NOT NULL;
-
+*/
 
   RETURN 1;
   END;

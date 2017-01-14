@@ -400,14 +400,13 @@ public class DataLoader extends PipelineJob
 
             Parameter expsample_accession = new Parameter("expsample_accession", JdbcType.VARCHAR);
             Parameter reagent_accession = new Parameter("reagent_accession", JdbcType.VARCHAR);
-            Parameter experiment_accession = new Parameter("experiment_accession", JdbcType.VARCHAR);
             SQLFragment insert = new SQLFragment(
-                    "INSERT INTO immport.expsample_2_reagent (expsample_accession, reagent_accession, experiment_accession)\n" +
-                            "SELECT ?, ?, ?\n",
-                    expsample_accession, reagent_accession, experiment_accession);
-            SQLFragment update = new SQLFragment("UPDATE immport.expsample_2_reagent SET expsample_accession=?, reagent_accession=?, experiment_accession=?\n" +
+                    "INSERT INTO immport.expsample_2_reagent (expsample_accession, reagent_accession)\n" +
+                            "SELECT ?, ?\n",
+                    expsample_accession, reagent_accession);
+            SQLFragment update = new SQLFragment("UPDATE immport.expsample_2_reagent SET expsample_accession=?, reagent_accession=?\n" +
                     "WHERE expsample_accession=? AND reagent_accession=?\n",
-                    expsample_accession, reagent_accession, experiment_accession, expsample_accession, reagent_accession);
+                    expsample_accession, reagent_accession, expsample_accession, reagent_accession);
             SQLFragment sqlf = new SQLFragment();
             sqlf.append("WITH __upsert__ AS (").append(update).append(" RETURNING *) ").append(insert).append(" WHERE NOT EXISTS (SELECT * FROM __upsert__)");
             return new Parameter.ParameterMap(targetSchema.getScope(), sqlf, (Map<String,String>)null);
@@ -429,14 +428,13 @@ public class DataLoader extends PipelineJob
 
             Parameter expsample_accession = new Parameter("expsample_accession", JdbcType.VARCHAR);
             Parameter treatment_accession = new Parameter("treatment_accession", JdbcType.VARCHAR);
-            Parameter experiment_accession = new Parameter("experiment_accession", JdbcType.VARCHAR);
             SQLFragment insert = new SQLFragment(
-                    "INSERT INTO immport.expsample_2_treatment (expsample_accession, treatment_accession, experiment_accession)\n" +
-                            "SELECT ?, ?, ?\n",
-                    expsample_accession, treatment_accession, experiment_accession);
-            SQLFragment update = new SQLFragment("UPDATE immport.expsample_2_treatment SET expsample_accession=?, treatment_accession=?, experiment_accession=?\n" +
+                    "INSERT INTO immport.expsample_2_treatment (expsample_accession, treatment_accession)\n" +
+                            "SELECT ?, ?\n",
+                    expsample_accession, treatment_accession);
+            SQLFragment update = new SQLFragment("UPDATE immport.expsample_2_treatment SET expsample_accession=?, treatment_accession=?\n" +
                     "WHERE expsample_accession=? AND treatment_accession=?\n",
-                    expsample_accession, treatment_accession, experiment_accession, expsample_accession, treatment_accession);
+                    expsample_accession, treatment_accession, expsample_accession, treatment_accession);
             SQLFragment sqlf = new SQLFragment();
             sqlf.append("WITH __upsert__ AS (").append(update).append(" RETURNING *) ").append(insert).append(" WHERE NOT EXISTS (SELECT * FROM __upsert__)");
             return new Parameter.ParameterMap(targetSchema.getScope(), sqlf, (Map<String,String>)null);
@@ -622,30 +620,23 @@ public class DataLoader extends PipelineJob
             // lookup tables
         new SharedCopyConfig("lk_adverse_event_severity"),
         new SharedCopyConfig("lk_age_event"),
-//        new LookupCopyConfig("lk_allele_status"),
         new SharedCopyConfig("lk_data_completeness"),
         new LookupCopyConfig("lk_data_format"),
         new LookupCopyConfig("lk_ethnicity"),
-//        new LookupCopyConfig("lk_exon_intron_interrogated"),
         new SharedCopyConfig("lk_exp_measurement_tech"),
         new LookupCopyConfig("lk_expsample_result_schema"),
         new LookupCopyConfig("lk_experiment_purpose"),
-//        new LookupCopyConfig("lk_feature_location"),
-//        new LookupCopyConfig("lk_feature_sequence_type"),
-//        new LookupCopyConfig("lk_feature_strand"),
-//        new LookupCopyConfig("lk_feature_type"),
+
         new LookupCopyConfig("lk_file_detail"),
         new LookupCopyConfig("lk_file_purpose"),
         new SharedCopyConfig("lk_gender"),
         new LookupCopyConfig("lk_locus_name"),
-//        new LookupCopyConfig("lk_locus_typing_method"),
         new LookupCopyConfig("lk_personnel_role"),
         new SharedCopyConfig("lk_plate_type"),
         new LookupCopyConfig("lk_protocol_type"),
         new SharedCopyConfig("lk_public_repository"),
         new LookupCopyConfig("lk_race"),
         new SharedCopyConfig("lk_reagent_type"),
-//        new LookupCopyConfig("lk_reason_not_completed"),
         new LookupCopyConfig("lk_research_focus"),
         new SharedCopyConfig("lk_sample_type"),
         new SharedCopyConfig("lk_source_type"),
@@ -663,7 +654,6 @@ public class DataLoader extends PipelineJob
         new SharedCopyConfig("subject"),
         new StudyCopyConfig("period"),
         new StudyCopyConfig("planned_visit"),
-//        new StudyCopyConfig("actual_visit"),
         new StudyCopyConfig("arm_or_cohort"),
         new StudyCopyConfig("biosample"),
         new SharedCopyConfig("experiment"),
@@ -673,7 +663,6 @@ public class DataLoader extends PipelineJob
         new SharedCopyConfig("reagent"),
         new SharedCopyConfig("treatment"),
         new StudyCopyConfig("adverse_event"),
-//        new StudyCopyConfig("assessment"),
         new SharedCopyConfig("control_sample"),
         new SharedCopyConfig("expsample_mbaa_detail"),
         new SharedCopyConfig("expsample_public_repository"),
@@ -683,7 +672,7 @@ public class DataLoader extends PipelineJob
         new SharedCopyConfig("inclusion_exclusion"),
         new SharedCopyConfig("kir_typing_system"),
         new StudyCopyConfig("reference_range"),
-//        new StudyCopyConfig("lab_test"),
+        new BiosampleCopyConfig("lab_test"),
         new StudyCopyConfig("protocol_deviation"),
         new StudyCopyConfig("reported_early_termination"),
         new SharedCopyConfig("standard_curve"),
@@ -695,7 +684,6 @@ public class DataLoader extends PipelineJob
         new StudyCopyConfig("study_personnel"),
         new StudyCopyConfig("study_pubmed"),
         new StudyCopyConfig("subject_measure_definition"),
-//        new StudyCopyConfig("substance_merge"),
             // lots of duplicates in contract_grant, is this only the test data???
             // force using merge by override updateInsertOptionBeforeCopy()
         new SharedCopyConfig("contract_grant")
@@ -742,15 +730,14 @@ public class DataLoader extends PipelineJob
             // junction tables
         new ArmCopyConfig("arm_2_subject"),
         new BiosampleCopyConfig("expsample_2_biosample"),
-//        new BiosampleCopyConfig("biosample_2_protocol"),
-//        new BiosampleCopyConfig("biosample_2_treatment"),
+        new BiosampleCopyConfig("biosample_2_treatment"),
         new SharedCopyConfig("experiment_2_protocol"),
         new ExpSample2FileInfo("expsample_2_file_info"),
-//        new ExpSample2Reagent("expsample_2_reagent"),
+        new ExpSample2Reagent("expsample_2_reagent"),
         new StudyCopyConfig("study_2_protocol"),
         new SharedCopyConfig("subject_2_protocol"),
         new SharedCopyConfig("control_sample_2_file_info"),
-//        new ExpSample2Treatment("expsample_2_treatment"),
+        new ExpSample2Treatment("expsample_2_treatment"),
         new ArmCopyConfig("planned_visit_2_arm"),
         new SharedCopyConfig("reagent_2_fcs_marker"),
         new SharedCopyConfig("standard_curve_2_file_info"),
@@ -758,28 +745,33 @@ public class DataLoader extends PipelineJob
         new SharedCopyConfig("reagent_set_2_reagent"),
 
         // this is basically a materialized view, database->database copy
-// TODO        new CopyConfig("immport", "q_subject_2_study", "immport", "subject_2_study", QueryUpdateService.InsertOption.IMPORT)
+        new CopyConfig("immport", "q_subject_2_study", "immport", "subject_2_study", QueryUpdateService.InsertOption.IMPORT)
     };
 
     static CopyConfig[] dr20_work_in_progress = new CopyConfig[]
     {
-        new LookupCopyConfig("lk_allele_status"),
-        new LookupCopyConfig("lk_exon_intron_interrogated"),
-        new LookupCopyConfig("lk_feature_location"),
-        new LookupCopyConfig("lk_feature_sequence_type"),
-        new LookupCopyConfig("lk_feature_strand"),
-        new LookupCopyConfig("lk_feature_type"),
-        new LookupCopyConfig("lk_locus_typing_method"),
-        new LookupCopyConfig("lk_reason_not_completed"),
-        new StudyCopyConfig("actual_visit"),
-        new StudyCopyConfig("assessment"),
-        new StudyCopyConfig("lab_test"),
-        new StudyCopyConfig("substance_merge"),
-        new BiosampleCopyConfig("biosample_2_protocol"),
-        new BiosampleCopyConfig("biosample_2_treatment"),
-        new ExpSample2Reagent("expsample_2_reagent"),
-        new CopyConfig("immport", "q_subject_2_study", "immport", "subject_2_study", QueryUpdateService.InsertOption.IMPORT),
-        new ExpSample2Treatment("expsample_2_treatment")
+/* <ADDED>
+            assessment_component
+            assessment_panel
+            contract_grant_2_personnel
+            contract_grant_2_study
+            expsample_2_biosample
+            fcs_analyzed_result_marker
+            fcs_header_marker_2_reagent
+            intervention
+            lab_test_panel
+            lab_test_panel_2_protocol
+            lk_analyte
+            lk_ancestral_population
+            lk_kir_gene
+            lk_kir_locus
+            lk_kir_present_absent
+            lk_organization
+            lk_user_role_type
+            lk_visibility_category
+            personnel
+            program_2_personnel
+</ADDED> */
     };
 
 //    static CopyConfig[] immportTables = dr20_ok;
@@ -820,6 +812,7 @@ public class DataLoader extends PipelineJob
             if (!dirs.containsKey("MySQL") && dirs.size()==1)
                 archiveFile = dirs.values().iterator().next();
 
+            execute(dr20_work_in_progress, archiveFile);
             execute(immportTables, archiveFile);
         }
         catch (IOException|SQLException x)

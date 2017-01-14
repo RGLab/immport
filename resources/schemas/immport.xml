@@ -137,6 +137,12 @@
             <column columnName="result_schema"/>
         </columns>
     </table>
+    <table tableName="subject_2_study" tableDbType="TABLE">
+        <columns>
+            <column columnName="subject_accession"/>
+            <column columnName="study_accession"/>
+        </columns>
+    </table>
     <table tableName="study_2_protocol" tableDbType="TABLE">
         <columns>
             <column columnName="study_accession"/>
@@ -550,6 +556,22 @@
             <column columnName="name"/>
             <column columnName="description"/>
             <column columnName="link"/>
+        </columns>
+    </table>
+    <table tableName="v_results_union" tableDbType="VIEW">
+        <columns>
+            <column columnName="subjectid"/>
+            <column columnName="assay"/>
+            <column columnName="arm_accession"/>
+            <column columnName="biosample_accession"/>
+            <column columnName="expsample_accession"/>
+            <column columnName="experiment_accession"/>
+            <column columnName="study_accession"/>
+            <column columnName="study_time_collected"/>
+            <column columnName="study_time_collected_unit"/>
+            <column columnName="subject_accession"/>
+            <column columnName="workspace_id"/>
+            <column columnName="study_day"/>
         </columns>
     </table>
     <table tableName="lk_protocol_type" tableDbType="TABLE">

@@ -456,11 +456,20 @@ public class DataLoader extends PipelineJob
      */
     static class LookupCopyConfig extends SharedCopyConfig
     {
-        LookupCopyConfig(String table)
+        final boolean force;
+
+        LookupCopyConfig(String table, boolean forceRemoveDuplicates)
         {
             // we don't need to merge, because we're filtering in memory
             super(table, QueryUpdateService.InsertOption.IMPORT);
+            force = forceRemoveDuplicates;
         }
+
+        LookupCopyConfig(String table)
+        {
+            this(table,false);
+        }
+
 
         @Override
         DataIteratorBuilder selectFromSource(DataLoader dl, DataIteratorContext context, @Nullable FileObject dir, Logger log) throws SQLException, IOException
@@ -469,7 +478,7 @@ public class DataLoader extends PipelineJob
             DbSchema targetSchema = DbSchema.get(getTargetSchema().getName());
             final ArrayList<String> names = new SqlSelector(targetSchema, "SELECT Name FROM " + getTargetSchema().getName() + "." + getTargetQuery()).getArrayList(String.class);
             final DataIteratorBuilder select = super.selectFromSource(dl,context,dir,log);
-            if (names.isEmpty())
+            if (names.isEmpty() && !force)
                 return select;
             return new LookupInsertFilter(select, names);
         }
@@ -745,36 +754,64 @@ public class DataLoader extends PipelineJob
         new SharedCopyConfig("reagent_set_2_reagent"),
 
         // this is basically a materialized view, database->database copy
-        new CopyConfig("immport", "q_subject_2_study", "immport", "subject_2_study", QueryUpdateService.InsertOption.IMPORT)
+        new CopyConfig("immport", "q_subject_2_study", "immport", "subject_2_study", QueryUpdateService.InsertOption.IMPORT),
+
+        /*
+         *  DR20 new tables
+         */
+
+        new StudyCopyConfig("assessment_panel"),
+        new ImmPortCopyConfig("assessment_component")
+        {
+            @Override
+            public void deleteFromTarget(PipelineJob job, List<String> studies) throws IOException, SQLException
+            {
+                DbSchema targetSchema = DbSchema.get(getTargetSchema().getName());
+                SQLFragment deleteSql = new SQLFragment();
+                deleteSql.append(
+                        "DELETE FROM " + getTargetSchema().getName() + "." + getTargetQuery() + "\n" +
+                                "WHERE assessment_panel_accession IN (SELECT assessment_panel_accession FROM " + getTargetSchema().getName() + ".assessment_panel WHERE study_accession ");
+                targetSchema.getSqlDialect().appendInClauseSql(deleteSql, studies);
+                deleteSql.append(")");
+                int rows = new SqlExecutor(targetSchema).execute(deleteSql);
+                job.info("" + rows + " " + (rows == 1 ? "row" : "rows") + " deleted from " + getTargetQuery());
+            }
+       },
+        new SharedCopyConfig("contract_grant_2_personnel"),
+        new StudyCopyConfig("contract_grant_2_study"),
+
+        new SharedCopyConfig("fcs_analyzed_result_marker"),
+        new SharedCopyConfig("fcs_header_marker_2_reagent"),
+
+        new StudyCopyConfig("intervention"),
+        new StudyCopyConfig("lab_test_panel"),
+            new ImmPortCopyConfig("lab_test_panel_2_protocol")
+            {
+                @Override
+                public void deleteFromTarget(PipelineJob job, List<String> studies) throws IOException, SQLException
+                {
+                    DbSchema targetSchema = DbSchema.get(getTargetSchema().getName());
+                    SQLFragment deleteSql = new SQLFragment(
+                        "DELETE FROM " + getTargetSchema().getName() + "." + getTargetQuery() + "\n" +
+                            "WHERE lab_test_panel_accession IN (SELECT lab_test_panel_accession FROM " + getTargetSchema().getName() + ".lab_test_panel WHERE study_accession ");
+                    targetSchema.getSqlDialect().appendInClauseSql(deleteSql, studies);
+                    deleteSql.append(")");
+                    int rows = new SqlExecutor(targetSchema).execute(deleteSql);
+                    job.info("" + rows + " " + (rows == 1 ? "row" : "rows") + " deleted from " + getTargetQuery());
+                }
+            },
+        new SharedCopyConfig("lk_analyte"),
+        new SharedCopyConfig("lk_ancestral_population"),
+        new LookupCopyConfig("lk_kir_gene"),
+        new LookupCopyConfig("lk_kir_locus"),
+        new LookupCopyConfig("lk_kir_present_absent"),
+        new LookupCopyConfig("lk_organization", true),
+        new LookupCopyConfig("lk_user_role_type"),
+        new LookupCopyConfig("lk_visibility_category"),
+        new SharedCopyConfig("personnel"),
+        new SharedCopyConfig("program_2_personnel")
     };
 
-    static CopyConfig[] dr20_work_in_progress = new CopyConfig[]
-    {
-/* <ADDED>
-            assessment_component
-            assessment_panel
-            contract_grant_2_personnel
-            contract_grant_2_study
-            expsample_2_biosample
-            fcs_analyzed_result_marker
-            fcs_header_marker_2_reagent
-            intervention
-            lab_test_panel
-            lab_test_panel_2_protocol
-            lk_analyte
-            lk_ancestral_population
-            lk_kir_gene
-            lk_kir_locus
-            lk_kir_present_absent
-            lk_organization
-            lk_user_role_type
-            lk_visibility_category
-            personnel
-            program_2_personnel
-</ADDED> */
-    };
-
-//    static CopyConfig[] immportTables = dr20_ok;
 
     /**
      * load from external schema attached as "hipc"
@@ -812,7 +849,6 @@ public class DataLoader extends PipelineJob
             if (!dirs.containsKey("MySQL") && dirs.size()==1)
                 archiveFile = dirs.values().iterator().next();
 
-            execute(dr20_work_in_progress, archiveFile);
             execute(immportTables, archiveFile);
         }
         catch (IOException|SQLException x)
@@ -1098,7 +1134,7 @@ public class DataLoader extends PipelineJob
                 protected boolean accept()
                 {
                     String name = (String)get(nameField);
-                    return !existingNames.contains(name);
+                    return existingNames.add(name);
                 }
             };
         }

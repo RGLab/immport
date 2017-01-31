@@ -138,7 +138,7 @@ BEGIN
   DELETE FROM immport.dimDemographic;
   INSERT INTO immport.dimDemographic (SubjectId, Study, AgeInYears, Species, Gender, Race, Age)
   SELECT DISTINCT
-    subject.subject_accession || '.' || SUBSTRING(study_accession,4) AS SubjectId,
+    subject.subject_accession || '.' || SUBSTRING(s2s.study_accession,4) AS SubjectId,
     s2s.study_accession AS Study,
     CASE age_unit
     WHEN 'Years' THEN floor(age_reported)
@@ -160,7 +160,11 @@ BEGIN
       WHEN floor(age_reported) >= 70 THEN '> 70'
       ELSE 'Unknown'
     END AS Age
-  FROM immport.subject INNER JOIN immport.subject_2_study s2s ON subject.subject_accession = s2s.subject_accession;
+  FROM immport.subject INNER JOIN immport.subject_2_study s2s ON subject.subject_accession = s2s.subject_accession
+    LEFT JOIN (
+      SELECT a2sj.subject_accession, arm.study_accession, a2sj.age_unit, a2sj.min_subject_age as age_reported
+      FROM immport.arm_2_subject a2sj INNER JOIN immport.arm_or_cohort arm ON a2sj.arm_accession = arm.arm_accession
+    ) s2age ON s2age.subject_accession = s2s.subject_accession AND s2age.study_accession = s2s.study_accession;
 
 
   -- dimStudy
@@ -171,11 +175,11 @@ BEGIN
     SELECT DISTINCT
       study.study_accession as Study,
       study.type as Type,
-      P.title as Program,
+      P.name as Program,
       cast(substring(study.study_accession,4) as integer) as SortOrder
     FROM immport.study
-      LEFT OUTER JOIN immport.workspace W ON study.workspace_id = W.workspace_id
-      LEFT OUTER JOIN immport.contract_grant C ON W.contract_id = C.contract_grant_id
+      LEFT OUTER JOIN immport.contract_grant_2_study cg2s ON study.study_accession = cg2s.study_accession
+      LEFT OUTER JOIN immport.contract_grant C ON cg2s.contract_grant_id = C.contract_grant_id
       LEFT OUTER JOIN immport.program P on C.program_id = P.program_id;
 
 

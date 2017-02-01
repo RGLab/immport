@@ -2,7 +2,6 @@ package org.labkey.test.pages.immport;
 
 import com.google.common.base.Predicate;
 import org.apache.commons.lang3.SystemUtils;
-import org.apache.tika.sax.Link;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.WebTestHelper;
@@ -11,7 +10,6 @@ import org.labkey.test.components.immport.StudySummaryWindow;
 import org.labkey.test.pages.LabKeyPage;
 import org.labkey.test.util.LogMethod;
 import org.labkey.test.util.LoggedParam;
-import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
@@ -22,6 +20,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static org.labkey.test.Locators.pageSignal;
 
 public class DataFinderPage extends LabKeyPage
 {
@@ -38,12 +38,12 @@ public class DataFinderPage extends LabKeyPage
     @Override
     protected void waitForPage()
     {
-        _test.waitForElement(LabKeyPage.Locators.pageSignal(COUNT_SIGNAL));
+        _test.waitForElement(pageSignal(COUNT_SIGNAL));
     }
 
     protected void waitForGroupUpdate()
     {
-        _test.waitForElement(LabKeyPage.Locators.pageSignal(GROUP_UPDATED_SIGNAL));
+        _test.waitForElement(pageSignal(GROUP_UPDATED_SIGNAL));
     }
 
     public static DataFinderPage goDirectlyToPage(BaseWebDriverTest test, String containerPath)

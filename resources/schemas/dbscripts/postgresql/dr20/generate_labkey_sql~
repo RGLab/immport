@@ -1,0 +1,1 @@
+grep -h DROP TABLE "*.sql"

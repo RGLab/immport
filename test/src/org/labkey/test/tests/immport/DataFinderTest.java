@@ -53,9 +53,11 @@ import org.labkey.test.pages.study.ManageParticipantGroupsPage;
 import org.labkey.test.pages.study.OverviewPage;
 import org.labkey.test.util.APIContainerHelper;
 import org.labkey.test.util.AbstractContainerHelper;
+import org.labkey.test.util.ApiPermissionsHelper;
 import org.labkey.test.util.DataRegionTable;
 import org.labkey.test.util.ExperimentalFeaturesHelper;
 import org.labkey.test.util.LogMethod;
+import org.labkey.test.util.PermissionsHelper;
 import org.labkey.test.util.PortalHelper;
 import org.labkey.test.util.PostgresOnlyTest;
 import org.labkey.test.util.ReadOnlyTest;
@@ -205,6 +207,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
 
     public void createUsers()
     {
+        ApiPermissionsHelper permHelper = new ApiPermissionsHelper(this);
 
         deleteUsersIfPresent(USER1, USER2, USER3);
 
@@ -218,19 +221,12 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         goToFolderPermissions();
         for(String subFolder : STUDY_SUBFOLDERS)
         {
-            click(Locator.linkWithText(subFolder));
-            waitForElement(Locator.permissionRendered());
-            _permissionsHelper.setUserPermissions(USER1, "Folder Administrator");
+            permHelper.addMemberToRole(USER1, "Folder Administrator", PermissionsHelper.MemberType.user, "/" + getProjectName() + "/" + subFolder);
         }
 
         log("Assign User2 Read permissions to just one of the folders: " + USER2_FOLDER);
-        goToProjectHome();
-        clickProject(getProjectName());
-        clickFolder(USER2_FOLDER);
-        _permissionsHelper.enterPermissionsUI();
-        waitForElement(Locator.permissionRendered());
-        _permissionsHelper.setUserPermissions(USER2, "Reader");
 
+        permHelper.addMemberToRole(USER2, "Reader", PermissionsHelper.MemberType.user, "/" + getProjectName() + "/" + USER2_FOLDER);
     }
 
     @Before
@@ -630,7 +626,6 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
             datasetCounts.put(name, numRows.intValue());
         }
 
-        Assert.assertEquals(2, datasetCounts.get("StudyProperties").intValue());
         Assert.assertEquals(345, datasetCounts.get("demographics").intValue());
         Assert.assertEquals(960, datasetCounts.get("elispot").intValue());
         Assert.assertEquals(fcs_analyzed_rowCount, datasetCounts.get("fcs_analyzed_result").intValue());
@@ -645,10 +640,6 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
 
         log("Validate contents");
         try (FileSystem fs = FileSystems.newFileSystem(exportedFile.toPath(), null)) {
-            // Verify StudyProperties.tsv exists
-            Path p = fs.getPath("StudyProperties.tsv");
-            Assert.assertTrue("Expected file within doesn't exist: " + p, Files.exists(p));
-
             // Extract a file
             List<String> lines = Files.readAllLines(fs.getPath("fcs_analyzed_result.tsv"), Charset.forName("UTF-8"));
             Assert.assertEquals(

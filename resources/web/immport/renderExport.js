@@ -237,9 +237,13 @@ function renderExport(){
             var totalFiles = 0, filesize = 0, data;
             for ( var i = 0; i < dataStore.getCount(); i ++ ){
                 data = dataStore.getAt( i ).getData();
-                if ( data.include && data.final )
-                {
-                    if ( isFileRecord( data ) && data.fileSize >= 0 ){
+                if ( data.include && data.final ){
+                    if (
+                        (   identifyDataType( data, 'f' ) ||
+                            identifyDataType( data, 'm' )
+                        ) &&
+                        data.fileSize >= 0
+                    ){
                         totalFiles += data.files;
                         filesize += Number( data.fileSize );
                     }
@@ -269,12 +273,9 @@ function renderExport(){
         btn.setDisabled( false );
     }
 
-    function isFileRecord( data ){
+    function identifyDataType( data, idChar ){
         var id = data.id.toString();
-        return (
-            ( id.indexOf( 'f', id.length - 1 ) != -1 ) || 
-            ( id.indexOf( 'm', id.length - 1 ) != -1 )
-        );
+        return ( id.indexOf( idChar, id.length - 1 ) != -1 );
     }
 
     /* This is an extension to allow the "Select All" checkbox in the header */
@@ -449,14 +450,15 @@ function renderExport(){
                         disabled: true,
                         handler: function (){
                             var schemaQueries = { 'study' : [] };
-                            var record, downloadFiles = [], matrices = [];
+                            var record, data, downloadFiles = [], matrices = [];
                             for ( var i = 0; i < dataStore.getCount(); i ++ ){
                                 record = dataStore.getAt( i );
-                                if ( record.getData().include ){
-                                    if ( isFileRecord( record ) ){
+                                data = record.getData();
+                                if ( data.include ){
+                                    if ( identifyDataType( data, 'f' ) ){
                                         downloadFiles.push( record.get('name') );
                                     }
-                                    else if ( isMatrixRecord( record ) ){
+                                    else if ( identifyDataType( data, 'm' ) ){
                                         matrices.push( record.get( 'name' ) );
                                     }
                                     else {

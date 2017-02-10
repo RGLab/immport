@@ -63,6 +63,7 @@ import org.labkey.api.query.ValidationException;
 import org.labkey.api.reader.ColumnDescriptor;
 import org.labkey.api.reader.TabLoader;
 import org.labkey.api.security.User;
+import org.labkey.api.util.ConfigurationException;
 import org.labkey.api.util.DateUtil;
 import org.labkey.api.util.ExceptionUtil;
 import org.labkey.api.util.FileUtil;
@@ -76,6 +77,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -239,7 +241,7 @@ public class DataLoader extends PipelineJob
             {
                 try (InputStream is = loadFile.getContent().getInputStream())
                 {
-                    String loadConfig = IOUtils.toString(is);
+                    String loadConfig = IOUtils.toString(is, Charset.forName("UTF-8"));
                     Matcher m = Pattern.compile("\"([^\"]*)\"").matcher(loadConfig);
                     if (m.find() && !StringUtils.isEmpty(m.group(1)))
                         tsvFile = dir.resolveFile("load/" + m.group(1));
@@ -398,14 +400,13 @@ public class DataLoader extends PipelineJob
 
             Parameter expsample_accession = new Parameter("expsample_accession", JdbcType.VARCHAR);
             Parameter reagent_accession = new Parameter("reagent_accession", JdbcType.VARCHAR);
-            Parameter experiment_accession = new Parameter("experiment_accession", JdbcType.VARCHAR);
             SQLFragment insert = new SQLFragment(
-                    "INSERT INTO immport.expsample_2_reagent (expsample_accession, reagent_accession, experiment_accession)\n" +
-                            "SELECT ?, ?, ?\n",
-                    expsample_accession, reagent_accession, experiment_accession);
-            SQLFragment update = new SQLFragment("UPDATE immport.expsample_2_reagent SET expsample_accession=?, reagent_accession=?, experiment_accession=?\n" +
+                    "INSERT INTO immport.expsample_2_reagent (expsample_accession, reagent_accession)\n" +
+                            "SELECT ?, ?\n",
+                    expsample_accession, reagent_accession);
+            SQLFragment update = new SQLFragment("UPDATE immport.expsample_2_reagent SET expsample_accession=?, reagent_accession=?\n" +
                     "WHERE expsample_accession=? AND reagent_accession=?\n",
-                    expsample_accession, reagent_accession, experiment_accession, expsample_accession, reagent_accession);
+                    expsample_accession, reagent_accession, expsample_accession, reagent_accession);
             SQLFragment sqlf = new SQLFragment();
             sqlf.append("WITH __upsert__ AS (").append(update).append(" RETURNING *) ").append(insert).append(" WHERE NOT EXISTS (SELECT * FROM __upsert__)");
             return new Parameter.ParameterMap(targetSchema.getScope(), sqlf, (Map<String,String>)null);
@@ -427,14 +428,13 @@ public class DataLoader extends PipelineJob
 
             Parameter expsample_accession = new Parameter("expsample_accession", JdbcType.VARCHAR);
             Parameter treatment_accession = new Parameter("treatment_accession", JdbcType.VARCHAR);
-            Parameter experiment_accession = new Parameter("experiment_accession", JdbcType.VARCHAR);
             SQLFragment insert = new SQLFragment(
-                    "INSERT INTO immport.expsample_2_treatment (expsample_accession, treatment_accession, experiment_accession)\n" +
-                            "SELECT ?, ?, ?\n",
-                    expsample_accession, treatment_accession, experiment_accession);
-            SQLFragment update = new SQLFragment("UPDATE immport.expsample_2_treatment SET expsample_accession=?, treatment_accession=?, experiment_accession=?\n" +
+                    "INSERT INTO immport.expsample_2_treatment (expsample_accession, treatment_accession)\n" +
+                            "SELECT ?, ?\n",
+                    expsample_accession, treatment_accession);
+            SQLFragment update = new SQLFragment("UPDATE immport.expsample_2_treatment SET expsample_accession=?, treatment_accession=?\n" +
                     "WHERE expsample_accession=? AND treatment_accession=?\n",
-                    expsample_accession, treatment_accession, experiment_accession, expsample_accession, treatment_accession);
+                    expsample_accession, treatment_accession, expsample_accession, treatment_accession);
             SQLFragment sqlf = new SQLFragment();
             sqlf.append("WITH __upsert__ AS (").append(update).append(" RETURNING *) ").append(insert).append(" WHERE NOT EXISTS (SELECT * FROM __upsert__)");
             return new Parameter.ParameterMap(targetSchema.getScope(), sqlf, (Map<String,String>)null);
@@ -456,11 +456,20 @@ public class DataLoader extends PipelineJob
      */
     static class LookupCopyConfig extends SharedCopyConfig
     {
-        LookupCopyConfig(String table)
+        final boolean force;
+
+        LookupCopyConfig(String table, boolean forceRemoveDuplicates)
         {
             // we don't need to merge, because we're filtering in memory
             super(table, QueryUpdateService.InsertOption.IMPORT);
+            force = forceRemoveDuplicates;
         }
+
+        LookupCopyConfig(String table)
+        {
+            this(table,false);
+        }
+
 
         @Override
         DataIteratorBuilder selectFromSource(DataLoader dl, DataIteratorContext context, @Nullable FileObject dir, Logger log) throws SQLException, IOException
@@ -469,7 +478,7 @@ public class DataLoader extends PipelineJob
             DbSchema targetSchema = DbSchema.get(getTargetSchema().getName());
             final ArrayList<String> names = new SqlSelector(targetSchema, "SELECT Name FROM " + getTargetSchema().getName() + "." + getTargetQuery()).getArrayList(String.class);
             final DataIteratorBuilder select = super.selectFromSource(dl,context,dir,log);
-            if (names.isEmpty())
+            if (names.isEmpty() && !force)
                 return select;
             return new LookupInsertFilter(select, names);
         }
@@ -556,6 +565,9 @@ public class DataLoader extends PipelineJob
             DbSchema targetSchema = DbSchema.get(getTargetSchema().getName());
             TableInfo targetTableInfo = targetSchema.getTable(getTargetQuery());
 
+            if (null == targetTableInfo)
+                throw new ConfigurationException("table not found: " + getTargetQuery());
+
             SQLFragment deleteSql = new SQLFragment();
 
             if (null != targetTableInfo.getColumn("biosample_accession"))
@@ -571,8 +583,8 @@ public class DataLoader extends PipelineJob
                 deleteSql.append(
                         "DELETE FROM " + getTargetSchema().getName() + "." + getTargetQuery() + "\n" +
                         "WHERE expsample_accession IN \n" +
-                        "  (SELECT biosample_2_expsample.expsample_accession FROM " + getTargetSchema().getName() + ".biosample \n" +
-                        "    INNER JOIN " + getTargetSchema().getName() + ".biosample_2_expsample ON biosample.biosample_accession=biosample_2_expsample.biosample_accession\n" +
+                        "  (SELECT expsample_2_biosample.expsample_accession FROM " + getTargetSchema().getName() + ".biosample \n" +
+                        "    INNER JOIN " + getTargetSchema().getName() + ".expsample_2_biosample ON biosample.biosample_accession=expsample_2_biosample.biosample_accession\n" +
                         "    WHERE biosample.study_accession ");
                 targetSchema.getSqlDialect().appendInClauseSql(deleteSql, studies);
                 deleteSql.append(")");
@@ -617,30 +629,23 @@ public class DataLoader extends PipelineJob
             // lookup tables
         new SharedCopyConfig("lk_adverse_event_severity"),
         new SharedCopyConfig("lk_age_event"),
-        new LookupCopyConfig("lk_allele_status"),
         new SharedCopyConfig("lk_data_completeness"),
         new LookupCopyConfig("lk_data_format"),
         new LookupCopyConfig("lk_ethnicity"),
-        new LookupCopyConfig("lk_exon_intron_interrogated"),
         new SharedCopyConfig("lk_exp_measurement_tech"),
         new LookupCopyConfig("lk_expsample_result_schema"),
         new LookupCopyConfig("lk_experiment_purpose"),
-        new LookupCopyConfig("lk_feature_location"),
-        new LookupCopyConfig("lk_feature_sequence_type"),
-        new LookupCopyConfig("lk_feature_strand"),
-        new LookupCopyConfig("lk_feature_type"),
+
         new LookupCopyConfig("lk_file_detail"),
         new LookupCopyConfig("lk_file_purpose"),
         new SharedCopyConfig("lk_gender"),
         new LookupCopyConfig("lk_locus_name"),
-        new LookupCopyConfig("lk_locus_typing_method"),
         new LookupCopyConfig("lk_personnel_role"),
         new SharedCopyConfig("lk_plate_type"),
         new LookupCopyConfig("lk_protocol_type"),
         new SharedCopyConfig("lk_public_repository"),
         new LookupCopyConfig("lk_race"),
         new SharedCopyConfig("lk_reagent_type"),
-        new LookupCopyConfig("lk_reason_not_completed"),
         new LookupCopyConfig("lk_research_focus"),
         new SharedCopyConfig("lk_sample_type"),
         new SharedCopyConfig("lk_source_type"),
@@ -658,7 +663,6 @@ public class DataLoader extends PipelineJob
         new SharedCopyConfig("subject"),
         new StudyCopyConfig("period"),
         new StudyCopyConfig("planned_visit"),
-        new StudyCopyConfig("actual_visit"),
         new StudyCopyConfig("arm_or_cohort"),
         new StudyCopyConfig("biosample"),
         new SharedCopyConfig("experiment"),
@@ -668,7 +672,6 @@ public class DataLoader extends PipelineJob
         new SharedCopyConfig("reagent"),
         new SharedCopyConfig("treatment"),
         new StudyCopyConfig("adverse_event"),
-        new StudyCopyConfig("assessment"),
         new SharedCopyConfig("control_sample"),
         new SharedCopyConfig("expsample_mbaa_detail"),
         new SharedCopyConfig("expsample_public_repository"),
@@ -678,7 +681,7 @@ public class DataLoader extends PipelineJob
         new SharedCopyConfig("inclusion_exclusion"),
         new SharedCopyConfig("kir_typing_system"),
         new StudyCopyConfig("reference_range"),
-        new StudyCopyConfig("lab_test"),
+        new BiosampleCopyConfig("lab_test"),
         new StudyCopyConfig("protocol_deviation"),
         new StudyCopyConfig("reported_early_termination"),
         new SharedCopyConfig("standard_curve"),
@@ -690,7 +693,6 @@ public class DataLoader extends PipelineJob
         new StudyCopyConfig("study_personnel"),
         new StudyCopyConfig("study_pubmed"),
         new StudyCopyConfig("subject_measure_definition"),
-        new StudyCopyConfig("substance_merge"),
             // lots of duplicates in contract_grant, is this only the test data???
             // force using merge by override updateInsertOptionBeforeCopy()
         new SharedCopyConfig("contract_grant")
@@ -736,8 +738,7 @@ public class DataLoader extends PipelineJob
 
             // junction tables
         new ArmCopyConfig("arm_2_subject"),
-        new BiosampleCopyConfig("biosample_2_expsample"),
-        new BiosampleCopyConfig("biosample_2_protocol"),
+        new BiosampleCopyConfig("expsample_2_biosample"),
         new BiosampleCopyConfig("biosample_2_treatment"),
         new SharedCopyConfig("experiment_2_protocol"),
         new ExpSample2FileInfo("expsample_2_file_info"),
@@ -753,7 +754,62 @@ public class DataLoader extends PipelineJob
         new SharedCopyConfig("reagent_set_2_reagent"),
 
         // this is basically a materialized view, database->database copy
-        new CopyConfig("immport", "q_subject_2_study", "immport", "subject_2_study", QueryUpdateService.InsertOption.IMPORT)
+        new CopyConfig("immport", "q_subject_2_study", "immport", "subject_2_study", QueryUpdateService.InsertOption.IMPORT),
+
+        /*
+         *  DR20 new tables
+         */
+
+        new StudyCopyConfig("assessment_panel"),
+        new ImmPortCopyConfig("assessment_component")
+        {
+            @Override
+            public void deleteFromTarget(PipelineJob job, List<String> studies) throws IOException, SQLException
+            {
+                DbSchema targetSchema = DbSchema.get(getTargetSchema().getName());
+                SQLFragment deleteSql = new SQLFragment();
+                deleteSql.append(
+                        "DELETE FROM " + getTargetSchema().getName() + "." + getTargetQuery() + "\n" +
+                                "WHERE assessment_panel_accession IN (SELECT assessment_panel_accession FROM " + getTargetSchema().getName() + ".assessment_panel WHERE study_accession ");
+                targetSchema.getSqlDialect().appendInClauseSql(deleteSql, studies);
+                deleteSql.append(")");
+                int rows = new SqlExecutor(targetSchema).execute(deleteSql);
+                job.info("" + rows + " " + (rows == 1 ? "row" : "rows") + " deleted from " + getTargetQuery());
+            }
+       },
+        new SharedCopyConfig("contract_grant_2_personnel"),
+        new StudyCopyConfig("contract_grant_2_study"),
+
+        new SharedCopyConfig("fcs_analyzed_result_marker"),
+        new SharedCopyConfig("fcs_header_marker_2_reagent"),
+
+        new StudyCopyConfig("intervention"),
+        new StudyCopyConfig("lab_test_panel"),
+            new ImmPortCopyConfig("lab_test_panel_2_protocol")
+            {
+                @Override
+                public void deleteFromTarget(PipelineJob job, List<String> studies) throws IOException, SQLException
+                {
+                    DbSchema targetSchema = DbSchema.get(getTargetSchema().getName());
+                    SQLFragment deleteSql = new SQLFragment(
+                        "DELETE FROM " + getTargetSchema().getName() + "." + getTargetQuery() + "\n" +
+                            "WHERE lab_test_panel_accession IN (SELECT lab_test_panel_accession FROM " + getTargetSchema().getName() + ".lab_test_panel WHERE study_accession ");
+                    targetSchema.getSqlDialect().appendInClauseSql(deleteSql, studies);
+                    deleteSql.append(")");
+                    int rows = new SqlExecutor(targetSchema).execute(deleteSql);
+                    job.info("" + rows + " " + (rows == 1 ? "row" : "rows") + " deleted from " + getTargetQuery());
+                }
+            },
+        new SharedCopyConfig("lk_analyte"),
+        new SharedCopyConfig("lk_ancestral_population"),
+        new LookupCopyConfig("lk_kir_gene"),
+        new LookupCopyConfig("lk_kir_locus"),
+        new LookupCopyConfig("lk_kir_present_absent"),
+        new LookupCopyConfig("lk_organization", true),
+        new LookupCopyConfig("lk_user_role_type"),
+        new LookupCopyConfig("lk_visibility_category"),
+        new SharedCopyConfig("personnel"),
+        new SharedCopyConfig("program_2_personnel")
     };
 
 
@@ -939,7 +995,7 @@ public class DataLoader extends PipelineJob
                 setStatus(TaskStatus.running, "DELETE from " + config.getTargetQuery());
                 config.deleteFromTarget(this,studyAccessions);
             }
-            catch (SQLException | DataAccessException x)
+            catch (SQLException | DataAccessException | ConfigurationException x)
             {
                 error("deleting from " + config.getTargetQuery() + "\n\t" + x.getMessage(), x);
             }
@@ -1078,7 +1134,7 @@ public class DataLoader extends PipelineJob
                 protected boolean accept()
                 {
                     String name = (String)get(nameField);
-                    return !existingNames.contains(name);
+                    return existingNames.add(name);
                 }
             };
         }

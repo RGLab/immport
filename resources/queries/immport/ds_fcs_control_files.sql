@@ -23,7 +23,7 @@ FROM
   file_info.name AS file_info_name,
   file_info.filesize_bytes as filesize,
   --file_info.purpose AS file_info_purpose,
-  biosample_2_expsample.expsample_accession AS expsample_accession,
+  expsample_2_biosample.expsample_accession AS expsample_accession,
   biosample.biosample_accession,
   biosample.subject_accession || '.' || SUBSTRING(biosample.study_accession,4) as participantid,
   COALESCE(biosample.study_time_collected,9999.0000) as sequencenum,
@@ -40,10 +40,10 @@ FROM
   --arm_or_cohort.arm_accession,
   arm_or_cohort.arm_accession AS arm_accession
    FROM
-  biosample, biosample_2_expsample, expsample_2_file_info, file_info, arm_2_subject, arm_or_cohort
+  biosample, expsample_2_biosample, expsample_2_file_info, file_info, arm_2_subject, arm_or_cohort
    WHERE
-  biosample.biosample_accession = biosample_2_expsample.biosample_accession AND
-  biosample_2_expsample.expsample_accession = expsample_2_file_info.expsample_accession AND
+  biosample.biosample_accession = expsample_2_biosample.biosample_accession AND
+  expsample_2_biosample.expsample_accession = expsample_2_file_info.expsample_accession AND
   expsample_2_file_info.file_info_id = file_info.file_info_id AND
   biosample.subject_accession = arm_2_subject.subject_accession AND
   arm_2_subject.arm_accession = arm_or_cohort.arm_accession AND

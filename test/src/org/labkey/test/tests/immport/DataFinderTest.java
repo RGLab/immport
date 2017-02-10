@@ -53,6 +53,7 @@ import org.labkey.test.pages.study.ManageParticipantGroupsPage;
 import org.labkey.test.pages.study.OverviewPage;
 import org.labkey.test.util.APIContainerHelper;
 import org.labkey.test.util.AbstractContainerHelper;
+import org.labkey.test.util.ApiPermissionsHelper;
 import org.labkey.test.util.DataRegionTable;
 import org.labkey.test.util.ExperimentalFeaturesHelper;
 import org.labkey.test.util.LogMethod;
@@ -92,11 +93,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
+import static org.labkey.test.util.PermissionsHelper.MemberType;
 
 @Category({Git.class})
 public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTest, ReadOnlyTest
 {
-    private static File immPortArchive = TestFileUtils.getSampleData("HIPC/ANIMAL_STUDIES-DR11.zip");
+    private static File immPortArchive = TestFileUtils.getSampleData("HIPC/ANIMAL_STUDIES-DR20.zip");
     private static File TEMPLATE_ARCHIVE = TestFileUtils.getSampleData("HIPC/SDY_template.zip");
     private static String[] ANIMAL_STUDIES = {"SDY99", "SDY139", "SDY147", "SDY208", "SDY215", "SDY217"};
     private static String[] STUDY_SUBFOLDERS = {"SDY139", "SDY147", "SDY208", "SDY217"};
@@ -120,7 +122,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
     @Override
     protected void doCleanup(boolean afterTest) throws TestTimeoutException
     {
-        deleteUsersIfPresent(USER1, USER2, USER3);
+        _userHelper.deleteUsers(false, USER1, USER2, USER3);
         AbstractContainerHelper containerHelper = new APIContainerHelper(this);
         containerHelper.deleteProject(getProjectName(), afterTest);
     }
@@ -144,14 +146,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
     @Override
     public boolean needsSetup()
     {
-        try
-        {
-            return HttpStatus.SC_NOT_FOUND == WebTestHelper.getHttpGetResponse(WebTestHelper.buildURL("project", getProjectName(), "begin"));
-        }
-        catch (IOException fail)
-        {
-            return true;
-        }
+        return HttpStatus.SC_NOT_FOUND == WebTestHelper.getHttpResponse(WebTestHelper.buildURL("project", getProjectName(), "begin")).getResponseCode();
     }
 
     private void setupProject()
@@ -205,31 +200,23 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
 
     public void createUsers()
     {
+        _userHelper.createUser(USER1);
+        _userHelper.createUser(USER2);
+        _userHelper.createUser(USER3);
 
-        deleteUsersIfPresent(USER1, USER2, USER3);
-
-        createUserWithPermissions(USER1, getProjectName(), "Project Administrator");
-        createUserWithPermissions(USER2, getProjectName(), "Reader");
-        createUser(USER3, null);
+        ApiPermissionsHelper permissionsHelper = new ApiPermissionsHelper(this);
+        permissionsHelper.addMemberToRole(USER1, "Project Administrator", MemberType.user, getProjectName());
+        permissionsHelper.addMemberToRole(USER2, "Reader", MemberType.user, getProjectName());
 
         // Assign users permissions to the various folders.
         log("Assign User1 Folder Administrator permissions to all of the sub folders.");
-        goToProjectHome();
-        goToFolderPermissions();
         for(String subFolder : STUDY_SUBFOLDERS)
         {
-            click(Locator.linkWithText(subFolder));
-            waitForElement(Locator.permissionRendered());
-            _permissionsHelper.setUserPermissions(USER1, "Folder Administrator");
+            permissionsHelper.addMemberToRole(USER1, "Folder Administrator", MemberType.user, getProjectName() + "/" + subFolder);
         }
 
         log("Assign User2 Read permissions to just one of the folders: " + USER2_FOLDER);
-        goToProjectHome();
-        clickProject(getProjectName());
-        clickFolder(USER2_FOLDER);
-        _permissionsHelper.enterPermissionsUI();
-        waitForElement(Locator.permissionRendered());
-        _permissionsHelper.setUserPermissions(USER2, "Reader");
+        permissionsHelper.addMemberToRole(USER2, "Reader", MemberType.user, getProjectName() + "/" + USER2_FOLDER);
 
     }
 

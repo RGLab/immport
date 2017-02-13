@@ -77,7 +77,6 @@ import java.nio.charset.Charset;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -972,7 +971,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         assertTrue("Icon for item in panel not as expected.", notificationPanelItem.getIconType().equals("fa-users"));
 
         log("Click on the item in the list and validate we go to the correct page.");
-        doAndWaitForPageToLoad(() -> notificationPanelItem.click());
+        doAndWaitForPageToLoad(notificationPanelItem::click);
 
         assertTrue("URL for page is not as expected. We should be at dataFinder.view", getURL().getPath().contains("dataFinder.view"));
         unreadNotifications--;
@@ -1029,7 +1028,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         final UserNotificationsPage.NotificationItem pageNotificationItem2 = notificationsPage.findNotificationInPage(groupsSent.get(SENT_CLICK_VIEW_LINK).groupName, UserNotificationsPage.NotificationTypes.STUDY);
         assertTrue("Did not find the 'going to view' notification in the list of all notifications.", pageNotificationItem2 != null);
         log("Click the 'view' link.");
-        doAndWaitForPageToLoad(() -> pageNotificationItem2.clickView());
+        doAndWaitForPageToLoad(pageNotificationItem2::clickView);
         assertTrue("URL for page is not as expected. We should be at dataFinder.view", getURL().getPath().contains("dataFinder.view"));
 
         log("Go back to the notifications page and click the 'Mark As Read' link.");
@@ -1409,9 +1408,9 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         else
             folder = "fcs_control_files/";
 
-        for(int j=0; j < controlFileList.size(); j++)
+        for (String controlFile : controlFileList)
         {
-            assertTrue("Did not find file: " + controlFileList.get(j), filesInZip.contains(folder + controlFileList.get(j)));
+            assertTrue("Did not find file: " + controlFile, filesInZip.contains(folder + controlFile));
         }
 
     }

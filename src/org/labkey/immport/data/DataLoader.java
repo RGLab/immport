@@ -675,11 +675,7 @@ public class DataLoader extends PipelineJob
         new SharedCopyConfig("control_sample"),
         new SharedCopyConfig("expsample_mbaa_detail"),
         new SharedCopyConfig("expsample_public_repository"),
-        new SharedCopyConfig("hla_allele_status"),
-        new SharedCopyConfig("hla_typing_sys_feature"),
-        new SharedCopyConfig("hla_typing_system"),
         new SharedCopyConfig("inclusion_exclusion"),
-        new SharedCopyConfig("kir_typing_system"),
         new StudyCopyConfig("reference_range"),
         new BiosampleCopyConfig("lab_test"),
         new StudyCopyConfig("protocol_deviation"),
@@ -704,7 +700,6 @@ public class DataLoader extends PipelineJob
         },
         new SharedCopyConfig("program"),
 
-        new SharedCopyConfig("fcs_annotation"),
         new SharedCopyConfig("fcs_analyzed_result_marker"),
 
             // force using merge by override updateInsertOptionBeforeCopy()
@@ -744,11 +739,9 @@ public class DataLoader extends PipelineJob
         new ExpSample2FileInfo("expsample_2_file_info"),
         new ExpSample2Reagent("expsample_2_reagent"),
         new StudyCopyConfig("study_2_protocol"),
-        new SharedCopyConfig("subject_2_protocol"),
         new SharedCopyConfig("control_sample_2_file_info"),
         new ExpSample2Treatment("expsample_2_treatment"),
         new ArmCopyConfig("planned_visit_2_arm"),
-        new SharedCopyConfig("reagent_2_fcs_marker"),
         new SharedCopyConfig("standard_curve_2_file_info"),
         new StudyCopyConfig("study_2_panel"),
         new SharedCopyConfig("reagent_set_2_reagent"),

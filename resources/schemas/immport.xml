@@ -1,4 +1,10 @@
 <tables xmlns="http://labkey.org/data/xml">
+    <table tableName="dimassay" tableDbType="TABLE">
+        <columns>
+            <column columnName="subjectid"/>
+            <column columnName="assay"/>
+        </columns>
+    </table>
     <table tableName="arm_2_subject" tableDbType="TABLE">
         <columns>
             <column columnName="arm_accession"/>
@@ -234,6 +240,13 @@
             <column columnName="description"/>
         </columns>
     </table>
+    <table tableName="dimstudytimepoint" tableDbType="TABLE">
+        <columns>
+            <column columnName="study"/>
+            <column columnName="timepoint"/>
+            <column columnName="sortorder"/>
+        </columns>
+    </table>
     <table tableName="hla_typing_result" tableDbType="TABLE">
         <columns>
             <column columnName="result_id"/>
@@ -332,6 +345,7 @@
             <column columnName="target_enrollment"/>
             <column columnName="type"/>
             <column columnName="workspace_id"/>
+            <column columnName="restricted"/>
         </columns>
     </table>
     <table tableName="lk_ancestral_population" tableDbType="TABLE">
@@ -549,6 +563,12 @@
             <column columnName="unit_of_measure"/>
             <column columnName="upper_limit"/>
             <column columnName="workspace_id"/>
+        </columns>
+    </table>
+    <table tableName="dimstudycondition" tableDbType="TABLE">
+        <columns>
+            <column columnName="study"/>
+            <column columnName="condition"/>
         </columns>
     </table>
     <table tableName="lk_lab_test_panel_name" tableDbType="TABLE">
@@ -842,6 +862,14 @@
             <column columnName="workspace_id"/>
         </columns>
     </table>
+    <table tableName="dimstudy" tableDbType="TABLE">
+        <columns>
+            <column columnName="study"/>
+            <column columnName="type"/>
+            <column columnName="sortorder"/>
+            <column columnName="program"/>
+        </columns>
+    </table>
     <table tableName="expsample_2_biosample" tableDbType="TABLE">
         <columns>
             <column columnName="expsample_accession"/>
@@ -1099,6 +1127,17 @@
         <columns>
             <column columnName="name"/>
             <column columnName="description"/>
+        </columns>
+    </table>
+    <table tableName="dimdemographic" tableDbType="TABLE">
+        <columns>
+            <column columnName="subjectid"/>
+            <column columnName="ageinyears"/>
+            <column columnName="species"/>
+            <column columnName="gender"/>
+            <column columnName="race"/>
+            <column columnName="age"/>
+            <column columnName="study"/>
         </columns>
     </table>
     <table tableName="reagent" tableDbType="TABLE">

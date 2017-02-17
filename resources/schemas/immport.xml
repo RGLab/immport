@@ -63,8 +63,18 @@
     </table>
     <table tableName="program_2_personnel" tableDbType="TABLE">
         <columns>
-            <column columnName="program_id"/>
-            <column columnName="personnel_id"/>
+            <column columnName="program_id">
+                <fk>
+                    <fkColumnName>program_id</fkColumnName>
+                    <fkTable>program</fkTable>
+                </fk>
+            </column>
+            <column columnName="personnel_id">
+                <fk>
+                    <fkColumnName>personnel_id</fkColumnName>
+                    <fkTable>personnel</fkTable>
+                </fk>
+            </column>
             <column columnName="role_type"/>
         </columns>
     </table>
@@ -269,14 +279,18 @@
     </table>
     <table tableName="contract_grant" tableDbType="TABLE">
         <columns>
-            <column columnName="contract_grant_id"/>
             <column columnName="category"/>
             <column columnName="description"/>
             <column columnName="end_date"/>
             <column columnName="external_id"/>
             <column columnName="link"/>
             <column columnName="name"/>
-            <column columnName="program_id"/>
+            <column columnName="program_id">
+                <fk>
+                    <fkColumnName>program_id</fkColumnName>
+                    <fkTable>program</fkTable>
+                </fk>
+            </column>
             <column columnName="start_date"/>
         </columns>
     </table>
@@ -746,7 +760,12 @@
     <table tableName="contract_grant_2_personnel" tableDbType="TABLE">
         <columns>
             <column columnName="contract_grant_id"/>
-            <column columnName="personnel_id"/>
+            <column columnName="personnel_id">
+                <fk>
+                    <fkColumnName>personnel_id</fkColumnName>
+                    <fkTable>personnel</fkTable>
+                </fk>
+            </column>
             <column columnName="role_type"/>
         </columns>
     </table>

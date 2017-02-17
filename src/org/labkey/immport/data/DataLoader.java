@@ -70,6 +70,7 @@ import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Path;
 import org.labkey.api.util.URLHelper;
 import org.labkey.api.view.ViewBackgroundInfo;
+import org.labkey.immport.ImmPortController;
 import org.labkey.immport.ImmPortDocumentProvider;
 import org.springframework.dao.DataAccessException;
 
@@ -1201,10 +1202,13 @@ public class DataLoader extends PipelineJob
     {
         if (checkInterrupted())
             throw new CancelledException();
+
         setStatus(TaskStatus.running, "Starting import");
         loadFromArchive();
+
         if (checkInterrupted())
             throw new CancelledException();
+
         if (CoreSchema.getInstance().getSqlDialect().isPostgreSQL())
         {
             try
@@ -1217,11 +1221,25 @@ public class DataLoader extends PipelineJob
             {
                 warn(x.getMessage());
             }
+
+            if (checkInterrupted())
+                throw new CancelledException();
         }
-        setStatus(TaskStatus.running, "Adding studies to full text index");
-        ImmPortDocumentProvider.reindex();
+
+        setStatus(TaskStatus.running, "Populate cube");
+        info("populating cube");
+        ImmPortController.populateCube(getContainer());
+
         if (checkInterrupted())
             throw new CancelledException();
+
+        setStatus(TaskStatus.running, "Adding studies to full text index");
+        info("adding studies to full text index");
+        ImmPortDocumentProvider.reindex();
+
+        if (checkInterrupted())
+            throw new CancelledException();
+
         info("COMPLETE");
         setStatus(PipelineJob.TaskStatus.complete, "Complete");
     }

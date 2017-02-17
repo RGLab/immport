@@ -250,9 +250,7 @@ public class ImmPortController extends SpringActionController
         @Override
         public boolean handlePost(CopyBean form, BindException errors) throws Exception
         {
-            DbSchema schema = DbSchema.get("immport", DbSchemaType.Module);
-            new SqlExecutor(schema.getScope()).execute(schema.getSqlDialect().execute(schema,"fn_populateDimensions",new SQLFragment()));
-            QueryService.get().cubeDataChanged(getContainer());
+            populateCube(getContainer());
             ImmPortDocumentProvider.reindex();
             return true;
         }
@@ -268,6 +266,14 @@ public class ImmPortController extends SpringActionController
         {
             return root;
         }
+    }
+
+
+    public static void populateCube(Container c)
+    {
+        DbSchema schema = DbSchema.get("immport", DbSchemaType.Module);
+        new SqlExecutor(schema.getScope()).execute(schema.getSqlDialect().execute(schema,"fn_populateDimensions",new SQLFragment()));
+        QueryService.get().cubeDataChanged(c);
     }
 
 

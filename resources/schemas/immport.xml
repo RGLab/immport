@@ -279,6 +279,7 @@
     </table>
     <table tableName="contract_grant" tableDbType="TABLE">
         <columns>
+            <column columnName="contract_grant_id"/>
             <column columnName="category"/>
             <column columnName="description"/>
             <column columnName="end_date"/>

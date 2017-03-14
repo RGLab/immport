@@ -7,6 +7,7 @@ PARAMETERS($STUDY VARCHAR DEFAULT NULL)
 SELECT
   subject_accession || '.' || SUBSTRING(study_accession,4) as participantid,
   COALESCE(study_time_collected,9999.0000) as sequencenum,
+  ancestral_population AS pop_area_name,
   result.*
 
 FROM hla_typing_result AS result

@@ -11,3 +11,4 @@ SELECT
   result.*
 FROM hai_result AS result
 WHERE $STUDY IS NULL OR $STUDY = result.study_accession
+

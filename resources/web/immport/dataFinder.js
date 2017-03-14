@@ -123,8 +123,8 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
         $scope.currentGroup = $scope.unsavedGroup;
         $scope.saveOptions = [ {id: 'update', label : "Save", isActive: false}, {id : "saveNew", label : "Save As", isActive: true} ];
         $scope.studySubject = {
-                    nounSingular: 'Subject',
-                    nounPlural: 'Subjects',
+                    nounSingular: 'Participant',
+                    nounPlural: 'Participants',
                     tableName: 'Participant',
                     columnName: 'ParticipantId'
                 }; // TODO: should this use LABKEY.getModuleContext('study').subject?

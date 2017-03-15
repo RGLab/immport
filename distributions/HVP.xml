@@ -16,7 +16,9 @@
         <ant antfile="${basedir}/distributions/pro_plus.xml" target="gather_modules" />
         <copy todir="${dist.modules.dir}">
             <filelist dir="${staging.modules.dir}">
+                <file name="docker.module" />
                 <file name="immport.module" />
+                <file name="rstudio.module" />
             </filelist>
         </copy>
     </target>

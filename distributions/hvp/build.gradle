@@ -7,7 +7,9 @@ apply plugin: 'org.labkey.distribution'
 
 Distribution.inheritDependencies(project, ":server:distributions:pro_plus")
 
-BuildUtils.addModuleDistributionDependencies(project, [":server:externalModules:RGLab:immport"])
+BuildUtils.addModuleDistributionDependencies(project, [":externalModules:RGLab:immport",
+                                                       ":server:optionalModules:docker",
+                                                       ":server:optionalModules:rstudio"])
 
 project.task(
         "distribution",

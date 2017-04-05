@@ -63,10 +63,10 @@
 <%
     DataFinderWebPart me = (DataFinderWebPart)HttpView.currentView();
     ViewContext context = HttpView.currentContext();
-    ArrayList<StudyBean> studies = new SqlSelector(DbSchema.get("immport", DbSchemaType.Module),"SELECT study.*, P.title as program_title, pi.pi_names\n" +
+    ArrayList<StudyBean> studies = new SqlSelector(DbSchema.get("immport", DbSchemaType.Module),"SELECT study.*, P.name as program_title, pi.pi_names\n" +
             "FROM immport.study " +
-            "LEFT OUTER JOIN immport.workspace W ON study.workspace_id = W.workspace_id\n" +
-            "LEFT OUTER JOIN immport.contract_grant C ON W.contract_id = C.contract_grant_id\n" +
+            "LEFT OUTER JOIN immport.contract_grant_2_study CG2S ON study.study_accession = CG2S.study_accession\n" +
+            "LEFT OUTER JOIN immport.contract_grant C ON CG2S.contract_grant_id = C.contract_grant_id\n" +
             "LEFT OUTER JOIN immport.program P on C.program_id = P.program_id\n" +
             "LEFT OUTER JOIN\n" +
             "\t(\n" +

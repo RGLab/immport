@@ -1,5 +1,5 @@
  /*
- * Copyright (c) 2013-2015 LabKey Corporation
+ * Copyright (c) 2013-2017 LabKey Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -91,8 +91,8 @@ SELECT
    END as assay,
    arm_or_cohort.arm_accession,
    biosample.biosample_accession,
-   biosample_2_expsample.expsample_accession,
-   biosample_2_expsample.experiment_accession,
+   expsample_2_biosample.expsample_accession,
+   expsample.experiment_accession,
    biosample.study_accession,
    biosample.study_time_collected,
    biosample.study_time_collected_unit,
@@ -100,8 +100,9 @@ SELECT
    biosample.workspace_id
 FROM
   immport.biosample
-  JOIN immport.biosample_2_expsample ON biosample.biosample_accession = biosample_2_expsample.biosample_accession
-  JOIN immport.expsample_2_file_info ON biosample_2_expsample.expsample_accession = expsample_2_file_info.expsample_accession
+  JOIN immport.expsample_2_biosample ON biosample.biosample_accession = expsample_2_biosample.biosample_accession
+  JOIN immport.expsample ON expsample_2_biosample.expsample_accession = expsample.expsample_accession
+  JOIN immport.expsample_2_file_info ON expsample_2_biosample.expsample_accession = expsample_2_file_info.expsample_accession
   JOIN immport.file_info ON expsample_2_file_info.file_info_id = file_info.file_info_id
   JOIN immport.arm_2_subject ON biosample.subject_accession = arm_2_subject.subject_accession
   JOIN immport.arm_or_cohort ON arm_2_subject.arm_accession = arm_or_cohort.arm_accession AND biosample.study_accession = arm_or_cohort.study_accession
@@ -137,7 +138,7 @@ BEGIN
   DELETE FROM immport.dimDemographic;
   INSERT INTO immport.dimDemographic (SubjectId, Study, AgeInYears, Species, Gender, Race, Age)
   SELECT DISTINCT
-    subject.subject_accession || '.' || SUBSTRING(study_accession,4) AS SubjectId,
+    subject.subject_accession || '.' || SUBSTRING(s2s.study_accession,4) AS SubjectId,
     s2s.study_accession AS Study,
     CASE age_unit
     WHEN 'Years' THEN floor(age_reported)
@@ -159,7 +160,11 @@ BEGIN
       WHEN floor(age_reported) >= 70 THEN '> 70'
       ELSE 'Unknown'
     END AS Age
-  FROM immport.subject INNER JOIN immport.subject_2_study s2s ON subject.subject_accession = s2s.subject_accession;
+  FROM immport.subject INNER JOIN immport.subject_2_study s2s ON subject.subject_accession = s2s.subject_accession
+    LEFT JOIN (
+      SELECT a2sj.subject_accession, arm.study_accession, a2sj.age_unit, a2sj.min_subject_age as age_reported
+      FROM immport.arm_2_subject a2sj INNER JOIN immport.arm_or_cohort arm ON a2sj.arm_accession = arm.arm_accession
+    ) s2age ON s2age.subject_accession = s2s.subject_accession AND s2age.study_accession = s2s.study_accession;
 
 
   -- dimStudy
@@ -170,11 +175,11 @@ BEGIN
     SELECT DISTINCT
       study.study_accession as Study,
       study.type as Type,
-      P.title as Program,
+      P.name as Program,
       cast(substring(study.study_accession,4) as integer) as SortOrder
     FROM immport.study
-      LEFT OUTER JOIN immport.workspace W ON study.workspace_id = W.workspace_id
-      LEFT OUTER JOIN immport.contract_grant C ON W.contract_id = C.contract_grant_id
+      LEFT OUTER JOIN immport.contract_grant_2_study cg2s ON study.study_accession = cg2s.study_accession
+      LEFT OUTER JOIN immport.contract_grant C ON cg2s.contract_grant_id = C.contract_grant_id
       LEFT OUTER JOIN immport.program P on C.program_id = P.program_id;
 
 
@@ -359,14 +364,14 @@ BEGIN
   FROM immport.v_results_union
   ORDER BY study_accession, sortorder;
 
-
+/*
   -- summarySubjectAssayStudy
   DELETE FROM immport.summarySubjectAssayStudy;
   INSERT INTO  immport.summarySubjectAssayStudy (subject_accession, assay, study_accession)
   SELECT DISTINCT subject_accession, assay, study_accession
   FROM immport.v_results_union
   WHERE subject_accession IS NOT NULL AND assay IS NOT NULL AND study_accession IS NOT NULL;
-
+*/
 
   RETURN 1;
   END;

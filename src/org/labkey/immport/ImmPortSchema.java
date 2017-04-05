@@ -62,7 +62,7 @@ public class ImmPortSchema extends UserSchema
     }
 
     @Override
-    protected TableInfo createTable(String name)
+    public TableInfo createTable(String name)
     {
         SchemaTableInfo tinfo = getDbSchema().getTable(name);
         if (null == tinfo)

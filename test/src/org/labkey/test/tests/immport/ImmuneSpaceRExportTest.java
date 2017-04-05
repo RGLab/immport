@@ -135,11 +135,11 @@ public class ImmuneSpaceRExportTest extends BaseWebDriverTest implements Postgre
         {
             assertTrue("Script is missing Rlabkey library", rScript.contains("library(Rlabkey)"));
             assertTrue("", rScript.contains("colFilter <- makeFilter(c(\"" + filterColName + "\", \"EQUAL\", \"foo\"))"));
-            assertTrue("Script is missing getDataset call", rScript.contains("dataset <- " + noun + "$getDataset(\"" + datasetName + "\", colFilter = colFilter)"));
+            assertTrue("Script is missing getDataset call", rScript.contains("dataset <- " + noun + "$getDataset(\"" + datasetName + "\", original_view = FALSE, colFilter = colFilter)"));
         }
         else
         {
-            assertTrue("Script is missing getDataset call", rScript.contains("dataset <- " + noun + "$getDataset(\"" + datasetName + "\")"));
+            assertTrue("Script is missing getDataset call", rScript.contains("dataset <- " + noun + "$getDataset(\"" + datasetName + "\", original_view = FALSE)"));
         }
     }
 

@@ -26,7 +26,7 @@ LTRIM(RTRIM(COALESCE(description,'') || ' ' || COALESCE(subtype,''))) AS specime
 
 -- passthrough --
 biosample_accession,
-biosampling_accession,
+--biosampling_accession,
 description,
 name,
 type,
@@ -36,8 +36,8 @@ study_time_collected_unit,
 study_time_t0_event,
 study_time_t0_event_specify,
 study_accession,
-workspace_id,
-actual_visit_accession
+workspace_id
+--,actual_visit_accession
 
 FROM
 (

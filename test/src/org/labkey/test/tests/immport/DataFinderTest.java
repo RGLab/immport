@@ -53,6 +53,7 @@ import org.labkey.test.pages.study.ManageParticipantGroupsPage;
 import org.labkey.test.pages.study.OverviewPage;
 import org.labkey.test.util.APIContainerHelper;
 import org.labkey.test.util.AbstractContainerHelper;
+import org.labkey.test.util.ApiPermissionsHelper;
 import org.labkey.test.util.DataRegionTable;
 import org.labkey.test.util.ExperimentalFeaturesHelper;
 import org.labkey.test.util.LogMethod;
@@ -76,7 +77,6 @@ import java.nio.charset.Charset;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -92,11 +92,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
+import static org.labkey.test.util.PermissionsHelper.MemberType;
 
 @Category({Git.class})
 public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTest, ReadOnlyTest
 {
-    private static File immPortArchive = TestFileUtils.getSampleData("HIPC/ANIMAL_STUDIES-DR11.zip");
+    private static File immPortArchive = TestFileUtils.getSampleData("HIPC/ANIMAL_STUDIES-DR20.zip");
     private static File TEMPLATE_ARCHIVE = TestFileUtils.getSampleData("HIPC/SDY_template.zip");
     private static String[] ANIMAL_STUDIES = {"SDY99", "SDY139", "SDY147", "SDY208", "SDY215", "SDY217"};
     private static String[] STUDY_SUBFOLDERS = {"SDY139", "SDY147", "SDY208", "SDY217"};
@@ -120,7 +121,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
     @Override
     protected void doCleanup(boolean afterTest) throws TestTimeoutException
     {
-        deleteUsersIfPresent(USER1, USER2, USER3);
+        _userHelper.deleteUsers(false, USER1, USER2, USER3);
         AbstractContainerHelper containerHelper = new APIContainerHelper(this);
         containerHelper.deleteProject(getProjectName(), afterTest);
     }
@@ -144,14 +145,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
     @Override
     public boolean needsSetup()
     {
-        try
-        {
-            return HttpStatus.SC_NOT_FOUND == WebTestHelper.getHttpGetResponse(WebTestHelper.buildURL("project", getProjectName(), "begin"));
-        }
-        catch (IOException fail)
-        {
-            return true;
-        }
+        return HttpStatus.SC_NOT_FOUND == WebTestHelper.getHttpResponse(WebTestHelper.buildURL("project", getProjectName(), "begin")).getResponseCode();
     }
 
     private void setupProject()
@@ -205,31 +199,23 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
 
     public void createUsers()
     {
+        _userHelper.createUser(USER1);
+        _userHelper.createUser(USER2);
+        _userHelper.createUser(USER3);
 
-        deleteUsersIfPresent(USER1, USER2, USER3);
-
-        createUserWithPermissions(USER1, getProjectName(), "Project Administrator");
-        createUserWithPermissions(USER2, getProjectName(), "Reader");
-        createUser(USER3, null);
+        ApiPermissionsHelper permissionsHelper = new ApiPermissionsHelper(this);
+        permissionsHelper.addMemberToRole(USER1, "Project Administrator", MemberType.user, getProjectName());
+        permissionsHelper.addMemberToRole(USER2, "Reader", MemberType.user, getProjectName());
 
         // Assign users permissions to the various folders.
         log("Assign User1 Folder Administrator permissions to all of the sub folders.");
-        goToProjectHome();
-        goToFolderPermissions();
         for(String subFolder : STUDY_SUBFOLDERS)
         {
-            click(Locator.linkWithText(subFolder));
-            waitForElement(Locator.permissionRendered());
-            _permissionsHelper.setUserPermissions(USER1, "Folder Administrator");
+            permissionsHelper.addMemberToRole(USER1, "Folder Administrator", MemberType.user, getProjectName() + "/" + subFolder);
         }
 
         log("Assign User2 Read permissions to just one of the folders: " + USER2_FOLDER);
-        goToProjectHome();
-        clickProject(getProjectName());
-        clickFolder(USER2_FOLDER);
-        _permissionsHelper.enterPermissionsUI();
-        waitForElement(Locator.permissionRendered());
-        _permissionsHelper.setUserPermissions(USER2, "Reader");
+        permissionsHelper.addMemberToRole(USER2, "Reader", MemberType.user, getProjectName() + "/" + USER2_FOLDER);
 
     }
 
@@ -630,10 +616,9 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
             datasetCounts.put(name, numRows.intValue());
         }
 
-        Assert.assertEquals(2, datasetCounts.get("StudyProperties").intValue());
-        Assert.assertEquals(345, datasetCounts.get("demographics").intValue());
-        Assert.assertEquals(960, datasetCounts.get("elispot").intValue());
-        Assert.assertEquals(fcs_analyzed_rowCount, datasetCounts.get("fcs_analyzed_result").intValue());
+        Assert.assertEquals(new Integer(345), datasetCounts.get("demographics"));
+        Assert.assertEquals(new Integer(960), datasetCounts.get("elispot"));
+        Assert.assertEquals(new Integer(fcs_analyzed_rowCount), datasetCounts.get("fcs_analyzed_result"));
 
 
         log("Download datasets zip");
@@ -645,10 +630,6 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
 
         log("Validate contents");
         try (FileSystem fs = FileSystems.newFileSystem(exportedFile.toPath(), null)) {
-            // Verify StudyProperties.tsv exists
-            Path p = fs.getPath("StudyProperties.tsv");
-            Assert.assertTrue("Expected file within doesn't exist: " + p, Files.exists(p));
-
             // Extract a file
             List<String> lines = Files.readAllLines(fs.getPath("fcs_analyzed_result.tsv"), Charset.forName("UTF-8"));
             Assert.assertEquals(
@@ -990,7 +971,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         assertTrue("Icon for item in panel not as expected.", notificationPanelItem.getIconType().equals("fa-users"));
 
         log("Click on the item in the list and validate we go to the correct page.");
-        doAndWaitForPageToLoad(() -> notificationPanelItem.click());
+        doAndWaitForPageToLoad(notificationPanelItem::click);
 
         assertTrue("URL for page is not as expected. We should be at dataFinder.view", getURL().getPath().contains("dataFinder.view"));
         unreadNotifications--;
@@ -1047,7 +1028,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         final UserNotificationsPage.NotificationItem pageNotificationItem2 = notificationsPage.findNotificationInPage(groupsSent.get(SENT_CLICK_VIEW_LINK).groupName, UserNotificationsPage.NotificationTypes.STUDY);
         assertTrue("Did not find the 'going to view' notification in the list of all notifications.", pageNotificationItem2 != null);
         log("Click the 'view' link.");
-        doAndWaitForPageToLoad(() -> pageNotificationItem2.clickView());
+        doAndWaitForPageToLoad(pageNotificationItem2::clickView);
         assertTrue("URL for page is not as expected. We should be at dataFinder.view", getURL().getPath().contains("dataFinder.view"));
 
         log("Go back to the notifications page and click the 'Mark As Read' link.");
@@ -1427,9 +1408,9 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         else
             folder = "fcs_control_files/";
 
-        for(int j=0; j < controlFileList.size(); j++)
+        for (String controlFile : controlFileList)
         {
-            assertTrue("Did not find file: " + controlFileList.get(j), filesInZip.contains(folder + controlFileList.get(j)));
+            assertTrue("Did not find file: " + controlFile, filesInZip.contains(folder + controlFile));
         }
 
     }

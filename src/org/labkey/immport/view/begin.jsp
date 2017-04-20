@@ -56,5 +56,5 @@ To create a gender subject_groups<br>
   Post loading tasks:<br>
   <%=textLink("Hide empty datasets", new ActionURL("study", "datasetVisibility", c))%>
   <%=textLink("Highligh study", new ActionURL("study", "manageStudyProperties", c))%>
-  <%=textLink("Update modules", new ActionURL("admin", "folderManagement", c, { tabId: 'folderType' }))%>
+  <%=textLink("Update modules", new ActionURL("admin", "folderManagement", c))%>
 </p>

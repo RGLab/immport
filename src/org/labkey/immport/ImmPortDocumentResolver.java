@@ -151,7 +151,7 @@ public class ImmPortDocumentResolver implements SearchService.ResourceResolver
             id,
             home.getId(),
             "text/html",
-            html.toString().getBytes(),
+            html.toString(),
             url,
             properties
         );

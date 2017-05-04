@@ -188,7 +188,7 @@
                         </div>
 
                         <span id="facetPanel">
-                            <div ng-include="'/facet.html'" ng-repeat="dim in [dimSpecies,dimCondition,dimType,dimCategory,dimAssay,dimTimepoint,dimGender,dimRace,dimAge]"></div>
+                            <div ng-include="'/facet.html'" ng-repeat="dim in [dimSpecies,dimCondition,dimType,dimCategory,dimAssay,dimTimepoint,dimGender,dimRace,dimAge,dimStudy]"></div>
                         </span>
                     </div>
                 </div>

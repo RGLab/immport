@@ -767,8 +767,6 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
             {
                 if (!dataspace.dimensions.hasOwnProperty(d))
                     continue;
-                if (d == "Study")
-                    continue;
                 var filterMembers = dataspace.dimensions[d].filters;
                 if (filterMembers && filterMembers.length > 0)
                     return true;
@@ -894,8 +892,6 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
             {
                 if (!dataspace.dimensions.hasOwnProperty(d))
                     continue;
-                if (d == "Study")
-                    continue;
                 $scope._clearFilter(d);
             }
 
@@ -937,10 +933,10 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
             var index = -1;
             for (var i = 0; i < filterMembers.length; i++)
             {
-                if (member.uniqueName == filterMembers[i].uniqueName)
+                if (member.uniqueName === filterMembers[i].uniqueName)
                     index = i;
             }
-            if (index == -1)
+            if (index === -1)
                 return;
             filterMembers[index].selected = false;
             filterMembers.splice(index, 1);
@@ -957,19 +953,20 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                     continue;
                 dim = dataspace.dimensions[d];
                 var filterMembers = dim.filters;
-                if (d == 'Study')
+                if (d === 'Study')
                 {
-                    if (!filterMembers || filterMembers.length == dim.members.length)
-                        continue;
+                    if (!filterMembers || filterMembers.length === 0 || filterMembers.length === dim.members.length)
+                        filterMembers = $scope.searchStudyFilter;
+                    else
+                        filterMembers = $scope.intersectMembers(filterMembers, $scope.searchStudyFilter);
 
-                    if (filterMembers.length == 0)
+                    if (filterMembers.length === 0)
                     {
-                        // in the case of study filter, this means no matches, rather than no filter!
                         $scope.updateCountsZero();
                         return;
                     }
                     var uniqueNames = filterMembers.map(function(m){return m.uniqueName;});
-                    if ($scope.filterByLevel != "[Study].[Name]")
+                    if ($scope.filterByLevel !== "[Study].[Name]")
                         intersectFilters.push({
                             level: $scope.filterByLevel,
                             membersQuery: {level: "[Study].[Name]", members: uniqueNames}
@@ -979,7 +976,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                 }
                 else
                 {
-                    if (!filterMembers || filterMembers.length == 0)
+                    if (!filterMembers || filterMembers.length === 0)
                         continue;
                     if (dim.filterType === "OR")
                     {
@@ -1008,7 +1005,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
             }
 
             var filters = intersectFilters;
-            if (intersectFilters.length && $scope.filterByLevel != "[Subject].[Subject]")
+            if (intersectFilters.length && $scope.filterByLevel !== "[Subject].[Subject]")
             {
                 filters = [{
                     level: "[Subject].[Subject]",
@@ -1177,38 +1174,43 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
             }
 
             // I don't like this, but it seems to keep layout from breaking
-            if (typeof window._resize == "function")
+            if (typeof window._resize === "function")
                 $timeout(window._resize,1);
 
             LABKEY.Utils.signalWebDriverTest('dataFinderCountsUpdated');
         };
 
-        $scope.clearStudyFilter = function ()
+
+        $scope.clearSearchStudyFilter = function ()
         {
-            $scope.setStudyFilter($scope.getStudySubsetList());
+            $scope.setSearchStudyFilter($scope.getStudySubsetList());
+            $scope.$broadcast("filterSelectionCleared", $scope.hasFilters());
         };
 
 
         $scope.getStudySubsetList = function ()
         {
-            if ($scope.studySubset == "ImmuneSpace")
+            if ($scope.studySubset === "ImmuneSpace")
                 return $scope.loaded_study_list;
-            if ($scope.studySubset == "Recent")
+            if ($scope.studySubset === "Recent")
                 return $scope.recent_study_list;
-            if ($scope.studySubset == "HipcFunded")
+            if ($scope.studySubset === "HipcFunded")
                 return $scope.hipc_study_list;
-            if ($scope.studySubset == "UnloadedImmPort")
+            if ($scope.studySubset === "UnloadedImmPort")
                 return $scope.unloaded_study_list;
             return Ext4.pluck($scope.dimStudy.members, 'uniqueName');
         };
 
 
-        $scope.setStudyFilter = function (studies)
+        $scope.setSearchStudyFilter = function (studies)
         {
-            var dim = $scope.dimStudy;
-            $scope._clearFilter(dim.name);
-            var filterMembers = dim.filters;
+            var oldSearchStudyFilter = $scope.searchStudyFilter || [];
 
+            // TODO broadcast???
+            studies = $scope.intersect(studies, $scope.getStudySubsetList());
+
+            var dim = $scope.dimStudy;
+            var filterMembers = [];
             for (var s = 0; s < studies.length; s++)
             {
                 var uniqueName = studies[s];
@@ -1220,7 +1222,15 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                 }
                 filterMembers.push(member);
             }
-            $scope.updateCountsAsync();
+
+            var changed = oldSearchStudyFilter.length !== filterMembers.length ||
+                    $scope.intersectMembers(oldSearchStudyFilter,filterMembers).length !== filterMembers.length;
+
+            if (changed)
+            {
+                $scope.searchStudyFilter = filterMembers;
+                $scope.updateCountsAsync();
+            }
         };
 
 
@@ -1236,9 +1246,9 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
             else
             {
                 $scope.saveFilterState();
-                $scope.clearStudyFilter();
+                $scope.clearSearchStudyFilter();
             }
-        };
+        }   ;
 
         $scope.doSearchTermsChanged_promise = null;
 
@@ -1253,7 +1263,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
             if (!$scope.searchTerms)
             {
                 $scope.searchMessage = "";
-                $scope.clearStudyFilter();
+                $scope.clearSearchStudyFilter();
                 return;
             }
 
@@ -1269,7 +1279,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
             promise.success(function (data)
             {
                 // NOOP if we're not current (poor man's cancel)
-                if (promise != $scope.doSearchTermsChanged_promise)
+                if (promise !== $scope.doSearchTermsChanged_promise)
                     return;
                 $scope.doSearchTermsChanged_promise = null;
                 var hits = data.hits;
@@ -1286,7 +1296,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                 }
                 if (!searchStudies.length)
                 {
-                    $scope.setStudyFilter(searchStudies);
+                    $scope.setSearchStudyFilter(searchStudies);
                     $scope.searchMessage = 'No studies match your search criteria';
                 }
                 else
@@ -1296,7 +1306,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                     var result = $scope.intersect(searchStudies, $scope.getStudySubsetList());
                     if (!result.length)
                         $scope.searchMessage = 'No studies match your search criteria';
-                    $scope.setStudyFilter(result);
+                    $scope.setSearchStudyFilter(result);
                 }
             });
         };
@@ -1312,11 +1322,22 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
             return ret;
         };
 
+        $scope.intersectMembers = function (a, b)
+        {
+            var o = {}, ret = [], i;
+            for (i = 0; i < a.length; i++)
+                o[a[i].uniqueName] = a[i];
+            for (i = 0; i < b.length; i++)
+                if (o[b[i].uniqueName])
+                    ret.push(b[i]);
+            return ret;
+        };
+
         $scope.onSearchTermsChanged_promise = null;
 
         $scope.onSearchTermsChanged = function ()
         {
-            if (null != $scope.onSearchTermsChanged_promise)
+            if (null !== $scope.onSearchTermsChanged_promise)
                 $scope.timeout.cancel($scope.onSearchTermsChanged_promise);
             $scope.onSearchTermsChanged_promise = $scope.timeout(function ()
             {
@@ -1425,7 +1446,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                     containers.push(study.containerId);
             }
 
-            if (containers.length == 0)
+            if (containers.length === 0)
             {
                 LABKEY.Ajax.request({
                     url: LABKEY.ActionURL.buildURL('study-shared', 'sharedStudyContainerFilter.api'),
@@ -1534,7 +1555,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
         dim.filterType = dim.filterType || "OR";
         for (var f = 0; f < dim.filterOptions.length; f++)
         {
-            if (dim.filterOptions[f].type == dim.filterType)
+            if (dim.filterOptions[f].type === dim.filterType)
                 dim.filterCaption = dim.filterOptions[f].caption;
         }
     }

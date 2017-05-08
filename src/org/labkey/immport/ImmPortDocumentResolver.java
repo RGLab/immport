@@ -30,6 +30,7 @@ import org.labkey.api.view.HttpView;
 import org.labkey.api.webdav.SimpleDocumentResource;
 import org.labkey.api.webdav.WebdavResource;
 
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -151,7 +152,7 @@ public class ImmPortDocumentResolver implements SearchService.ResourceResolver
             id,
             home.getId(),
             "text/html",
-            html.toString(),
+            html.toString().getBytes(Charset.forName("UTF-8")),
             url,
             properties
         );

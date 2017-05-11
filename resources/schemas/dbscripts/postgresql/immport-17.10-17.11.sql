@@ -13,7 +13,3 @@ ALTER TABLE immport.experiment ALTER COLUMN purpose TYPE VARCHAR(100);
 -- study.download_page_available
 -- study.final_public_release_date
 -- planned_public_release_date
-
--- new columns
-ALTER TABLE immport.STUDY ADD COLUMN latest_data_release_date DATE NULL;
-ALTER TABLE immport.STUDY ADD COLUMN latest_data_release_version VARCHAR(10) NULL;

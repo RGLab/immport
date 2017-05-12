@@ -8,8 +8,3 @@ ALTER TABLE immport.standard_curve_2_file_info ALTER COLUMN data_format TYPE VAR
 
 -- deprecated, "purpose" can be deleted when DR20 is not longer supporteds
 ALTER TABLE immport.experiment ALTER COLUMN purpose TYPE VARCHAR(100);
-
--- other columnss to deprecate
--- study.download_page_available
--- study.final_public_release_date
--- planned_public_release_date

@@ -231,6 +231,7 @@ LI.member .member-indicator
     display:inline-block;
     width:16px;
     z-index:2;
+    vertical-align: top;
 }
 .member-indicator.selected:after
 {

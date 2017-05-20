@@ -152,7 +152,7 @@ public class ImmPortDocumentResolver implements SearchService.ResourceResolver
             id,
             home.getId(),
             "text/html",
-            html.toString().getBytes(Charset.forName("UTF-8")),
+            html.toString(),
             url,
             properties
         );

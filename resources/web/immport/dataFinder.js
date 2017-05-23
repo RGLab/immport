@@ -1078,7 +1078,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                     dim = dataspace.dimensions[d];
                     if (dim.name === "Subject")
                         onRows.arguments.push({level: dim.hierarchy.levels[0].uniqueName});
-                    else if (dim.name === "Study" && $scope.filterByLevel === "[Study].[Name]")
+                    else if (dim.name === "Study") // && $scope.filterByLevel === "[Study].[Name]")
                         continue;
                     else
                         onRows.arguments.push({level: dim.level.uniqueName});

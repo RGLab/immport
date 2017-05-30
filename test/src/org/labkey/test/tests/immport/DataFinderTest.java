@@ -411,7 +411,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         for (String studyAccession : STUDY_SUBFOLDERS)
         {
             clickFolder(studyAccession);
-            StudyOverviewWebPart studyOverview = new StudyOverviewWebPart(this);
+            StudyOverviewWebPart studyOverview = new StudyOverviewWebPart(getDriver());
             studyParticipantCounts.put(studyAccession, studyOverview.getParticipantCount());
         }
 
@@ -544,7 +544,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         List<String> assaysWithoutData = finder.getAllDimensionPanels().get(Dimension.ASSAY).getEmptyValues();
         Map<Dimension, Integer> finderSummaryCounts = finder.getSummaryCounts();
 
-        OverviewPage studyOverview = new StudyOverviewWebPart(this).clickStudyNavigator();
+        OverviewPage studyOverview = new StudyOverviewWebPart(getDriver()).clickStudyNavigator();
 
         Map<String, Integer> studyOverviewParticipantCounts = studyOverview.getDatasetTotalParticipantCounts();
 

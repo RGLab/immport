@@ -319,7 +319,8 @@ public class DataFinderPage extends LabKeyPage
         TIMEPOINT("Day of Study", "timepoints"),
         GENDER("Gender", "genders"),
         RACE("Race", "races"),
-        AGE("Age", "age groups");
+        AGE("Age", "age groups"),
+        STUDY("Study", "studies");
 
         private String caption;
         private String summaryLabel;

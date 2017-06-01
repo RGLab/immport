@@ -36,7 +36,8 @@ public class ImmuneSpaceRExportScriptFactory extends RExportScriptFactory
             Study study = container != null ? StudyService.get().getStudy(container) : null;
             boolean isImmPortModuleEnabled = container != null && container.getActiveModules().contains(ModuleLoader.getInstance().getModule(ImmPortModule.class));
             boolean isStudyDataset = study != null && "study".equals(getSchemaName()) && study.getDatasetByName(getQueryName()) != null;
-            if (!isImmPortModuleEnabled || !isStudyDataset)
+            boolean isSupportedView = StringUtils.isEmpty(getViewName()) || "full".equalsIgnoreCase(getViewName()); //Issue 29755
+            if (!isImmPortModuleEnabled || !isStudyDataset || !isSupportedView)
                 return super.getScriptExportText();
 
             return StringUtils.join(getScriptCommands(),"\n");
@@ -56,7 +57,6 @@ public class ImmuneSpaceRExportScriptFactory extends RExportScriptFactory
                 sb.append("# This script makes use of the RGLab/ImmuneSpaceR package.").append("\n");
                 sb.append("# See https://github.com/RGLab/ImmuneSpaceR for more information.").append("\n");
                 sb.append("\n");
-                sb.append("library(ImmuneSpaceR)").append("\n");
 
                 // the Rlabkey package is used to apply filters to the query
                 commands.add(sb.toString());
@@ -76,6 +76,13 @@ public class ImmuneSpaceRExportScriptFactory extends RExportScriptFactory
                 sb.append(noun).append(" <- CreateConnection(\"").append(container.getName()).append("\")").append("\n");
             commands.add(sb.toString());
             sb.setLength(0);
+
+            // Issue 29755: original_view argument. TRUE = full, FALSE = default
+            String origViewStr = "";
+            if (StringUtils.isEmpty(getViewName()))
+                origViewStr = ", original_view = FALSE";
+            else if ("full".equalsIgnoreCase(getViewName()))
+                origViewStr = ", original_view = TRUE";
 
             // use the Rlabkey makeFilter function for the colFilter parameter
             String colFilterStr = "";
@@ -101,6 +108,7 @@ public class ImmuneSpaceRExportScriptFactory extends RExportScriptFactory
             // use the ImmuneSpaceR getDataset function for the specified query/dataset name and apply any column filters / sorts
             sb.append(variableName + " <- ").append(noun)
                     .append("$getDataset(\"").append(getQueryName()).append("\"")
+                    .append(origViewStr)
                     .append(colFilterStr)
                     .append(colSortStr)
                     .append(")");

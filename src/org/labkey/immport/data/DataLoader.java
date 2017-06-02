@@ -479,6 +479,8 @@ public class DataLoader extends PipelineJob
             DbSchema targetSchema = DbSchema.get(getTargetSchema().getName());
             final ArrayList<String> names = new SqlSelector(targetSchema, "SELECT Name FROM " + getTargetSchema().getName() + "." + getTargetQuery()).getArrayList(String.class);
             final DataIteratorBuilder select = super.selectFromSource(dl,context,dir,log);
+            if (select == null)
+                return null;
             if (names.isEmpty() && !force)
                 return select;
             return new LookupInsertFilter(select, names);

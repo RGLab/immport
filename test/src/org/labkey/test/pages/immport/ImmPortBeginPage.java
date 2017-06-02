@@ -1,12 +1,10 @@
 package org.labkey.test.pages.immport;
 
 import org.labkey.test.BaseWebDriverTest;
-import org.labkey.test.ExtraSiteWrapper;
 import org.labkey.test.Locator;
 import org.labkey.test.WebTestHelper;
 import org.labkey.test.pages.LabKeyPage;
 import org.labkey.test.util.LogMethod;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.File;
 
@@ -79,6 +77,7 @@ public class ImmPortBeginPage extends LabKeyPage
     public LabKeyPage uploadSpecimens()
     {
         _test.clickAndWait(Locator.linkWithText("Import Archive"));
-        throw new NotImplementedException();
+        //TODO: Finish implementation
+        return null;
     }
 }

@@ -188,7 +188,7 @@
                         </div>
 
                         <span id="facetPanel">
-                            <div ng-include="'/facet.html'" ng-repeat="dim in [dimSpecies,dimCondition,dimType,dimCategory,dimAssay,dimTimepoint,dimGender,dimRace,dimAge]"></div>
+                            <div ng-include="'/facet.html'" ng-repeat="dim in [dimSpecies,dimCondition,dimType,dimCategory,dimAssay,dimTimepoint,dimGender,dimRace,dimAge,dimStudy]"></div>
                         </span>
                     </div>
                 </div>
@@ -248,7 +248,7 @@
             </div>
         </div>
         <ul>
-            <li ng-repeat="member in dim.members" id="m_{{dim.name}}_{{member.uniqueName}}" style="position:relative;" class="member"
+            <li ng-repeat="member in dim.members | filter:isMemberVisible" id="m_{{dim.name}}_{{member.uniqueName}}" style="position:relative;" class="member"
                  ng-class="{'selected-member':member.selected, 'empty-member':(!member.selected && member.count == 0)}"
                  ng-click="selectMember(dim.name,member,$event)">
                 <span class="active member-indicator" ng-class="{selected:member.selected, 'none-selected':!dim.filters.length, 'not-selected':!member.selected}" ng-click="toggleMember(dim.name,member,$event)">

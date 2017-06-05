@@ -911,6 +911,12 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         }
     }
 
+    int getInboxCount()
+    {
+        String s = UserNotificationsPanel.getInboxCount(this);
+        return StringUtils.isEmpty(s) ? 0 : Integer.parseInt(s);
+    }
+
     @Test
     public void testNotifications() throws MalformedURLException
     {
@@ -938,7 +944,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
 
         log("First thing, impersonate the recipient of the notices and get their notification count before we start.");
         impersonate(USER1);
-        recipientCountBefore = Integer.parseInt(UserNotificationsPanel.getInboxCount(this));
+        recipientCountBefore = getInboxCount();
         stopImpersonating();
 
         log("Create several different study groups that will cause notifications to be sent.");
@@ -953,7 +959,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         log("Impersonate the recipient and validate that they see notifications.");
         impersonate(USER1);
 
-        recipientCountAfter = Integer.parseInt(UserNotificationsPanel.getInboxCount(this));
+        recipientCountAfter = getInboxCount();
         log("Message count on inbox: " + recipientCountAfter);
         Assert.assertEquals("Notification count for the inbox is not as expected.", (recipientCountBefore + unreadNotifications), recipientCountAfter);
 
@@ -977,7 +983,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         unreadNotifications--;
 
         log("Validate that the notification count has gone down.");
-        recipientCountAfter = Integer.parseInt(UserNotificationsPanel.getInboxCount(this));
+        recipientCountAfter = getInboxCount();
         assertEquals("Count after clicking the item in the panel was not as expected.", (recipientCountBefore + unreadNotifications), recipientCountAfter);
 
         log("Visit the url link for a different group and confirm that this causes the notification count to go down.");
@@ -985,7 +991,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         goToURL(previewUrl, 10000);
         unreadNotifications--;
 
-        recipientCountAfter = Integer.parseInt(UserNotificationsPanel.getInboxCount(this));
+        recipientCountAfter = getInboxCount();
         assertEquals("Count after was not as expected.",  (recipientCountBefore + unreadNotifications), recipientCountAfter);
 
         log("Go home, kind of resetting.");
@@ -1063,7 +1069,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         // Wait a moment for the panel to clear.
         sleep(500);
 
-        assertEquals("Notification count for inbox is not as expected.", 0, Integer.parseInt(UserNotificationsPanel.getInboxCount(this)));
+        assertEquals("Notification count for inbox is not as expected.", 0, getInboxCount());
         assertEquals("Count of notifications in the panel is not as expected.", 0, notificationsPanel.getNotificationCount());
 
         log("The text 'No new notifications' should be shown in the panel.");
@@ -1081,7 +1087,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         }
 
         log("Get the new unread count for this user (should be 0) and stop impersonating.");
-        recipientCountBefore = Integer.parseInt(UserNotificationsPanel.getInboxCount(this));
+        recipientCountBefore = getInboxCount();
 
         stopImpersonating();
 
@@ -1097,7 +1103,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         log("Again impersonate the recipient and validate that they see notifications.");
         impersonate(USER1);
 
-        recipientCountAfter = Integer.parseInt(UserNotificationsPanel.getInboxCount(this));
+        recipientCountAfter = getInboxCount();
         log("Message count on inbox: " + recipientCountAfter);
         Assert.assertEquals("Notification count for the inbox is not as expected.", (recipientCountBefore + unreadNotifications), recipientCountAfter);
 

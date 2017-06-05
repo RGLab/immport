@@ -18,9 +18,15 @@ package org.labkey.immport;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
+import org.json.JSONObject;
 import org.labkey.api.action.Action;
 import org.labkey.api.action.ActionType;
+import org.labkey.api.action.ApiAction;
+import org.labkey.api.action.ApiResponse;
+import org.labkey.api.action.ApiResponseWriter;
+import org.labkey.api.action.ApiSimpleResponse;
 import org.labkey.api.action.ExportAction;
 import org.labkey.api.action.FormViewAction;
 import org.labkey.api.action.HasBindParameters;
@@ -29,6 +35,7 @@ import org.labkey.api.action.RedirectAction;
 import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
 import org.labkey.api.admin.notification.NotificationService;
+import org.labkey.api.data.BaseSelector;
 import org.labkey.api.data.ColumnHeaderType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerFilter;
@@ -44,7 +51,6 @@ import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.data.dialect.SqlDialect;
 import org.labkey.api.files.FileContentService;
-import org.labkey.api.gwt.client.util.StringUtils;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.PipelineUrls;
@@ -478,6 +484,11 @@ public class ImmPortController extends SpringActionController
                                 + File.separator + file.getFileName());
                     }
 
+                    if (!src.isFile())
+                    {
+                        LOG.info("File not found: " + src.getAbsolutePath());
+                        continue;
+                    }
                     LOG.info("Adding file to zip: " + src.getAbsolutePath());
 
                     try (InputStream in = new FileInputStream(src))
@@ -873,6 +884,53 @@ public class ImmPortController extends SpringActionController
         {
             return root.addChild("Data Finder", new ActionURL(DataFinderAction.class, getContainer()))
                     .addChild("Export Study Datasets");
+        }
+    }
+
+    public static class NameForm
+    {
+        String name;
+
+        public String getName()
+        {
+            return name;
+        }
+
+        public void setName(String name)
+        {
+            this.name = name;
+        }
+    }
+
+
+    @RequiresNoPermission
+    public class ContainersForModuleAction extends ApiAction<NameForm>
+    {
+        @Override
+        public Object execute(NameForm form, BindException errors) throws Exception
+        {
+            DbSchema immport =  DbSchema.get("immport",DbSchemaType.Module);
+            DbScope scope = immport.getScope();
+
+            Container project = getContainer().getProject();
+            SQLFragment filter = new ContainerFilter.AllInProject(getUser()).getSQLFragment(immport, new SQLFragment("entityid"),getContainer().getProject());
+            SQLFragment select = new SQLFragment(
+                "select containers.name, containers.entityid, properties.name as module\n" +
+                    "from \n" +
+                    "    prop.properties inner join \n" +
+                    "    prop.propertysets on properties.\"set\"=propertysets.\"set\" and propertysets.category='activeModules' inner join \n" +
+                    "    core.containers on propertysets.objectid=containers.entityid\n" +
+                    "where \n");
+            select.append(filter);
+            if (!StringUtils.isEmpty(form.getName()))
+            {
+                select.append(" and properties.name ilike ?").add(form.getName());
+            }
+            Map[] result = new SqlSelector(scope,select).getMapArray();
+            JSONObject ret = new JSONObject();
+            ret.put("success", true);
+            ret.put("result", result);
+            return new ApiSimpleResponse(ret);
         }
     }
 }

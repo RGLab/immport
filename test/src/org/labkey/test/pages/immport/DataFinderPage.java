@@ -319,7 +319,8 @@ public class DataFinderPage extends LabKeyPage
         TIMEPOINT("Day of Study", "timepoints"),
         GENDER("Gender", "genders"),
         RACE("Race", "races"),
-        AGE("Age", "age groups");
+        AGE("Age", "age groups"),
+        STUDY("Study", "studies");
 
         private String caption;
         private String summaryLabel;
@@ -509,7 +510,8 @@ public class DataFinderPage extends LabKeyPage
             for (WebElement member : members)
             {
                 String name = elements.memberName.findElement(member).getText();
-                Integer count = Integer.valueOf(elements.memberCount.findElement(member).getText());
+                String countText = elements.memberCount.findElement(member).getText();
+                Integer count = null==countText ? null : Integer.parseInt(countText);
                 countMap.put(name, count);
             }
 

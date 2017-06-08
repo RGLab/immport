@@ -1167,6 +1167,8 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                 }
             }
 
+            var hasStudyFilter = $scope.dimStudy.filters.length !== 0 && $scope.dimStudy.filters.length !== $scope.dimStudy.members.length;
+
             for (var cs=0 ; cs<cellsetResults.length ; cs++) {
                 var cellSet = cellsetResults[cs];
                 var positions = cellSetHelper.getRowPositionsOneLevel(cellSet);
@@ -1174,7 +1176,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                 var max = 0;
                 for (var i = 0; i < positions.length; i++) {
                     var resultMember = positions[i];
-                    if (resultMember.level.uniqueName == "[Subject].[Subject]") {
+                    if (resultMember.level.uniqueName === "[Subject].[Subject]") {
                         $scope.subjects.push(resultMember.name);
                     }
                     else {
@@ -1184,12 +1186,22 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                         member = dim.memberMap[resultMember.uniqueName];
                         if (!member) {
                             // might be an all member
-                            if (dim.allMemberName == resultMember.uniqueName)
+                            if (dim.allMemberName === resultMember.uniqueName)
                                 dim.allMemberCount = count;
-                            else if (-1 == resultMember.uniqueName.indexOf("#") && "(All)" != resultMember.name)
+                            else if (-1 === resultMember.uniqueName.indexOf("#") && "(All)" !== resultMember.name)
                                 console.log("member not found: " + resultMember.uniqueName);
                         }
-                        else {
+                        else if (dim === $scope.dimStudy)
+                        {
+                            member.count = count;
+                            // STUDY is weird because we're showing counts for non-selected studies...
+                            if (count && (!hasStudyFilter || member.selected))
+                                dim.summaryCount += 1;
+                            if (count > max)
+                                max = count;
+                        }
+                        else
+                        {
                             member.count = count;
                             if (count)
                                 dim.summaryCount += 1;

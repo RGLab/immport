@@ -102,9 +102,9 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
     private static String[] ANIMAL_STUDIES = {"SDY99", "SDY139", "SDY147", "SDY208", "SDY215", "SDY217"};
     private static String[] STUDY_SUBFOLDERS = {"SDY139", "SDY147", "SDY208", "SDY217"};
     private static String USER2_FOLDER = "SDY139";
-    private static String USER1 = "user1@foo.com";
-    private static String USER2 = "user2@foo.com";
-    private static String USER3 = "user3@foo.com";
+    private static String USER1 = "user1@immport.test";
+    private static String USER2 = "user2@immport.test";
+    private static String USER3 = "user3@immport.test";
 
     @Override
     protected String getProjectName()

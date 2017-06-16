@@ -255,9 +255,6 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                 {
                     var filter = filters[f];
 
-                    if (filter.name == "Study" && $scope.filterByLevel == "[Study].[Name]")
-                        continue;
-
                     if (filter.name == "Search")
                     {
                         $scope.$emit("searchTermsAppliedFromFilter", filter.members);
@@ -442,7 +439,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                         // parse the sent groups filters, but explicitly remove the Study members
                         // as this user might have different study/container permissions
                         var groupFilters = Ext4.decode(json.groups[0].filters);
-                        delete groupFilters['Study'];
+                        //delete groupFilters['Study'];
 
                         $scope.clearAllFilters(false);
                         $scope._applyGroupFilters(groupFilters);

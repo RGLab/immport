@@ -484,6 +484,11 @@ public class ImmPortController extends SpringActionController
                                 + File.separator + file.getFileName());
                     }
 
+                    if (!src.isFile())
+                    {
+                        LOG.info("File not found: " + src.getAbsolutePath());
+                        continue;
+                    }
                     LOG.info("Adding file to zip: " + src.getAbsolutePath());
 
                     try (InputStream in = new FileInputStream(src))

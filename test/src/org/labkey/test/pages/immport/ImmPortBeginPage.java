@@ -50,7 +50,7 @@ public class ImmPortBeginPage extends LabKeyPage
     @LogMethod
     public void populateCube()
     {
-        _test.clickAndWait(Locator.linkWithText("Populate Cube"));
+        _test.clickAndWait(Locator.linkWithText("Populate cube"));
         _test.clickAndWait(Locator.css("form[name=populateCube] input[type=submit]"), 120000);
     }
 

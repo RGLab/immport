@@ -206,6 +206,8 @@
             <column columnName="subject_accession"/>
             <column columnName="workspace_file_info_id"/>
             <column columnName="workspace_id"/>
+            <column columnName="repository_accession"/>
+            <column columnName="repository_name"/>
         </columns>
     </table>
     <table tableName="lk_source_type" tableDbType="TABLE">
@@ -234,6 +236,8 @@
             <column columnName="virus_strain_preferred"/>
             <column columnName="virus_strain_reported"/>
             <column columnName="workspace_id"/>
+            <column columnName="repository_accession"/>
+            <column columnName="repository_name"/>
         </columns>
     </table>
     <table tableName="fcs_analyzed_result_marker" tableDbType="TABLE">
@@ -275,6 +279,8 @@
             <column columnName="study_time_collected_unit"/>
             <column columnName="subject_accession"/>
             <column columnName="workspace_id"/>
+            <column columnName="repository_accession"/>
+            <column columnName="repository_name"/>
         </columns>
     </table>
     <table tableName="contract_grant" tableDbType="TABLE">
@@ -444,6 +450,12 @@
             <column columnName="study_time_collected_unit"/>
             <column columnName="subject_accession"/>
             <column columnName="workspace_id"/>
+            <column columnName="repository_accession"/>
+            <column columnName="repository_name"/>
+            <column columnName="concentration_unit_reported"/>
+            <column columnName="unit_preferred"/>
+            <column columnName="concentration_value_reported"/>
+            <column columnName="concentration_value_preferred"/>
         </columns>
     </table>
     <table tableName="fcs_header_marker_2_reagent" tableDbType="TABLE">
@@ -502,6 +514,8 @@
             <column columnName="virus_strain_preferred"/>
             <column columnName="virus_strain_reported"/>
             <column columnName="workspace_id"/>
+            <column columnName="repository_accession"/>
+            <column columnName="repository_name"/>
         </columns>
     </table>
     <table tableName="lk_kir_gene" tableDbType="TABLE">
@@ -811,6 +825,11 @@
             <column columnName="study_time_collected_unit"/>
             <column columnName="subject_accession"/>
             <column columnName="workspace_id"/>
+            <column columnName="repository_accession"/>
+            <column columnName="repository_name"/>
+            <column columnName="allele_1"/>
+            <column columnName="allele_2"/>
+            <column columnName="kir_haplotype"/>
         </columns>
     </table>
     <table tableName="performance_metrics" tableDbType="TABLE">
@@ -941,6 +960,8 @@
             <column columnName="value_preferred"/>
             <column columnName="value_reported"/>
             <column columnName="workspace_id"/>
+            <column columnName="repository_accession"/>
+            <column columnName="repository_name"/>
         </columns>
     </table>
     <table tableName="study_pubmed" tableDbType="TABLE">
@@ -1228,6 +1249,8 @@
             <column columnName="value_preferred"/>
             <column columnName="value_reported"/>
             <column columnName="workspace_id"/>
+            <column columnName="repository_accession"/>
+            <column columnName="repository_name"/>
         </columns>
     </table>
     <table tableName="fcs_header_marker" tableDbType="TABLE">
@@ -1287,6 +1310,8 @@
             <column columnName="study_time_collected_unit"/>
             <column columnName="subject_accession"/>
             <column columnName="workspace_id"/>
+            <column columnName="repository_accession"/>
+            <column columnName="repository_name"/>
         </columns>
     </table>
     <table tableName="expsample_2_file_info" tableDbType="TABLE">

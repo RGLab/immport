@@ -58,7 +58,6 @@
     ActionURL studyUrl = null;
     if (!c.isRoot())
     {
-        String comma = "\n";
         Container p = c.getProject();
         QuerySchema s = DefaultSchema.get(context.getUser(), p).getSchema("study");
         TableInfo sp = s.getTable("StudyProperties");
@@ -71,11 +70,15 @@
         for (Map<String, Object> map : maps)
         {
             Container studyContainer = ContainerManager.getForId((String) map.get("container"));
+            if (null == studyContainer)
+                continue;
             String study_accession = (String)map.get("study_accession");
             String name = (String)map.get("Label");
-            if (null == study_accession && name.startsWith("SDY"))
+            if (null == study_accession && StringUtils.startsWith(name,"SDY"))
                 study_accession = name;
-            if (null != studyContainer && StringUtils.equalsIgnoreCase(details.study.getStudy_accession(), study_accession))
+            if (null == study_accession && StringUtils.startsWith(studyContainer.getName(),"SDY"))
+                study_accession = studyContainer.getName();
+            if (StringUtils.equalsIgnoreCase(details.study.getStudy_accession(), study_accession))
             {
                 studyUrl = studyContainer.getStartURL(context.getUser());
                 break;
@@ -130,5 +133,3 @@
     <% } %>
 </div>
 </div>
-
-

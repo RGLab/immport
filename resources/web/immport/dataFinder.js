@@ -503,7 +503,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
 
         $scope.groupsAvailable = function ()
         {
-            return $scope.groupList.length > 0;
+            return $scope.groupList && $scope.groupList.length > 0;
         };
 
         $scope.saveParticipantIdGroupInSession = function (participantIds)

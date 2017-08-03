@@ -4,8 +4,6 @@ import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.pages.LabKeyPage;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.List;
 
 public class SendParticipantPage extends LabKeyPage
@@ -73,13 +71,11 @@ public class SendParticipantPage extends LabKeyPage
 
     public static class Locators
     {
-        public static final Locator.CssLocator bodyPanel = Locator.css("#bodypanel");
-        public static final Locator.CssLocator recipientsList = bodyPanel.append(" #recipientList");
-        public static final Locator.CssLocator messageSubject = bodyPanel.append(" #messageSubject");
-        public static final Locator.CssLocator messageBody = bodyPanel.append(" #messageBody");
+        public static final Locator recipientsList = Locator.id("recipientList");
+        public static final Locator messageSubject = Locator.id("messageSubject");
+        public static final Locator messageBody = Locator.id("messageBody");
         public static final Locator.XPathLocator linkText = Locator.xpath("//form//b[contains(text(), 'Message link:')]//following-sibling::div[1]");
-        public static final Locator.CssLocator previewLink = bodyPanel.append(" div a.labkey-text-link");
-        public static final Locator.CssLocator errorMessage = bodyPanel.append(" div.labkey-error");
+        public static final Locator errorMessage = org.labkey.test.Locators.labkeyError;
     }
 
 }

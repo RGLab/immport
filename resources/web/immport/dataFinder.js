@@ -118,7 +118,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
     dataFinderApp
             .controller("SubjectGroupController", ['$scope', function($scope) {
 
-        $scope.groupList = [];
+        $scope.groupList = null;
         $scope.unsavedGroup = { id: null, label : "Unsaved Group"};
         $scope.currentGroup = $scope.unsavedGroup;
         $scope.saveOptions = [ {id: 'update', label : "Save", isActive: false}, {id : "saveNew", label : "Save As", isActive: true} ];
@@ -254,9 +254,6 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                 if (filters.hasOwnProperty(f))
                 {
                     var filter = filters[f];
-
-                    if (filter.name == "Study" && $scope.filterByLevel == "[Study].[Name]")
-                        continue;
 
                     if (filter.name == "Search")
                     {
@@ -442,7 +439,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                         // parse the sent groups filters, but explicitly remove the Study members
                         // as this user might have different study/container permissions
                         var groupFilters = Ext4.decode(json.groups[0].filters);
-                        delete groupFilters['Study'];
+                        //delete groupFilters['Study'];
 
                         $scope.clearAllFilters(false);
                         $scope._applyGroupFilters(groupFilters);
@@ -549,8 +546,11 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
         });
 
         $scope.$on("cubeReady", function(event) {
-            if (!$scope.groupsAvailable())
-                $scope.loadSubjectGroups();
+            if (!$scope.cubeReadyBroadcastReceived) {
+                $scope.cubeReadyBroadcastReceived = true;
+                if (!$scope.groupsAvailable())
+                    $scope.loadSubjectGroups();
+            }
         });
 
         $scope.$on("filterSelectionCleared", function(event, hasFilters) {
@@ -1037,6 +1037,18 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
             var includeSubjectIds = true;
             var cellsetResults = [];
             var onRows;
+            var mdxQueryComplete = function (cellSet, mdx, config)
+            {
+                // use angular timeout() for its implicit $scope.$apply()
+                //                config.scope.timeout(function(){config.scope.updateCounts(config.dim, cellSet);},1);
+                config.scope.timeout(function () {
+                    cellsetResults.push(cellSet);
+                    if (cellsetResults.length === 2) {
+                        config.scope.updateCountsUnion(cellsetResults, isSavedGroup);
+                        $scope.$broadcast("cubeReady");
+                    }
+                }, 1);
+            };
 
             /** first query the study counts **/
             {
@@ -1047,18 +1059,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                     configId: 'ImmPort:/StudyCube',
                     schemaName: 'ImmPort',
                     name: 'StudyCube',
-                    success: function (cellSet, mdx, config)
-                    {
-                        // use angular timeout() for its implicit $scope.$apply()
-                        //                config.scope.timeout(function(){config.scope.updateCounts(config.dim, cellSet);},1);
-                        config.scope.timeout(function () {
-                            cellsetResults.push(cellSet);
-                            if (cellsetResults.length === 2) {
-                                config.scope.updateCountsUnion(cellsetResults, isSavedGroup);
-                                $scope.$broadcast("cubeReady");
-                            }
-                        }, 1);
-                    },
+                    success: mdxQueryComplete,
                     scope: $scope,
 
                     // query
@@ -1093,18 +1094,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                     configId: 'ImmPort:/StudyCube',
                     schemaName: 'ImmPort',
                     name: 'StudyCube',
-                    success: function (cellSet, mdx, config)
-                    {
-                        // use angular timeout() for its implicit $scope.$apply()
-                        //                config.scope.timeout(function(){config.scope.updateCounts(config.dim, cellSet);},1);
-                        config.scope.timeout(function () {
-                            cellsetResults.push(cellSet);
-                            if (cellsetResults.length === 2) {
-                                config.scope.updateCountsUnion(cellsetResults, isSavedGroup);
-                                $scope.$broadcast("cubeReady");
-                            }
-                        }, 1);
-                    },
+                    success: mdxQueryComplete,
                     scope: $scope,
 
                     // query
@@ -1167,6 +1157,8 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                 }
             }
 
+            var hasStudyFilter = $scope.dimStudy.filters.length !== 0 && $scope.dimStudy.filters.length !== $scope.dimStudy.members.length;
+
             for (var cs=0 ; cs<cellsetResults.length ; cs++) {
                 var cellSet = cellsetResults[cs];
                 var positions = cellSetHelper.getRowPositionsOneLevel(cellSet);
@@ -1174,7 +1166,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                 var max = 0;
                 for (var i = 0; i < positions.length; i++) {
                     var resultMember = positions[i];
-                    if (resultMember.level.uniqueName == "[Subject].[Subject]") {
+                    if (resultMember.level.uniqueName === "[Subject].[Subject]") {
                         $scope.subjects.push(resultMember.name);
                     }
                     else {
@@ -1184,12 +1176,22 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                         member = dim.memberMap[resultMember.uniqueName];
                         if (!member) {
                             // might be an all member
-                            if (dim.allMemberName == resultMember.uniqueName)
+                            if (dim.allMemberName === resultMember.uniqueName)
                                 dim.allMemberCount = count;
-                            else if (-1 == resultMember.uniqueName.indexOf("#") && "(All)" != resultMember.name)
+                            else if (-1 === resultMember.uniqueName.indexOf("#") && "(All)" !== resultMember.name)
                                 console.log("member not found: " + resultMember.uniqueName);
                         }
-                        else {
+                        else if (dim === $scope.dimStudy)
+                        {
+                            member.count = count;
+                            // STUDY is weird because we're showing counts for non-selected studies...
+                            if (count && (!hasStudyFilter || member.selected))
+                                dim.summaryCount += 1;
+                            if (count > max)
+                                max = count;
+                        }
+                        else
+                        {
                             member.count = count;
                             if (count)
                                 dim.summaryCount += 1;

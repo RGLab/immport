@@ -63,10 +63,9 @@
             <source schemaName="immport" queryName="ds_fcs_control_files" />
             <destination schemaName="study" queryName="fcs_control_files" targetOption="truncate" />
         </transform>
-        <!--<transform id="subject_measure" type="org.labkey.di.pipeline.TransformTask">-->
-        <!--<source schemaName="immport" queryName="ds_subject_measure" />-->
-        <!--<destination schemaName="study" queryName="subject_measure" targetOption="truncate" />-->
-        <!--</transform>-->
+        <transform id="hideEmptyDatasets" type="TaskrefTransformStep">
+            <taskref ref="org.labkey.immport.data.AfterStudyLoadTask"/>
+        </transform>
     </transforms>
 
     <incrementalFilter className="SelectAllFilterStrategy" />

@@ -87,6 +87,7 @@ public class ImmPortSchema extends UserSchema
         {
             case "contract_grant" :
             case "contract_grant_2_study" :
+            case "dimstudyassay":
             case "program study" :
             case "study" :
             case "study_link" :

@@ -20,10 +20,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.collections.CaseInsensitiveTreeMap;
+import org.labkey.api.collections.CaseInsensitiveTreeSet;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.DbSchemaType;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SchemaTableInfo;
 import org.labkey.api.data.TableInfo;
@@ -31,15 +33,21 @@ import org.labkey.api.module.Module;
 import org.labkey.api.query.DefaultQueryUpdateService;
 import org.labkey.api.query.DefaultSchema;
 import org.labkey.api.query.FilteredTable;
+import org.labkey.api.query.QueryDefinition;
 import org.labkey.api.query.QueryForeignKey;
 import org.labkey.api.query.QuerySchema;
 import org.labkey.api.query.QueryUpdateService;
+import org.labkey.api.query.SchemaKey;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
 import org.labkey.immport.security.CanViewRestrictedStudiesPermission;
 
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * User: cnathe
@@ -50,28 +58,107 @@ public class ImmPortSchema extends UserSchema
     public static final String NAME = "immport";
     public static final String DESCRIPTION = "Contains data from ImmPort";
 
-    public ImmPortSchema(User user, Container container)
+    enum AvailableTables
     {
-        super(NAME, DESCRIPTION, user, container, DbSchema.get(NAME));
+        ALL,
+        PUBLIC,
+        NONE
     }
+    final AvailableTables availableTables;
+
+
+    private ImmPortSchema(String name, AvailableTables a, User user, Container container)
+    {
+        super(name, DESCRIPTION, user, container, DbSchema.get(NAME, DbSchemaType.Module));
+        this.availableTables = a;
+    }
+
+    private ImmPortSchema(SchemaKey key, AvailableTables a, User user, Container container)
+    {
+        super(key, DESCRIPTION, user, container, DbSchema.get(NAME, DbSchemaType.Module), null);
+        this.availableTables = a;
+    }
+
+
+    private boolean isGuestReadable(String tableName)
+    {
+        String lcase = tableName.toLowerCase();
+        switch (lcase)
+        {
+            case "contract_grant" :
+            case "contract_grant_2_study" :
+            case "program study" :
+            case "study" :
+            case "study_link" :
+            case "study_personnel" :
+            case "study_pubmed" :
+                return true;
+            default:
+                return false;
+        }
+    }
+
+
+    @Override
+    public List<String> getTableAndQueryNames(boolean visibleOnly)
+    {
+        if (availableTables == AvailableTables.NONE)
+            return Collections.emptyList();
+        return super.getTableAndQueryNames(visibleOnly);
+    }
+
+
+    @Override
+    public @NotNull Map<String, QueryDefinition> getQueryDefs()
+    {
+        if (availableTables == AvailableTables.NONE)
+            return Collections.emptyMap();
+        return super.getQueryDefs();
+    }
+
+
+    @Override
+    public @Nullable QueryDefinition getQueryDef(@NotNull String queryName)
+    {
+        if (availableTables == AvailableTables.NONE)
+            return null;
+        return super.getQueryDef(queryName);
+    }
+
 
     @Override
     public Set<String> getTableNames()
     {
-        return new HashSet<>(getDbSchema().getTableNames());
+        if (availableTables == AvailableTables.NONE)
+            return Collections.emptySet();
+        else if (availableTables == AvailableTables.ALL)
+            return new HashSet<>(getDbSchema().getTableNames());
+        return getDbSchema().getTableNames().stream()
+            .filter(this::isGuestReadable)
+            .collect(Collectors.toSet());
     }
+
 
     @Override
     public TableInfo createTable(String name)
     {
+        if (availableTables == AvailableTables.NONE)
+            return null;
+
         SchemaTableInfo tinfo = getDbSchema().getTable(name);
         if (null == tinfo)
             return null;
 
+        boolean isGuestReadable = isGuestReadable(tinfo.getName());
+        if (availableTables == AvailableTables.PUBLIC && !isGuestReadable)
+        {
+                return null;
+        }
+
         FilteredTable<ImmPortSchema> wrappedTable;
 
         // wrap all tables so we can tack on foreign keys
-        // use ImmPortFilterTable for tables that have to enforce restricted study secuirty
+        // use ImmPortFilterTable for tables that have to enforce restricted study security
         String lcase = name.toLowerCase();
         if (!lcase.startsWith("dim") && !lcase.startsWith("summary"))
         {
@@ -91,11 +178,29 @@ public class ImmPortSchema extends UserSchema
     {
         DefaultSchema.registerProvider(NAME, new DefaultSchema.SchemaProvider(module)
         {
+            @Override
+            public boolean isAvailable(DefaultSchema schema, Module module)
+            {
+                return true;
+            }
+
             public QuerySchema createSchema(DefaultSchema schema, Module module)
             {
-                return new ImmPortSchema(schema.getUser(), schema.getContainer());
+                boolean isActive = super.isAvailable(schema, module);
+                if (isActive && !schema.getUser().isGuest())
+                    return new ImmPortSchema(NAME,  AvailableTables.ALL, schema.getUser(), schema.getContainer());
+                else
+                    return new ImmPortSchema(NAME,  AvailableTables.NONE, schema.getUser(), schema.getContainer());
             }
         });
+    }
+
+
+    /* don't show immport schema by default if module is not active */
+    @Override
+    public boolean isHidden()
+    {
+        return availableTables == AvailableTables.NONE;
     }
 
 
@@ -147,7 +252,7 @@ public class ImmPortSchema extends UserSchema
                 ret.append(getFromTable().getFromSQL("$"));
 
             User user = _userSchema.getUser();
-            boolean isSiteAdmin = user.isSiteAdmin();
+            boolean isSiteAdmin = user.isApplicationAdmin();
             boolean canViewRestricted = ContainerManager.getRoot().hasPermission(user, CanViewRestrictedStudiesPermission.class);
             if (!isSiteAdmin && !canViewRestricted)
             {
@@ -184,9 +289,30 @@ public class ImmPortSchema extends UserSchema
         @Nullable @Override
         public QueryUpdateService getUpdateService()
         {
-            if (!getUser().isSiteAdmin())
+            if (!getUser().isApplicationAdmin())
                 return null;
             return new DefaultQueryUpdateService(this, getRealTable());
         }
+    }
+
+
+    @Override
+    public Set<String> getSchemaNames()
+    {
+        CaseInsensitiveTreeSet ret = new CaseInsensitiveTreeSet(super.getSchemaNames());
+        if (!getName().equals("public"))
+            ret.add("public");
+        return ret;
+    }
+
+
+    @Override
+    public QuerySchema getSchema(String name)
+    {
+        if (name.equalsIgnoreCase("public"))
+        {
+            return new ImmPortSchema(new SchemaKey(getSchemaPath(),"public"),  AvailableTables.PUBLIC, getUser(), getContainer());
+        }
+        return super.getSchema(name);
     }
 }

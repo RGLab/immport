@@ -220,6 +220,16 @@ UNION ALL
 CREATE OR REPLACE FUNCTION immport.fn_populateDimensions() RETURNS INTEGER AS $$
 BEGIN
 
+  -- dimStudyAssay
+
+  DELETE FROM immport.dimStudyAssay;
+  INSERT INTO immport.dimStudyAssay (Study, Assay, Name, Label)
+  SELECT DISTINCT
+    study_accession as Study, name, label, assay
+  FROM immport.v_results_summary
+  WHERE study_accession IS NOT NULL;
+
+
   -- dimAssay
 
   DELETE FROM immport.dimAssay;

@@ -114,14 +114,13 @@ public class ImmPortModule extends DefaultModule
         }
 
         // if DifferentialExpressionAnalysis module is registered, add support for folder import/export
-        Module deaModule = ModuleLoader.getInstance().getModule("DifferentialExpressionAnalysis");
+        Module deaModule = ModuleLoader.getInstance().getModule(DifferentialExpressionWriterFactory.MODULE_NAME);
         FolderSerializationRegistry fsr = ServiceRegistry.get().getService(FolderSerializationRegistry.class);
         if (null != deaModule && null != fsr)
         {
-            // fsr.addFactories(new DifferentialExpressionWriterFactory(), new DifferentialExpressionImporterFactory());
+            fsr.addFactories(new DifferentialExpressionWriterFactory(), new DifferentialExpressionImporterFactory());
         }
     }
-
 
 
     @NotNull

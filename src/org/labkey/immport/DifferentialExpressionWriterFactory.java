@@ -35,6 +35,12 @@ import java.util.stream.Collectors;
 
 public class DifferentialExpressionWriterFactory implements FolderWriterFactory
 {
+    public static String MODULE_NAME = "DifferentialExpressionAnalysis";
+    public static String SCHEMA_NAME = "gene_expression";
+    public static String DATA_TYPE = "Differential Expression data";
+    public static String DIRECTORY_NAME = "hipc_DifferentialExpression";
+
+
     @Override
     public FolderWriter create()
     {
@@ -57,7 +63,7 @@ public class DifferentialExpressionWriterFactory implements FolderWriterFactory
         @Override
         public boolean show(Container c)
         {
-            QuerySchema schema = DefaultSchema.get(User.getSearchUser(), c).getSchema("gene_expression");
+            QuerySchema schema = DefaultSchema.get(User.getSearchUser(), c).getSchema(SCHEMA_NAME);
             return null != schema;
         }
 
@@ -83,13 +89,13 @@ public class DifferentialExpressionWriterFactory implements FolderWriterFactory
         @Override
         public String getDataType()
         {
-            return "Differential Expression data";
+            return DATA_TYPE;
         }
 
         @Override
         public void write(Container object, ImportContext<FolderDocument.Folder> ctx, VirtualFile root) throws Exception
         {
-            VirtualFile outputDir = root.getDir("hipc_DifferentialExpression");
+            VirtualFile outputDir = root.getDir(DIRECTORY_NAME);
             Container c = ctx.getContainer();
             User user = ctx.getUser();
             StudyService ss = StudyService.get();
@@ -98,7 +104,7 @@ public class DifferentialExpressionWriterFactory implements FolderWriterFactory
             if (null != s && s.isDataspaceStudy())
                 cf = new DataspaceContainerFilter(user, s);
 
-            QuerySchema schema = DefaultSchema.get(user, c).getSchema("gene_expression");
+            QuerySchema schema = DefaultSchema.get(user, c).getSchema(SCHEMA_NAME);
             if (null == schema)
                 return;
 

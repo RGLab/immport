@@ -79,7 +79,7 @@ public class DifferentialExpressionImporterFactory implements FolderImporterFact
 
             for (String tableName : Arrays.asList("gene_expression_analysis", "gene_expression_analysis_results"))
             {
-                TableInfo t = schema.getTable("gene_expression_analysis");
+                TableInfo t = schema.getTable(tableName);
                 QueryUpdateService qus = t.getUpdateService();
                 try (InputStream is = outputDir.getInputStream(tableName + ".tsv"))
                 {

@@ -7,15 +7,17 @@ import org.labkey.api.admin.FolderWriter;
 import org.labkey.api.admin.FolderWriterFactory;
 import org.labkey.api.admin.ImportContext;
 import org.labkey.api.data.ColumnHeaderType;
-import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerFilter;
-import org.labkey.api.data.ContainerFilterable;
-import org.labkey.api.data.Results;
+import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.DbSchemaType;
+import org.labkey.api.data.ResultsImpl;
+import org.labkey.api.data.SQLFragment;
+import org.labkey.api.data.SqlExecutor;
+import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.TSVGridWriter;
 import org.labkey.api.data.TSVWriter;
 import org.labkey.api.data.TableInfo;
-import org.labkey.api.data.TableSelector;
 import org.labkey.api.query.DefaultSchema;
 import org.labkey.api.query.QuerySchema;
 import org.labkey.api.security.User;
@@ -27,10 +29,9 @@ import org.labkey.api.writer.Writer;
 import org.labkey.folder.xml.FolderDocument;
 
 import java.io.PrintWriter;
+import java.sql.ResultSet;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
 
 
 public class DifferentialExpressionWriterFactory implements FolderWriterFactory
@@ -101,25 +102,37 @@ public class DifferentialExpressionWriterFactory implements FolderWriterFactory
             StudyService ss = StudyService.get();
             Study s = null==ss ? null : ss.getStudy(c);
             ContainerFilter cf = ContainerFilter.CURRENT;
+            boolean multiFolder = false;
             if (null != s && s.isDataspaceStudy())
+            {
                 cf = new DataspaceContainerFilter(user, s);
+                multiFolder = (cf.getIds(ctx.getContainer()).size() > 1);
+            }
 
             QuerySchema schema = DefaultSchema.get(user, c).getSchema(SCHEMA_NAME);
             if (null == schema)
                 return;
+            DbSchema dbschema = DbSchema.get(SCHEMA_NAME, DbSchemaType.Module);
 
             for (String tableName : Arrays.asList("gene_expression_analysis", "gene_expression_analysis_results"))
             {
-                TableInfo t = schema.getTable("gene_expression_analysis");
+                TableInfo t = dbschema.getTable(tableName);
                 // we want all columns except "container", and "key" SERIAL
-                List<ColumnInfo> cols = t.getColumns().stream()
+                SQLFragment sql = new SQLFragment("SELECT ");
+                t.getColumns().stream()
                         .filter(col -> !StringUtils.equalsIgnoreCase(col.getName(), "container") &&
-                                !StringUtils.equalsIgnoreCase(col.getName(), "key"))
-                        .collect(Collectors.toList());
-                ((ContainerFilterable)t).setContainerFilter(cf);
-                try (Results r = new TableSelector(t, cols, null, null).getResults())
+                                !StringUtils.equalsIgnoreCase(col.getName(), "key") &&
+                                !StringUtils.equalsIgnoreCase(col.getName(), "analysis_accession"))
+                        .forEach(col -> sql.append(col.getName()).append(", "));
+                if (multiFolder)
+                    sql.append(dbschema.getSqlDialect().concatenate("analysis_accession","'.'","(select name from core.containers where containers.entityid = container)")).append(" AS analysis_accession\n");
+                else
+                    sql.append("analysis_accession\n");
+                sql.append(" FROM " + t.toString() + "\nWHERE ");
+                sql.append(cf.getSQLFragment(dbschema, new SQLFragment("container"), ctx.getContainer()));
+                try (ResultSet r = new SqlSelector(dbschema,sql).getResultSet())
                 {
-                    TSVGridWriter tsv = new TSVGridWriter(r);
+                    TSVGridWriter tsv = new TSVGridWriter(new ResultsImpl(r));
                     tsv.setDelimiterCharacter(TSVWriter.DELIM.TAB);
                     tsv.setQuoteCharacter(TSVWriter.QUOTE.DOUBLE);
                     tsv.setColumnHeaderType(ColumnHeaderType.Name);

@@ -87,12 +87,13 @@ public class ImmPortSchema extends UserSchema
         {
             case "contract_grant" :
             case "contract_grant_2_study" :
+            case "dimassay" :
+            case "dimdemographic" :
             case "dimstudyassay":
             case "program study" :
             case "study" :
             case "study_link" :
             case "study_personnel" :
-            case "study_pubmed" :
                 return true;
             default:
                 return false;

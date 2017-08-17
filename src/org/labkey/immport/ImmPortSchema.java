@@ -90,7 +90,7 @@ public class ImmPortSchema extends UserSchema
             case "dimassay" :
             case "dimdemographic" :
             case "dimstudyassay":
-            case "program study" :
+            case "program" :
             case "study" :
             case "study_link" :
             case "study_personnel" :

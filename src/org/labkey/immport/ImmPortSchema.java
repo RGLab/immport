@@ -94,6 +94,7 @@ public class ImmPortSchema extends UserSchema
             case "study" :
             case "study_link" :
             case "study_personnel" :
+            case "study_pubmed" :
                 return true;
             default:
                 return false;

@@ -223,9 +223,17 @@ BEGIN
   -- dimStudyAssay
 
   DELETE FROM immport.dimStudyAssay;
-  INSERT INTO immport.dimStudyAssay (Study, Assay, Name, Label)
+  INSERT INTO immport.dimStudyAssay (Study, Assay, Name, Label, CategoryLabel)
   SELECT DISTINCT
-    study_accession as Study, name, label, assay
+    study_accession as Study, assay, name, label,
+    CASE name
+      WHEN 'demographics' THEN 'Demographics'
+      WHEN 'cohort_membership' THEN 'Demographics'
+      WHEN 'gene_expression_files' THEN 'Raw data files'
+      WHEN 'fcs_sample_files' THEN 'Raw data files'
+      WHEN 'fcs_control_files' THEN 'Raw data files'
+      ELSE 'Assays'
+    END AS CategoryLabel
   FROM immport.v_results_summary
   WHERE study_accession IS NOT NULL;
 

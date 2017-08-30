@@ -13,15 +13,15 @@ public class CopyImmPortStudyPage extends LabKeyPage
 
     public LabKeyPage copyStudyResults(String study)
     {
-        _test.setFormElement(Locator.id("replaceResultsForm").append(Locator.id("$STUDY")), study);
+        setFormElement(Locator.id("replaceResultsForm").append(Locator.tagWithName("input", "$STUDY")), study);
         Locator.id("replaceResultsForm").findElement(getDriver()).submit();
-        return new LabKeyPage(_test); // TODO: pipeline-status DetailsAction
+        return new LabKeyPage(getDriver()); // TODO: pipeline-status DetailsAction
     }
 
     public LabKeyPage appendStudyResults(String study)
     {
-        _test.setFormElement(Locator.id("appendResultsForm").append(Locator.id("$STUDY")), study);
+        setFormElement(Locator.id("appendResultsForm").append(Locator.tagWithName("input", "$STUDY")), study);
         Locator.id("appendResultsForm").findElement(getDriver()).submit();
-        return new LabKeyPage(_test); // TODO: pipeline-status DetailsAction
+        return new LabKeyPage(getDriver()); // TODO: pipeline-status DetailsAction
     }
 }

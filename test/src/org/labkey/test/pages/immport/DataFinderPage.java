@@ -8,6 +8,7 @@ import org.labkey.test.WebTestHelper;
 import org.labkey.test.components.Component;
 import org.labkey.test.components.immport.StudySummaryWindow;
 import org.labkey.test.pages.LabKeyPage;
+import org.labkey.test.util.DataRegionTable;
 import org.labkey.test.util.LogMethod;
 import org.labkey.test.util.LoggedParam;
 import org.openqa.selenium.Keys;
@@ -92,14 +93,14 @@ public class DataFinderPage extends LabKeyPage
 
     public void saveGroup()
     {
-        waitForElement(Locators.saveGroupMsgBoxRegion);
+        DataRegionTable.DataRegion(getDriver()).withName("demoDataRegion").waitFor();
         _test.clickButtonContainingText("Save", BaseWebDriverTest.WAIT_FOR_EXT_MASK_TO_DISSAPEAR);
         waitForGroupUpdate();
     }
 
     public void saveGroup(String name)
     {
-        waitForElement(Locators.saveGroupMsgBoxRegion);
+        DataRegionTable.DataRegion(getDriver()).withName("demoDataRegion").waitFor();
         _test.setFormElement(Locators.groupLabelInput, name);
         _test.clickButtonContainingText("Save", BaseWebDriverTest.WAIT_FOR_EXT_MASK_TO_DISSAPEAR);
         waitForGroupUpdate();
@@ -107,7 +108,7 @@ public class DataFinderPage extends LabKeyPage
 
     public void saveAndSendGroup(String name)
     {
-        waitForElement(Locators.saveGroupMsgBoxRegion);
+        DataRegionTable.DataRegion(getDriver()).withName("demoDataRegion").waitFor();
         _test.setFormElement(Locators.groupLabelInput, name);
         _test.clickButtonContainingText("Save and Send", BaseWebDriverTest.WAIT_FOR_EXT_MASK_TO_DISSAPEAR);
         waitForText("Message link:");
@@ -115,7 +116,7 @@ public class DataFinderPage extends LabKeyPage
 
     public String getGroupNameFromForm()
     {
-        waitForElement(Locators.saveGroupMsgBoxRegion);
+        DataRegionTable.DataRegion(getDriver()).withName("demoDataRegion").waitFor();
         return _test.getFormElement(Locators.groupLabelInput);
     }
 
@@ -304,7 +305,6 @@ public class DataFinderPage extends LabKeyPage
         public static final Locator.CssLocator savedGroups = loadMenu.append(" ul.labkey-dropdown-menu-active");
         public static final Locator.XPathLocator save = Locator.xpath("//li[contains(@ng-repeat, 'saveOptions')][not(contains(@class, 'inactive'))]").append(Locator.linkWithText("Save"));
         public static final Locator.XPathLocator saveAs = Locator.xpath("//li[contains(@ng-repeat, 'saveOptions')][not(contains(@class, 'inactive'))]").append(Locator.linkWithText("Save As"));
-        public static final Locator.CssLocator  saveGroupMsgBoxRegion = Locator.css("div.x4-window td.labkey-dataregion-msgbox div.labkey-dataregion-msg span");
     }
 
     public enum Dimension

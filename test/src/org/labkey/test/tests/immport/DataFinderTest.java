@@ -32,6 +32,7 @@ import org.labkey.remoteapi.CommandException;
 import org.labkey.remoteapi.Connection;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
+import org.labkey.test.Locators;
 import org.labkey.test.TestFileUtils;
 import org.labkey.test.TestTimeoutException;
 import org.labkey.test.WebTestHelper;
@@ -97,6 +98,7 @@ import static org.labkey.test.util.PermissionsHelper.MemberType;
 @Category({Git.class})
 public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTest, ReadOnlyTest
 {
+    {setIsBootstrapWhitelisted(true);}
     private static File immPortArchive = TestFileUtils.getSampleData("HIPC/ANIMAL_STUDIES-DR20.zip");
     private static File TEMPLATE_ARCHIVE = TestFileUtils.getSampleData("HIPC/SDY_template.zip");
     private static String[] ANIMAL_STUDIES = {"SDY99", "SDY139", "SDY147", "SDY208", "SDY215", "SDY217"};
@@ -429,7 +431,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
             String studyAccession = studyCard.getAccession();
             foundAccessions.add(studyAccession);
             studyCard.clickGoToStudy();
-            WebElement title = Locator.css(".labkey-folder-title > a").waitForElement(shortWait());
+            WebElement title = Locators.bodyTitle().waitForElement(shortWait());
             assertEquals("Study card " + studyAccession + " linked to wrong study", studyAccession, title.getText());
             goBack();
         }

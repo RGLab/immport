@@ -20,6 +20,8 @@ import static org.junit.Assert.assertTrue;
 @Category({Git.class})
 public class ImmuneSpaceRExportTest extends BaseWebDriverTest implements PostgresOnlyTest
 {
+    {setIsBootstrapWhitelisted(true);}
+
     private final String IMMPORT_STUDY = "Study 123";
     private final String NON_IMMPORT_STUDY = "Study 456";
     private final String DATASET_NAME = "ELISA";

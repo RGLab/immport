@@ -131,7 +131,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
     @BeforeClass
     public static void initTest()
     {
-        if (WebTestHelper.getDatabaseType().compareTo(WebTestHelper.DatabaseType.PostgreSQL) != 0)
+        if (WebTestHelper.getDatabaseType() != WebTestHelper.DatabaseType.PostgreSQL)
         {
             Assert.fail("Unsupported DB. This must be run against a Postgres DB.");
         }

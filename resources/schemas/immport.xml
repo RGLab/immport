@@ -1370,4 +1370,22 @@
             <column columnName="organization"/>
         </columns>
     </table>
+    <table tableName="dimstudyassay" tableDbType="TABLE">
+        <columns>
+            <column columnName="study"/>
+            <column columnName="assay"/>
+            <column columnName="name"/>
+            <column columnName="label"/>
+            <column columnName="categorylabel"/>
+        </columns>
+    </table>
+    <table tableName="v_results_summary" tableDbType="VIEW">
+        <columns>
+            <column columnName="assay"/>
+            <column columnName="name"/>
+            <column columnName="label"/>
+            <column columnName="study_accession"/>
+        </columns>
+    </table>
+
 </tables>

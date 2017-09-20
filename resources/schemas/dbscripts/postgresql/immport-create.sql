@@ -110,17 +110,133 @@ WHERE
   file_info.purpose IN ('Gene expression result', 'CyTOF result')
 ) X;
 
-/*
+
+
+CREATE OR REPLACE VIEW immport.v_results_summary AS
+
+  SELECT 'ELISA' AS assay, 'elisa' AS name, 'Enzyme-linked immunosorbent assay (ELISA)' AS label, study_accession
+  FROM (SELECT DISTINCT study_accession FROM immport.elisa_result) _
+
+  UNION ALL
+
+  SELECT 'ELISPOT' AS assay, 'elispot' AS name, 'Enzyme-Linked ImmunoSpot (ELISPOT)' AS label, study_accession
+  FROM (SELECT DISTINCT study_accession FROM immport.elispot_result) _
+
+  UNION ALL
+
+  SELECT 'Flow Cytometry' AS assay, 'fcs_analyzed_result' AS name, 'Flow cytometry analyzed results' AS label, study_accession
+  FROM (SELECT DISTINCT study_accession FROM immport.fcs_analyzed_result) _
+
+  UNION ALL
+
+  SELECT 'HAI' AS assay, 'hai' AS name, 'Hemagglutination inhibition (HAI)' AS label, study_accession
+  FROM (SELECT DISTINCT study_accession FROM immport.hai_result) _
+
+  UNION ALL
+
+  SELECT 'HLA Typing' AS assay, 'hla_typing' As name, 'Human leukocyte antigen (HLA) typing' AS label, study_accession
+  FROM (SELECT DISTINCT study_accession FROM immport.hla_typing_result) _
+
+  UNION ALL
+
+  SELECT 'KIR' AS assay, 'kir_typing' AS name, 'Killer cell immunoglobulin-like receptors (KIR) typing' AS label, study_accession
+  FROM (SELECT DISTINCT study_accession FROM immport.kir_typing_result) _
+
+  UNION ALL
+
+  SELECT 'MBAA' AS assay, 'mbaa' AS name, 'Multiplex bead array asssay' AS label, study_accession
+  FROM (SELECT DISTINCT study_accession FROM immport.mbaa_result) _
+
+
+  UNION ALL
+
+  SELECT 'Neutralizing Antibody' AS assay, 'neut_ab_titer' AS name, 'Neutralizing antibody titer' AS label, study_accession
+  FROM (SELECT DISTINCT study_accession FROM immport.neut_ab_titer_result) _
+
+  UNION ALL
+
+  SELECT 'PCR' AS assay, 'pcr' AS name, 'Polymerisation chain reaction (PCR)' AS label, study_accession
+  FROM (SELECT DISTINCT study_accession FROM immport.pcr_result) _
+
+  UNION ALL
+
+  SELECT DISTINCT
+       'Gene Expression' AS assay,
+       'gene_expression_files' AS name,
+       'Gene expression microarray data files' AS label,
+     biosample.study_accession
+  FROM
+    immport.biosample
+    JOIN immport.expsample_2_biosample ON biosample.biosample_accession = expsample_2_biosample.biosample_accession
+    JOIN immport.expsample ON expsample_2_biosample.expsample_accession = expsample.expsample_accession
+    JOIN immport.expsample_2_file_info ON expsample_2_biosample.expsample_accession = expsample_2_file_info.expsample_accession
+    JOIN immport.file_info ON expsample_2_file_info.file_info_id = file_info.file_info_id
+--    JOIN immport.arm_2_subject ON biosample.subject_accession = arm_2_subject.subject_accession
+--    JOIN immport.arm_or_cohort ON arm_2_subject.arm_accession = arm_or_cohort.arm_accession AND biosample.study_accession = arm_or_cohort.study_accession
+  WHERE
+    file_info.purpose IN ('Gene expression result')
+
 UNION ALL
 
-SELECT 'measure' AS assay,
-NULL AS arm_accession,NULL AS biosample_accession,NULL AS expsample_accession,NULL AS experiment_accession,study_accession,NULL AS study_time_collected,NULL AS study_time_collected_unit,subject_accession,workspace_id
-FROM subject_measure_result
-*/
+  SELECT DISTINCT
+       'FCS sample files' AS assay,
+       'fcs_sample_files'  AS name,
+       'FCS sample files' AS label,
+     biosample.study_accession
+  FROM
+    immport.biosample
+    JOIN immport.expsample_2_biosample ON biosample.biosample_accession = expsample_2_biosample.biosample_accession
+    JOIN immport.expsample ON expsample_2_biosample.expsample_accession = expsample.expsample_accession
+    JOIN immport.expsample_2_file_info ON expsample_2_biosample.expsample_accession = expsample_2_file_info.expsample_accession
+    JOIN immport.file_info ON expsample_2_file_info.file_info_id = file_info.file_info_id
+--    JOIN immport.arm_2_subject ON biosample.subject_accession = arm_2_subject.subject_accession
+--    JOIN immport.arm_or_cohort ON arm_2_subject.arm_accession = arm_or_cohort.arm_accession AND biosample.study_accession = arm_or_cohort.study_accession
+  WHERE
+    file_info.name LIKE '%.fcs' AND
+    file_info.purpose IN ('Flow cytometry result', 'CyTOF result')
+
+UNION ALL
+
+  SELECT DISTINCT
+       'FCS control files' AS assay,
+       'fcs_control_files' AS name,
+       'FCS control files' AS label,
+     biosample.study_accession
+  FROM
+    immport.biosample
+    JOIN immport.expsample_2_biosample ON biosample.biosample_accession = expsample_2_biosample.biosample_accession
+    JOIN immport.expsample ON expsample_2_biosample.expsample_accession = expsample.expsample_accession
+    JOIN immport.expsample_2_file_info ON expsample_2_biosample.expsample_accession = expsample_2_file_info.expsample_accession
+    JOIN immport.file_info ON expsample_2_file_info.file_info_id = file_info.file_info_id
+--    JOIN immport.arm_2_subject ON biosample.subject_accession = arm_2_subject.subject_accession
+--    JOIN immport.arm_or_cohort ON arm_2_subject.arm_accession = arm_or_cohort.arm_accession AND biosample.study_accession = arm_or_cohort.study_accession
+  WHERE
+    file_info.name LIKE '%.fcs' AND
+    file_info.purpose = 'Flow cytometry compensation or control'
+;
+
 
 
 CREATE OR REPLACE FUNCTION immport.fn_populateDimensions() RETURNS INTEGER AS $$
 BEGIN
+
+  -- dimStudyAssay
+
+  DELETE FROM immport.dimStudyAssay;
+  INSERT INTO immport.dimStudyAssay (Study, Assay, Name, Label, CategoryLabel)
+  SELECT DISTINCT
+    study_accession as Study, assay, name, label,
+    CASE name
+      WHEN 'demographics' THEN 'Demographics'
+      WHEN 'cohort_membership' THEN 'Demographics'
+      WHEN 'gene_expression_files' THEN 'Raw data files'
+      WHEN 'fcs_sample_files' THEN 'Raw data files'
+      WHEN 'fcs_control_files' THEN 'Raw data files'
+      ELSE 'Assays'
+    END AS CategoryLabel
+  FROM immport.v_results_summary
+  WHERE study_accession IS NOT NULL;
+
 
   -- dimAssay
 

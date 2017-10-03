@@ -102,14 +102,25 @@ FROM
   immport.biosample
   JOIN immport.expsample_2_biosample ON biosample.biosample_accession = expsample_2_biosample.biosample_accession
   JOIN immport.expsample ON expsample_2_biosample.expsample_accession = expsample.expsample_accession
-  JOIN immport.expsample_2_file_info ON expsample_2_biosample.expsample_accession = expsample_2_file_info.expsample_accession
-  JOIN immport.file_info ON expsample_2_file_info.file_info_id = file_info.file_info_id
   JOIN immport.arm_2_subject ON biosample.subject_accession = arm_2_subject.subject_accession
   JOIN immport.arm_or_cohort ON arm_2_subject.arm_accession = arm_or_cohort.arm_accession AND biosample.study_accession = arm_or_cohort.study_accession
-WHERE
-  file_info.purpose IN ('Gene expression result', 'CyTOF result')
+  JOIN (
+    SELECT
+      file_info.purpose, expsample_2_file_info.expsample_accession
+    FROM
+      immport.file_info INNER JOIN immport.expsample_2_file_info ON file_info.file_info_id = expsample_2_file_info.file_info_id
+    WHERE
+      file_info.purpose IN ('Gene expression result', 'CyTOF result')
+  UNION
+    SELECT
+      'Gene expression result' as purpose,
+      expsample_accession
+    FROM
+      immport.expsample_public_repository
+    WHERE
+      repository_name = 'GEO' AND repository_accession like 'GSM%'
+  ) file_info ON file_info.expsample_accession = expsample.expsample_accession
 ) X;
-
 
 
 CREATE OR REPLACE VIEW immport.v_results_summary AS
@@ -168,15 +179,22 @@ CREATE OR REPLACE VIEW immport.v_results_summary AS
   FROM
     immport.biosample
     JOIN immport.expsample_2_biosample ON biosample.biosample_accession = expsample_2_biosample.biosample_accession
-    JOIN immport.expsample ON expsample_2_biosample.expsample_accession = expsample.expsample_accession
-    JOIN immport.expsample_2_file_info ON expsample_2_biosample.expsample_accession = expsample_2_file_info.expsample_accession
-    JOIN immport.file_info ON expsample_2_file_info.file_info_id = file_info.file_info_id
---    JOIN immport.arm_2_subject ON biosample.subject_accession = arm_2_subject.subject_accession
---    JOIN immport.arm_or_cohort ON arm_2_subject.arm_accession = arm_or_cohort.arm_accession AND biosample.study_accession = arm_or_cohort.study_accession
-  WHERE
-    file_info.purpose IN ('Gene expression result')
+  WHERE expsample_2_biosample.expsample_accession IN
+  (
+      SELECT expsample_2_file_info.expsample_accession
+      FROM immport.expsample_2_file_info JOIN immport.file_info ON expsample_2_file_info.file_info_id = file_info.file_info_id
+      WHERE
+        file_info.purpose IN ('Gene expression result')
+    UNION
+      SELECT
+         expsample_public_repository.expsample_accession
+      FROM
+        immport.expsample_public_repository
+      WHERE
+        repository_name = 'GEO' AND repository_accession LIKE 'GSM%'
+  )
 
-UNION ALL
+  UNION ALL
 
   SELECT DISTINCT
        'FCS sample files' AS assay,

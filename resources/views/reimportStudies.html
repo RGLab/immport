@@ -24,7 +24,7 @@ LABKEY.Utils.onReady(function()
         var studies = [];
         data.rows.forEach(function(row){
             var study = row.Label;
-            if (study.substring(0,3) == 'SDY')
+            if (study != null && study.substring(0,3) == 'SDY')
                 studies.push(study);
         });
         renderPage(studies);

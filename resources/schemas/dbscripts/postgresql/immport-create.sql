@@ -84,7 +84,7 @@ FROM immport.pcr_result
 UNION ALL
 
 SELECT
-   CASE file_info.purpose
+   CASE file_info.detail
      WHEN 'Gene expression result' THEN 'Gene Expression'
      WHEN 'CyTOF result' THEN 'CyTOF'
      ELSE 'UNKNOWN'
@@ -106,14 +106,14 @@ FROM
   JOIN immport.arm_or_cohort ON arm_2_subject.arm_accession = arm_or_cohort.arm_accession AND biosample.study_accession = arm_or_cohort.study_accession
   JOIN (
     SELECT
-      file_info.purpose, expsample_2_file_info.expsample_accession
+      file_info.detail, expsample_2_file_info.expsample_accession
     FROM
       immport.file_info INNER JOIN immport.expsample_2_file_info ON file_info.file_info_id = expsample_2_file_info.file_info_id
     WHERE
-      file_info.purpose IN ('Gene expression result', 'CyTOF result')
+      file_info.detail IN ('Gene expression result', 'CyTOF result')
   UNION
     SELECT
-      'Gene expression result' as purpose,
+      'Gene expression result' as detail,
       expsample_accession
     FROM
       immport.expsample_public_repository
@@ -184,7 +184,7 @@ CREATE OR REPLACE VIEW immport.v_results_summary AS
       SELECT expsample_2_file_info.expsample_accession
       FROM immport.expsample_2_file_info JOIN immport.file_info ON expsample_2_file_info.file_info_id = file_info.file_info_id
       WHERE
-        file_info.purpose IN ('Gene expression result')
+        file_info.detail IN ('Gene expression result')
     UNION
       SELECT
          expsample_public_repository.expsample_accession
@@ -211,7 +211,7 @@ CREATE OR REPLACE VIEW immport.v_results_summary AS
 --    JOIN immport.arm_or_cohort ON arm_2_subject.arm_accession = arm_or_cohort.arm_accession AND biosample.study_accession = arm_or_cohort.study_accession
   WHERE
     file_info.name LIKE '%.fcs' AND
-    file_info.purpose IN ('Flow cytometry result', 'CyTOF result')
+    file_info.detail IN ('Flow cytometry result', 'CyTOF result')
 
 UNION ALL
 
@@ -230,7 +230,7 @@ UNION ALL
 --    JOIN immport.arm_or_cohort ON arm_2_subject.arm_accession = arm_or_cohort.arm_accession AND biosample.study_accession = arm_or_cohort.study_accession
   WHERE
     file_info.name LIKE '%.fcs' AND
-    file_info.purpose = 'Flow cytometry compensation or control'
+    file_info.detail = 'Flow cytometry compensation or control'
 ;
 
 

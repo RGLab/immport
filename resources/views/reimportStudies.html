@@ -27,6 +27,11 @@ LABKEY.Utils.onReady(function()
             if (study != null && study.substring(0,3) == 'SDY')
                 studies.push(study);
         });
+        studies.sort(function(a, b){
+            a = a.replace('SDY', '');
+            b = b.replace('SDY', '');
+            return Number(a) - Number(b);
+        });
         renderPage(studies);
     }
 

@@ -99,7 +99,7 @@ import static org.labkey.test.util.PermissionsHelper.MemberType;
 public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTest, ReadOnlyTest
 {
     {setIsBootstrapWhitelisted(true);}
-    private static File immPortArchive = TestFileUtils.getSampleData("HIPC/ANIMAL_STUDIES-DR20.zip");
+    private static File immPortArchive = TestFileUtils.getSampleData("HIPC/ANIMAL_STUDIES-DR23.zip");
     private static File TEMPLATE_ARCHIVE = TestFileUtils.getSampleData("HIPC/SDY_template.zip");
     private static String[] ANIMAL_STUDIES = {"SDY99", "SDY139", "SDY147", "SDY208", "SDY215", "SDY217"};
     private static String[] STUDY_SUBFOLDERS = {"SDY139", "SDY147", "SDY208", "SDY217"};
@@ -111,7 +111,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
     @Override
     protected String getProjectName()
     {
-        return "ImmuneSpace Test Data Finder";
+        return "ImmuneSpace Test Data Finder DR23";
     }
 
     @Override

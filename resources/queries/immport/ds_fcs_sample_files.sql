@@ -7,7 +7,7 @@
 PARAMETERS($STUDY VARCHAR DEFAULT NULL)
 SELECT
 file_info.name AS file_info_name,
-file_info.purpose AS file_info_purpose,
+file_info.detail AS file_info_purpose,
 file_info.filesize_bytes as filesize,
 expsample_2_biosample.expsample_accession,
 biosample.biosample_accession,
@@ -35,5 +35,5 @@ biosample.subject_accession = arm_2_subject.subject_accession AND
 arm_2_subject.arm_accession = arm_or_cohort.arm_accession AND
 biosample.study_accession = arm_or_cohort.study_accession AND
 file_info.name LIKE '%.fcs' AND
-(file_info.purpose = 'Flow cytometry result' OR  file_info.purpose = 'CyTOF result')
+(file_info.detail = 'Flow cytometry result' OR  file_info.detail = 'CyTOF result')
 AND ($STUDY IS NULL OR $STUDY = biosample.study_accession)

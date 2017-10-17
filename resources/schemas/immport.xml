@@ -141,7 +141,6 @@
             <column columnName="filesize_bytes"/>
             <column columnName="name"/>
             <column columnName="original_file_name"/>
-            <column columnName="purpose"/>
             <column columnName="workspace_id"/>
         </columns>
     </table>
@@ -407,13 +406,6 @@
             <column columnName="workspace_id"/>
         </columns>
     </table>
-    <table tableName="lk_kir_present_absent" tableDbType="TABLE">
-        <columns>
-            <column columnName="name"/>
-            <column columnName="description"/>
-            <column columnName="link"/>
-        </columns>
-    </table>
     <table tableName="lk_plate_type" tableDbType="TABLE">
         <columns>
             <column columnName="name"/>
@@ -518,13 +510,6 @@
             <column columnName="repository_name"/>
         </columns>
     </table>
-    <table tableName="lk_kir_gene" tableDbType="TABLE">
-        <columns>
-            <column columnName="name"/>
-            <column columnName="description"/>
-            <column columnName="link"/>
-        </columns>
-    </table>
     <table tableName="lk_analyte" tableDbType="TABLE">
         <columns>
             <column columnName="analyte_accession"/>
@@ -556,6 +541,9 @@
             <column columnName="uniprot_id"/>
             <column columnName="uniprot_protein_name"/>
             <column columnName="unique_id"/>
+            <column columnName="gene_symbol"/>
+            <column columnName="uniprot_entry"/>
+            <column columnName="uniprot_entry_name"/>
         </columns>
     </table>
     <table tableName="lk_gender" tableDbType="TABLE">
@@ -1083,13 +1071,6 @@
             <column columnName="workspace_id"/>
         </columns>
     </table>
-    <table tableName="lk_file_purpose" tableDbType="TABLE">
-        <columns>
-            <column columnName="name"/>
-            <column columnName="description"/>
-            <column columnName="link"/>
-        </columns>
-    </table>
     <table tableName="lk_personnel_role" tableDbType="TABLE">
         <columns>
             <column columnName="name"/>
@@ -1155,13 +1136,6 @@
             <column columnName="study_treatment_action_taken"/>
             <column columnName="subject_accession"/>
             <column columnName="workspace_id"/>
-        </columns>
-    </table>
-    <table tableName="lk_experiment_purpose" tableDbType="TABLE">
-        <columns>
-            <column columnName="name"/>
-            <column columnName="description"/>
-            <column columnName="link"/>
         </columns>
     </table>
     <table tableName="lk_user_role_type" tableDbType="TABLE">
@@ -1278,13 +1252,6 @@
             <column columnName="workspace_id"/>
         </columns>
     </table>
-    <table tableName="lk_data_format" tableDbType="TABLE">
-        <columns>
-            <column columnName="name"/>
-            <column columnName="description"/>
-            <column columnName="link"/>
-        </columns>
-    </table>
     <table tableName="planned_visit_2_arm" tableDbType="TABLE">
         <columns>
             <column columnName="planned_visit_accession"/>
@@ -1318,7 +1285,6 @@
         <columns>
             <column columnName="expsample_accession"/>
             <column columnName="file_info_id"/>
-            <column columnName="data_format"/>
             <column columnName="result_schema"/>
         </columns>
     </table>

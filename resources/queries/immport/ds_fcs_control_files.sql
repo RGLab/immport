@@ -49,7 +49,7 @@ FROM
   arm_2_subject.arm_accession = arm_or_cohort.arm_accession AND
   biosample.study_accession = arm_or_cohort.study_accession AND
   file_info.name LIKE '%.fcs' AND
-  file_info.purpose = 'Flow cytometry compensation or control'
+  file_info.detail = 'Flow cytometry compensation or control'
   AND ($STUDY IS NULL OR $STUDY = biosample.study_accession)
 ) AS fcc,
 ds_fcs_sample_files

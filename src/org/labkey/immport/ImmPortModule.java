@@ -17,10 +17,13 @@
 package org.labkey.immport;
 
 import org.jetbrains.annotations.NotNull;
+import org.labkey.api.admin.FolderSerializationRegistry;
 import org.labkey.api.data.Container;
 import org.labkey.api.module.DefaultModule;
 import org.labkey.api.module.FolderTypeManager;
+import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleContext;
+import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.query.QueryView;
 import org.labkey.api.rstudio.RStudioService;
 import org.labkey.api.search.SearchService;
@@ -53,7 +56,7 @@ public class ImmPortModule extends DefaultModule
     @Override
     public double getVersion()
     {
-        return 17.13;
+        return 17.24;
     }
 
     @Override
@@ -109,7 +112,16 @@ public class ImmPortModule extends DefaultModule
                 // pass
             }
         }
+
+        // if DifferentialExpressionAnalysis module is registered, add support for folder import/export
+        Module deaModule = ModuleLoader.getInstance().getModule(DifferentialExpressionWriterFactory.MODULE_NAME);
+        FolderSerializationRegistry fsr = ServiceRegistry.get().getService(FolderSerializationRegistry.class);
+        if (null != deaModule && null != fsr)
+        {
+            fsr.addFactories(new DifferentialExpressionWriterFactory(), new DifferentialExpressionImporterFactory());
+        }
     }
+
 
     @NotNull
     @Override

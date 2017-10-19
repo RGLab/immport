@@ -374,12 +374,12 @@ public class DataLoader extends PipelineJob
             Parameter data_format = new Parameter("data_format", JdbcType.VARCHAR);
             Parameter result_schema = new Parameter("result_schema", JdbcType.VARCHAR);
             SQLFragment insert = new SQLFragment(
-                "INSERT INTO immport.expsample_2_file_info (expsample_accession, file_info_id, experiment_accession, data_format, result_schema)\n" +
-                "SELECT ?, ?, ?, ?, ?\n",
-                expsample_accession, file_info_id, experiment_accession, data_format, result_schema);
-            SQLFragment update = new SQLFragment("UPDATE immport.expsample_2_file_info SET expsample_accession=?, file_info_id=?, experiment_accession=?, data_format=?, result_schema=?\n" +
+                "INSERT INTO immport.expsample_2_file_info (expsample_accession, file_info_id, result_schema)\n" +
+                "SELECT ?, ?, ?\n",
+                expsample_accession, file_info_id, result_schema);
+            SQLFragment update = new SQLFragment("UPDATE immport.expsample_2_file_info SET expsample_accession=?, file_info_id=?, result_schema=?\n" +
                 "WHERE expsample_accession=? AND file_info_id=?\n",
-                expsample_accession, file_info_id, experiment_accession, data_format, result_schema, expsample_accession, file_info_id);
+                expsample_accession, file_info_id, result_schema, expsample_accession, file_info_id);
             SQLFragment sqlf = new SQLFragment();
             sqlf.append("WITH __upsert__ AS (").append(update).append(" RETURNING *) ").append(insert).append(" WHERE NOT EXISTS (SELECT * FROM __upsert__)");
             return new Parameter.ParameterMap(targetSchema.getScope(), sqlf, (Map<String,String>)null);
@@ -633,14 +633,14 @@ public class DataLoader extends PipelineJob
         new SharedCopyConfig("lk_adverse_event_severity"),
         new SharedCopyConfig("lk_age_event"),
         new SharedCopyConfig("lk_data_completeness"),
-        new LookupCopyConfig("lk_data_format"),
+//        new LookupCopyConfig("lk_data_format"),
         new LookupCopyConfig("lk_ethnicity"),
         new SharedCopyConfig("lk_exp_measurement_tech"),
         new LookupCopyConfig("lk_expsample_result_schema"),
-        new LookupCopyConfig("lk_experiment_purpose"),
+//        new LookupCopyConfig("lk_experiment_purpose"),
 
         new LookupCopyConfig("lk_file_detail"),
-        new LookupCopyConfig("lk_file_purpose"),
+//        new LookupCopyConfig("lk_file_purpose"),
         new SharedCopyConfig("lk_gender"),
         new LookupCopyConfig("lk_locus_name"),
         new LookupCopyConfig("lk_personnel_role"),
@@ -757,7 +757,7 @@ public class DataLoader extends PipelineJob
          */
 
         new StudyCopyConfig("assessment_panel"),
-        new ImmPortCopyConfig("assessment_component")
+        new SharedCopyConfig("assessment_component")
         {
             @Override
             public void deleteFromTarget(PipelineJob job, List<String> studies) throws IOException, SQLException
@@ -798,9 +798,9 @@ public class DataLoader extends PipelineJob
             },
         new SharedCopyConfig("lk_analyte"),
         new SharedCopyConfig("lk_ancestral_population"),
-        new LookupCopyConfig("lk_kir_gene"),
-        new LookupCopyConfig("lk_kir_locus"),
-        new LookupCopyConfig("lk_kir_present_absent"),
+//        new LookupCopyConfig("lk_kir_gene"),
+//        new LookupCopyConfig("lk_kir_locus"),
+//        new LookupCopyConfig("lk_kir_present_absent"),
         new LookupCopyConfig("lk_organization", true),
         new LookupCopyConfig("lk_user_role_type"),
         new LookupCopyConfig("lk_visibility_category"),

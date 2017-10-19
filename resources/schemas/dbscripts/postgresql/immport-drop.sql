@@ -1,5 +1,6 @@
 
-  /*
+
+  /*
  * Copyright (c) 2013 LabKey Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,3 +19,4 @@
 DROP FUNCTION IF EXISTS immport.fn_populateDimensions();
 DROP FUNCTION IF EXISTS immport.fn_populateDimensions(INTEGER);
 DROP VIEW IF EXISTS immport.v_results_union;
+DROP VIEW IF EXISTS immport.v_results_summary;

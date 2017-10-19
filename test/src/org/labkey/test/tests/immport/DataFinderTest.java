@@ -32,6 +32,7 @@ import org.labkey.remoteapi.CommandException;
 import org.labkey.remoteapi.Connection;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
+import org.labkey.test.Locators;
 import org.labkey.test.TestFileUtils;
 import org.labkey.test.TestTimeoutException;
 import org.labkey.test.WebTestHelper;
@@ -97,7 +98,8 @@ import static org.labkey.test.util.PermissionsHelper.MemberType;
 @Category({Git.class})
 public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTest, ReadOnlyTest
 {
-    private static File immPortArchive = TestFileUtils.getSampleData("HIPC/ANIMAL_STUDIES-DR20.zip");
+    {setIsBootstrapWhitelisted(true);}
+    private static File immPortArchive = TestFileUtils.getSampleData("HIPC/ANIMAL_STUDIES-DR23.zip");
     private static File TEMPLATE_ARCHIVE = TestFileUtils.getSampleData("HIPC/SDY_template.zip");
     private static String[] ANIMAL_STUDIES = {"SDY99", "SDY139", "SDY147", "SDY208", "SDY215", "SDY217"};
     private static String[] STUDY_SUBFOLDERS = {"SDY139", "SDY147", "SDY208", "SDY217"};
@@ -109,7 +111,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
     @Override
     protected String getProjectName()
     {
-        return "ImmuneSpace Test Data Finder";
+        return "ImmuneSpace Test Data Finder DR23";
     }
 
     @Override
@@ -129,7 +131,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
     @BeforeClass
     public static void initTest()
     {
-        if (WebTestHelper.getDatabaseType().compareTo(WebTestHelper.DatabaseType.PostgreSQL) != 0)
+        if (WebTestHelper.getDatabaseType() != WebTestHelper.DatabaseType.PostgreSQL)
         {
             Assert.fail("Unsupported DB. This must be run against a Postgres DB.");
         }
@@ -429,7 +431,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
             String studyAccession = studyCard.getAccession();
             foundAccessions.add(studyAccession);
             studyCard.clickGoToStudy();
-            WebElement title = Locator.css(".labkey-folder-title > a").waitForElement(shortWait());
+            WebElement title = Locators.bodyTitle().waitForElement(shortWait());
             assertEquals("Study card " + studyAccession + " linked to wrong study", studyAccession, title.getText());
             goBack();
         }
@@ -963,7 +965,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
 
         log("Find the notification that is for the study group: " + groupsSent.get(SENT_CLICK_IN_PANEL).groupName);
 
-        final NotificationPanelItem notificationPanelItem = notificationsPanel.findNotificationInList(groupsSent.get(SENT_CLICK_IN_PANEL).groupName, UserNotificationsPanel.NotificationTypes.STUDY);
+        final NotificationPanelItem notificationPanelItem = notificationsPanel.findNotificationInList(groupsSent.get(SENT_CLICK_IN_PANEL).groupName, "Study");
 
         assertTrue("Did not find a notice with the group name '" + groupsSent.get(SENT_CLICK_IN_PANEL).groupName + "' in it.", notificationPanelItem != null);
         assertTrue("Item in panel did not have the expected created by.", notificationPanelItem.getCreatedBy().contains("Today -"));
@@ -993,7 +995,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
 
         notificationsPanel = UserNotificationsPanel.clickInbox(this);
 
-        NotificationPanelItem notificationPanelItem2 = notificationsPanel.findNotificationInList(groupsSent.get(SENT_MARK_AS_READ).groupName, UserNotificationsPanel.NotificationTypes.STUDY);
+        NotificationPanelItem notificationPanelItem2 = notificationsPanel.findNotificationInList(groupsSent.get(SENT_MARK_AS_READ).groupName, "Study");
 
         assertTrue("Did not find a notice with the group name '" + groupsSent.get(SENT_MARK_AS_READ).groupName + "' in it.", notificationPanelItem2 != null);
 

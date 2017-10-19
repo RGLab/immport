@@ -46,6 +46,7 @@ public class ImmuneSpaceRExportTest extends BaseWebDriverTest implements Postgre
     {
         _containerHelper.createProject(getProjectName(), "Study");
         importFolderFromZip(TestFileUtils.getSampleData("HIPC/ImmuneSpaceRExport.folder.zip"), false, 1);
+        _containerHelper.setFolderType("Dataspace");
     }
 
     @Test
@@ -70,7 +71,7 @@ public class ImmuneSpaceRExportTest extends BaseWebDriverTest implements Postgre
         goToProjectHome();
         clickFolder(IMMPORT_STUDY);
         clickAndWait(Locator.linkContainingText(DATASET_NAME));
-        verifyRExportScript(true, IMMPORT_STUDY, "Dataset", "study", DATASET_NAME.toLowerCase(), DATASET_COLUMN_NAME, "study");
+        verifyRExportScript(false, IMMPORT_STUDY, "Dataset", "study", DATASET_NAME.toLowerCase(), DATASET_COLUMN_NAME, "study");
     }
 
     @Test
@@ -132,7 +133,7 @@ public class ImmuneSpaceRExportTest extends BaseWebDriverTest implements Postgre
         rScript = rScript.replaceAll("&lt;", "<");
 
         assertTrue("Script is missing ImmuneSpaceR library", rScript.contains("library(ImmuneSpaceR)"));
-        assertTrue("Script is missing CreateConnection call", rScript.contains(noun + " <- CreateConnection(\"" + connContainerName + "\")"));
+        assertTrue("Script is missing CreateConnection call", rScript.contains(noun + " <- CreateConnection(\"\")"));
         if (filterColName != null)
         {
             assertTrue("Script is missing Rlabkey library", rScript.contains("library(Rlabkey)"));

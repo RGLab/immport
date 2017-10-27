@@ -6,7 +6,6 @@ import org.junit.experimental.categories.Category;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.TestFileUtils;
-import org.labkey.test.TestTimeoutException;
 import org.labkey.test.categories.Git;
 import org.labkey.test.util.DataRegionExportHelper;
 import org.labkey.test.util.DataRegionTable;
@@ -20,8 +19,6 @@ import static org.junit.Assert.assertTrue;
 @Category({Git.class})
 public class ImmuneSpaceRExportTest extends BaseWebDriverTest implements PostgresOnlyTest
 {
-    {setIsBootstrapWhitelisted(true);}
-
     private final String IMMPORT_STUDY = "Study 123";
     private final String NON_IMMPORT_STUDY = "Study 456";
     private final String DATASET_NAME = "ELISA";

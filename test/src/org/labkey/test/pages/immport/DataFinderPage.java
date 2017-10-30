@@ -301,7 +301,7 @@ public class DataFinderPage extends LabKeyPage
         public static final Locator.CssLocator saveMenu = Locator.css("#saveMenu");
         public static final Locator.CssLocator loadMenu = Locator.css("#loadMenu");
         public static final Locator.CssLocator sendMenu = Locator.css("#sendMenu");
-        public static final Locator.IdLocator manageMenu = Locator.id("manageMenu");
+        public static final Locator.IdLocator manageMenu = Locator.id("df-manageMenu");
         public static final Locator.CssLocator savedGroups = loadMenu.append(" ul.labkey-dropdown-menu-active");
         public static final Locator.XPathLocator save = Locator.xpath("//li[contains(@ng-repeat, 'saveOptions')][not(contains(@class, 'inactive'))]").append(Locator.linkWithText("Save"));
         public static final Locator.XPathLocator saveAs = Locator.xpath("//li[contains(@ng-repeat, 'saveOptions')][not(contains(@class, 'inactive'))]").append(Locator.linkWithText("Save As"));
@@ -418,8 +418,8 @@ public class DataFinderPage extends LabKeyPage
 
         private class Elements
         {
-            public Locator.CssLocator activeOption = Locator.css(".menu-item-link:not(.inactive)");
-            public Locator.CssLocator inactiveOption = Locator.css(".menu-item-link.inactive");
+            public Locator.CssLocator activeOption = Locator.css(".df-menu-item-link:not(.inactive)");
+            public Locator.CssLocator inactiveOption = Locator.css(".df-menu-item-link.inactive");
         }
     }
 

@@ -47,6 +47,12 @@ TABLE.labkey-data-finder
 {
     clear:both;
 }
+
+.labkey-study-card-divider {
+    margin: 7px 0;
+    border-top: 1pt inset #AAAAAA;
+}
+
 DIV.labkey-study-card
 {
     background-color:#F8F8F8;
@@ -55,8 +61,8 @@ DIV.labkey-study-card
     margin: 5pt;
     float:left;
     position:relative;
-    width:160pt;
-    height:140pt;
+    width:172pt;
+    height:152pt;
     overflow-y:hidden;
 }
 
@@ -84,12 +90,12 @@ SPAN.labkey-study-search
 }
 
 /* search area */
-DIV.search-box
+DIV.df-search-box
 {
     float:left;
     padding:10pt;
 }
-INPUT.search-box
+INPUT.df-search-box
 {
     width:200pt;
 }
@@ -100,25 +106,25 @@ DIV.studyfinder-header
     padding-right:10pt;
 }
 
-DIV.search-message
+DIV.df-search-message
 {
     padding-left:10pt;
 }
 
-TD.selection-panel
+TD.df-selection-panel
 {
     vertical-align: text-top;
     width:220pt;
     height:100%;
 }
 
-TD.selection-panel > DIV
+TD.df-selection-panel > DIV
 {
     height:100%;
     overflow-y:auto;
 }
 
-DIV.help-links
+DIV.df-help-links
 {
     float:right;
     vertical-align: text-top;
@@ -126,79 +132,80 @@ DIV.help-links
     padding:3px 0px;
 }
 
-DIV.summary LI.member
+DIV.df-summary LI.df-member
 {
     clear:both;
     padding:2pt;
     margin:1px 0px 1px 0px;
     border:1px solid #ffffff;
-    height:14pt;
+    height:19.5pt;
     position:relative;
     width:100%;
 }
 
 /* facets */
 
-.clear-filter
+.df-clear-filter
 {
     float:right;
 }
 
-DIV.facet
+DIV.df-facet
 {
     max-width:200pt;
     border:solid 2pt rgb(220, 220, 220);
 }
 
+.labkey-study-card-summary,
 .active
 {
     cursor:pointer;
 }
-DIV.facet-header
+DIV.df-facet-header
 {
     padding:4pt;
     background-color: rgb(240, 240, 240);
 }
 
-DIV.facet-header .facet-caption
+DIV.df-facet-header .df-facet-caption
 {
     font-weight:400;
 }
 
-DIV.facet-header .labkey-filter-options
+DIV.df-facet-header .labkey-filter-options
 {
     font-size: 11px;
     padding: 3px 0px 0px 20px;
 }
 
-DIV.facet UL
+DIV.df-facet UL
 {
     list-style-type:none;
     padding-left:0;
     padding-right:5pt;
     margin:0;
 }
-DIV.facet LI.member
+DIV.df-facet LI.df-member
 {
     clear:both;
     cursor:pointer;
     padding:2pt;
     margin:1px 0px 1px 0px;
     border:1px solid #ffffff;
-    height:14pt;
+    height:19.5pt;
     position:relative;
     width:100%;
 }
-DIV.facet.collapsed LI.member
+DIV.df-facet.collapsed LI.df-member
 {
     display:none;
 }
-DIV.facet.collapsed .fa-plus-square
+DIV.df-facet.collapsed .fa-plus-square
 {
     float:left;
     display:inline;
 }
-DIV.facet.collapsed .fa-minus-square
+DIV.df-facet.collapsed .fa-minus-square
 {
     float:left;
     display:none;
@@ -213,19 +220,19 @@ DIV.expanded  .fa-minus-square
     float:left;
     display:inline;
 }
-DIV.facet.collapsed LI.member.selected-member
+DIV.df-facet.collapsed LI.df-member.df-selected-member
 {
     display:block;
 }
-DIV.facet LI.member:hover SPAN.bar
+DIV.df-facet LI.df-member:hover SPAN.df-bar
 {
     background-color:rgba(81, 158, 218, 0.2);
 }
-DIV.facet LI.empty-member
+DIV.df-facet LI.df-empty-member
 {
     color:#888888;
 }
-LI.member .member-indicator
+LI.df-member .df-member-indicator
 {
     position:relative;
     display:inline-block;
@@ -233,27 +240,27 @@ LI.member .member-indicator
     z-index:2;
     vertical-align: top;
 }
-.member-indicator.selected:after
+.df-member-indicator.selected:after
 {
     content:"\002713"
 }
-.member-indicator.selected:hover:after
+.df-member-indicator.selected:hover:after
 {
     content:"x";
 }
-.member-indicator.not-selected:after
+.df-member-indicator.not-selected:after
 {
     content:"\0025FB"
 }
-.member-indicator.not-selected:hover:after
+.df-member-indicator.not-selected:hover:after
 {
     content:"\002713"
 }
-.member-indicator.not-selected.none-selected:after
+.df-member-indicator.not-selected.df-none-selected:after
 {
     content:"\002713"; color:lightgray;
 }
-LI.member .member-name
+LI.df-member .df-member-name
 {
     display:inline-block;
     position:relative;
@@ -263,19 +270,19 @@ LI.member .member-name
     white-space: nowrap;
     z-index:2;
 }
-LI.member .member-count
+LI.df-member .df-member-count
 {
     position:relative;
     float:right;
     z-index:2;
 }
 
-LI.member SPAN.bar-selected
+LI.df-member SPAN.df-bar-selected
 {
     background-color:rgba(81, 158, 218, 0.2);
 }
 
-LI.member .bar
+LI.df-member .df-bar
 {
     height:14pt;
     background-color:#DEDEDE;
@@ -307,30 +314,30 @@ DIV.labkey-filter-popup
 }
 
 /* menus */
-.nav
+.df-nav
 {
     margin: 0;
     padding-left: 0;;
     list-style: none;
 }
 
-ul.nav
+ul.df-nav
 {
     display:block;
 }
 
-.navbar-nav > li
+.df-navbar-nav > li
 {
     float: left;
 }
 
-.navbar-nav
+.df-navbar-nav
 {
     float: left;
     margin: 0;
 }
 
-.navbar-nav > li > .labkey-dropdown-menu
+.df-navbar-nav > li > .labkey-dropdown-menu
 {
     margin-top : 0;
 }
@@ -407,33 +414,38 @@ ul.nav
     -webkit-padding-start: 0px
 }
 
-#manageMenu > a {
+#df-manageMenu > a {
     color:black;
     padding-right: 5px;
 }
 
-.menu-item-link {
+.df-menu-item-link {
     line-height: 22px;
     display: inline-block;
     padding: 0 8px 0 8px;
 }
 
+.labkey-study-detail {
+    border-color: #F8F8F8;
+    background-color: #F8F8F8;
+    padding: 0 20px 20px 20px;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.15), -1px 0 0 rgba(0,0,0,0.06), 1px 0 0 rgba(0,0,0,0.06), 0 1px 0 rgba(0,0,0,0.12);
+}
+
 .labkey-study-detail .x4-window-header {
     background-color: #F8F8F8;
-    padding: 0;
     box-shadow: #F8F8F8 0 0 0 0;
 }
 
-.labkey-study-detail {
-    border-color: #F8F8F8;
-    padding: 0;
+.labkey-study-detail .study-title {
+    font-family: 'Roboto-Bold', 'Arial-Bold', 'Helvetica-Bold', sans-serif;
+    font-weight: bold;
 }
 
 div.study-demographics {
     background-color: white;
     padding: 10px 20px 20px 20px;
     margin-top: 10px;
-    box-shadow: 0 1px 1px rgba(0,0,0,0.15), -1px 0 0 rgba(0,0,0,0.06), 1px 0 0 rgba(0,0,0,0.06), 0 1px 0 rgba(0,0,0,0.12);
 }
 
 div.study-demographics h2 {
@@ -456,13 +468,13 @@ div.study-demographics h3 {
     border-bottom: 1px solid darkgray;
 }
 
-#demographics-content .detail {
+#demographics-content .df-detail {
     font-size: 15px;
     padding-left: 30px;
     padding-bottom: 5px;
 }
 
-#demographics-content .detail div {
+#demographics-content .df-detail div {
     font-size: 15px;
 }
 
@@ -475,14 +487,14 @@ div.study-demographics h3 {
     padding: 3px;
 }
 
-#demographics-content div.label, a.label {
+#demographics-content div.df-label, a.df-label {
     font-size: 12px;
     color: #a9a9a9;
     vertical-align: text-top;
 }
 
 
-#assays-content .detail div {
+#assays-content .df-detail div {
     font-size: 15px;
     padding: 3px;
 }

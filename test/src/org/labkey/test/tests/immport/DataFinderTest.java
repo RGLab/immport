@@ -17,7 +17,6 @@
 package org.labkey.test.tests.immport;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.SystemUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpDelete;
@@ -41,6 +40,7 @@ import org.labkey.test.components.ParticipantListWebPart;
 import org.labkey.test.components.core.NotificationPanelItem;
 import org.labkey.test.components.core.UserNotificationsPanel;
 import org.labkey.test.components.dumbster.EmailRecordTable;
+import org.labkey.test.components.ext4.Checkbox;
 import org.labkey.test.components.ext4.Window;
 import org.labkey.test.components.immport.StudySummaryWindow;
 import org.labkey.test.components.study.StudyOverviewWebPart;
@@ -1382,12 +1382,12 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         waitForElements(Locator.xpath("//td[@role='gridcell']//div").withText("File"), 2, 30000);
 
         log("Limit the export to only the fcs control files.");
-        List<WebElement> chkBoxes = Locator.css("div.x4-grid-cell-inner-checkcolumn").findElements(getDriver());
-        chkBoxes.get(chkBoxes.size()-1).click();  // Yes this is bad, but for now the checkbox we are interested in will be at the end of the list.
+        String controlFilesDatasetId = "5019";
+        Checkbox controlFilesChecker = Checkbox.Ext4Checkbox().locatedBy(Locator.css("tr[data-recordid='" + controlFilesDatasetId + "f'] div.x4-grid-cell-inner-checkcolumn img")).find(getDriver());
+        controlFilesChecker.check();
+        Locator.id("summaryData").childTag("div").withText("Files number: 45").waitForElement(getDriver(), WAIT_FOR_JAVASCRIPT);
 
-        log("Download the zip file.");
-        File download = clickAndWaitForDownload(Locator.xpath("//*[@id='downloadBtn']"));
-        log("download file name: " + download.getName());
+        File download = clickAndWaitForDownload(Locator.id("downloadBtn"));
 
         log("Look at zip file and make sure the expected files are there.");
         Set<String> filesInZip = new HashSet<>();
@@ -1403,17 +1403,15 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
             }
         }
 
-        String folder;
-        if(SystemUtils.IS_OS_WINDOWS)
-            folder = "fcs_control_files\\";
-        else
-            folder = "fcs_control_files/";
+        String folder = "fcs_control_files" + File.separator;
+        assertTrue("Did not find any individual control files in zip export: " + download.getName(),
+                filesInZip.stream().anyMatch(file -> file.startsWith(folder)));
 
         for (String controlFile : controlFileList)
         {
-            assertTrue("Did not find file: " + controlFile, filesInZip.contains(folder + controlFile));
+            assertTrue("Did not find file '" + controlFile + "' in zip export: " + download.getName(),
+                    filesInZip.contains(folder + controlFile));
         }
-
     }
 
     @LogMethod(quiet = true)

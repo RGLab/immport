@@ -84,9 +84,9 @@ FROM immport.pcr_result
 UNION ALL
 
 SELECT
-   CASE file_info.detail
-     WHEN 'Gene expression result' THEN 'Gene Expression'
-     WHEN 'CyTOF result' THEN 'CyTOF'
+   CASE
+     WHEN file_info.detail IN ('Affymetrix CEL', 'Affymetrix other', 'Gene expression result', 'Illumina BeadArray', 'TPM') THEN 'Gene Expression'
+     WHEN file_info.detail IN ('CyTOF result') THEN 'CyTOF'
      ELSE 'UNKNOWN'
    END as assay,
    arm_or_cohort.arm_accession,
@@ -110,7 +110,7 @@ FROM
     FROM
       immport.file_info INNER JOIN immport.expsample_2_file_info ON file_info.file_info_id = expsample_2_file_info.file_info_id
     WHERE
-      file_info.detail IN ('Gene expression result', 'CyTOF result')
+      file_info.detail IN ('Affymetrix CEL', 'Affymetrix other', 'Gene expression result', 'Illumina BeadArray', 'TPM', 'CyTOF result')
   UNION
     SELECT
       'Gene expression result' as detail,
@@ -184,7 +184,7 @@ CREATE OR REPLACE VIEW immport.v_results_summary AS
       SELECT expsample_2_file_info.expsample_accession
       FROM immport.expsample_2_file_info JOIN immport.file_info ON expsample_2_file_info.file_info_id = file_info.file_info_id
       WHERE
-        file_info.detail IN ('Gene expression result')
+        file_info.detail IN ('Affymetrix CEL', 'Affymetrix other', 'Gene expression result', 'Illumina BeadArray', 'TPM')
     UNION
       SELECT
          expsample_public_repository.expsample_accession
@@ -305,6 +305,8 @@ BEGIN
 
   DELETE FROM immport.dimStudy;
 
+  -- study x contract_grant_2_study is MxM, even though it is 1xM 99% of the time
+  -- we're going to force this to me 1xM, with a synthetic junction table
   INSERT INTO immport.dimStudy (Study, Type, Program, SortOrder)
     SELECT DISTINCT
       study.study_accession as Study,
@@ -312,7 +314,7 @@ BEGIN
       P.name as Program,
       cast(substring(study.study_accession,4) as integer) as SortOrder
     FROM immport.study
-      LEFT OUTER JOIN immport.contract_grant_2_study cg2s ON study.study_accession = cg2s.study_accession
+      LEFT OUTER JOIN (SELECT study_accession, MIN(contract_grant_id) as contract_grant_id FROM immport.contract_grant_2_study GROUP BY study_accession) cg2s ON study.study_accession = cg2s.study_accession
       LEFT OUTER JOIN immport.contract_grant C ON cg2s.contract_grant_id = C.contract_grant_id
       LEFT OUTER JOIN immport.program P on C.program_id = P.program_id;
 

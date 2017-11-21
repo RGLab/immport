@@ -58,6 +58,7 @@ DIV.labkey-study-card
     width:160pt;
     height:140pt;
     overflow-y:hidden;
+    overflow-x:hidden;
 }
 
 DIV.loaded,

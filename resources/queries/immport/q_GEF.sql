@@ -9,4 +9,4 @@ FROM
   file_info, expsample_2_file_info
 WHERE
   file_info.file_info_id = expsample_2_file_info.file_info_id AND
-  file_info.detail = 'Gene expression result'
+  file_info.detail IN ('Affymetrix CEL', 'Affymetrix other', 'Gene expression result', 'Illumina BeadArray', 'TPM')

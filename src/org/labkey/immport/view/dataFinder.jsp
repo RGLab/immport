@@ -63,9 +63,12 @@
 <%
     DataFinderWebPart me = (DataFinderWebPart)HttpView.currentView();
     ViewContext context = HttpView.currentContext();
-    ArrayList<StudyBean> studies = new SqlSelector(DbSchema.get("immport", DbSchemaType.Module),"SELECT study.*, P.name as program_title, pi.pi_names\n" +
+    // CONSIDER: add this to fn_populateDimensions (maybe just add additional program_id column to dimStudy)
+    ArrayList<StudyBean> studies = new SqlSelector(DbSchema.get("immport", DbSchemaType.Module),
+            "SELECT study.*, P.name as program_title, pi.pi_names\n" +
             "FROM immport.study " +
-            "LEFT OUTER JOIN immport.contract_grant_2_study CG2S ON study.study_accession = CG2S.study_accession\n" +
+//            "LEFT OUTER JOIN immport.contract_grant_2_study CG2S ON study.study_accession = CG2S.study_accession\n" +
+            "LEFT OUTER JOIN (SELECT study_accession, MIN(contract_grant_id) as contract_grant_id FROM immport.contract_grant_2_study GROUP BY study_accession) CG2S ON study.study_accession = CG2S.study_accession\n" +
             "LEFT OUTER JOIN immport.contract_grant C ON CG2S.contract_grant_id = C.contract_grant_id\n" +
             "LEFT OUTER JOIN immport.program P on C.program_id = P.program_id\n" +
             "LEFT OUTER JOIN\n" +

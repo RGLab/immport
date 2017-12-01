@@ -9,7 +9,7 @@ SELECT
   COALESCE(study_time_collected,9999.0000) as sequencenum,
 
   result_id,
-  COALESCE(analyte_preferred,analyte_reported) AS analyte,
+  COALESCE(analyte_reported,analyte_preferred) AS analyte,
   analyte_preferred,
   analyte_reported,
   arm_accession,

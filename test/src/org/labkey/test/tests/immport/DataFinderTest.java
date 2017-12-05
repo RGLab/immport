@@ -1293,24 +1293,25 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
     public void testExportDataWithFiles() throws Exception
     {
         PortalHelper portalHelper = new PortalHelper(this);
-        List<String> controlFileList = Arrays.asList("Fig7_Compensation Controls_Blue E 530,2f,30 Stained Control.fcs",
-                "Fig7_Compensation Controls_Violet B 450,2f,50 Stained Control.fcs",
-                "Fig7_Compensation Controls_Unstained Control.fcs",
-                "Fig7_Compensation Controls_Red C 670,2f,14 Stained Control.fcs",
-                "Fig7_Compensation Controls_Red A 780,2f,60 Stained Control.fcs",
-                "Fig7_Compensation Controls_Violet A 550,5c,50 Stained Control.fcs",
-                "Fig7_Compensation Controls_Blue A 780,2f,60 Stained Control.fcs",
-                "Fig7_Compensation Controls_Blue B 670LP Stained Control.fcs",
-                "Fig7_Compensation Controls_Blue D 585,2f,42 Stained Control.fcs",
-                "Compensation Controls_Blue A 780,2f,60 Stained Control.fcs",
-                "Compensation Controls_Unstained Control.fcs",
-                "Compensation Controls_Violet A 550,5c,50 Stained Control.fcs",
-                "Compensation Controls_Blue D 585,2f,42 Stained Control.fcs",
-                "Compensation Controls_Red C 670,2f,14 Stained Control.fcs",
-                "Compensation Controls_Blue B 670LP Stained Control.fcs",
-                "Compensation Controls_Red A 780,2f,60 Stained Control.fcs",
-                "Compensation Controls_Violet B 450,2f,50 Stained Control.fcs",
-                "Compensation Controls_Blue E 530,2f,30 Stained Control.fcs");
+        List<String> controlFileList = Arrays.asList(
+                "Fig7_Compensation Controls_Blue E 530,2f,30 Stained Control.297194.fcs",
+                "Fig7_Compensation Controls_Violet B 450,2f,50 Stained Control.297200.fcs",
+                "Fig7_Compensation Controls_Unstained Control.297193.fcs",
+                "Fig7_Compensation Controls_Red C 670,2f,14 Stained Control.297198.fcs",
+                "Fig7_Compensation Controls_Red A 780,2f,60 Stained Control.297199.fcs",
+                "Fig7_Compensation Controls_Violet A 550,5c,50 Stained Control.297201.fcs",
+                "Fig7_Compensation Controls_Blue A 780,2f,60 Stained Control.297197.fcs",
+                "Fig7_Compensation Controls_Blue B 670LP Stained Control.297196.fcs",
+                "Fig7_Compensation Controls_Blue D 585,2f,42 Stained Control.297195.fcs",
+                "Compensation Controls_Blue A 780,2f,60 Stained Control.297084.fcs",
+                "Compensation Controls_Unstained Control.297089.fcs",
+                "Compensation Controls_Violet A 550,5c,50 Stained Control.297088.fcs",
+                "Compensation Controls_Blue D 585,2f,42 Stained Control.297082.fcs",
+                "Compensation Controls_Red C 670,2f,14 Stained Control.297085.fcs",
+                "Compensation Controls_Blue B 670LP Stained Control.297083.fcs",
+                "Compensation Controls_Red A 780,2f,60 Stained Control.297086.fcs",
+                "Compensation Controls_Violet B 450,2f,50 Stained Control.297087.fcs",
+                "Compensation Controls_Blue E 530,2f,30 Stained Control.297081.fcs");
         File fl;
         boolean createdFolder;
 

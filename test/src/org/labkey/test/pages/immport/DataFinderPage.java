@@ -289,11 +289,11 @@ public class DataFinderPage extends LabKeyPage
         public static final Locator.CssLocator studySearchInput = studyFinder.append(Locator.css("#searchTerms"));
         public static final Locator.NameLocator studySubsetChooser = Locator.name("studySubsetSelect");
         public static final Locator.CssLocator studyCard = studyFinder.append(Locator.css(".labkey-study-card"));
-        public static final Locator.CssLocator selectionPanel = studyFinder.append(Locator.css(".selection-panel"));
+        public static final Locator.CssLocator selectionPanel = studyFinder.append(Locator.css(".df-selection-panel"));
         public static final Locator.CssLocator facetPanel = selectionPanel.append(Locator.css("#facetPanel"));
-        public static final Locator.CssLocator facet = facetPanel.append(" .facet");
+        public static final Locator.CssLocator facet = facetPanel.append(" .df-facet");
         public static final Locator.CssLocator summaryArea = selectionPanel.append(Locator.css("#summaryArea"));
-        public static final Locator.CssLocator selection = facetPanel.append(Locator.css(" .selected-member"));
+        public static final Locator.CssLocator selection = facetPanel.append(Locator.css(" .df-selected-member"));
         public static final Locator.CssLocator clearAll = Locator.css("span[ng-click='clearAllFilters(true);']");
         public static final Locator.CssLocator clearAllFilters = Locator.css("span[ng-click='clearAllClick();']");
         public static final Locator.CssLocator groupLabel = Locator.css(".labkey-group-label");
@@ -301,7 +301,7 @@ public class DataFinderPage extends LabKeyPage
         public static final Locator.CssLocator saveMenu = Locator.css("#saveMenu");
         public static final Locator.CssLocator loadMenu = Locator.css("#loadMenu");
         public static final Locator.CssLocator sendMenu = Locator.css("#sendMenu");
-        public static final Locator.IdLocator manageMenu = Locator.id("manageMenu");
+        public static final Locator.IdLocator manageMenu = Locator.id("df-manageMenu");
         public static final Locator.CssLocator savedGroups = loadMenu.append(" ul.labkey-dropdown-menu-active");
         public static final Locator.XPathLocator save = Locator.xpath("//li[contains(@ng-repeat, 'saveOptions')][not(contains(@class, 'inactive'))]").append(Locator.linkWithText("Save"));
         public static final Locator.XPathLocator saveAs = Locator.xpath("//li[contains(@ng-repeat, 'saveOptions')][not(contains(@class, 'inactive'))]").append(Locator.linkWithText("Save As"));
@@ -418,8 +418,8 @@ public class DataFinderPage extends LabKeyPage
 
         private class Elements
         {
-            public Locator.CssLocator activeOption = Locator.css(".menu-item-link:not(.inactive)");
-            public Locator.CssLocator inactiveOption = Locator.css(".menu-item-link.inactive");
+            public Locator.CssLocator activeOption = Locator.css(".df-menu-item-link:not(.inactive)");
+            public Locator.CssLocator inactiveOption = Locator.css(".df-menu-item-link.inactive");
         }
     }
 
@@ -575,17 +575,17 @@ public class DataFinderPage extends LabKeyPage
 
         private class Elements
         {
-            public Locator.CssLocator facetCaption = Locator.css(".facet-caption");
-            public Locator.CssLocator dimension = Locator.css(".facet-caption > span");
-            public Locator.CssLocator member = Locator.css(".member");
-            public Locator.CssLocator memberName = Locator.css(".member-name");
-            public Locator.CssLocator memberCount = Locator.css(".member-count");
-            public Locator.CssLocator selectedMemberCheck = Locator.css(".member .member-indicator.selected");
-            public Locator.CssLocator emptyMemberName = Locator.css(".ng-scope.empty-member .member-name");
-            public Locator.CssLocator nonEmptyMemberName = Locator.css(".ng-scope.member:not(.empty-member) .member-name");
-            public Locator.CssLocator nonEmptyNonSelectedMemberName = Locator.css(".ng-scope.member:not(.empty-member):not(.selected-member) .member-name");
-            public Locator.CssLocator selectedMemberName = Locator.css(".ng-scope.selected-member .member-name");
-            public Locator.CssLocator clearFilters = Locator.css(".clear-filter");
+            public Locator.CssLocator facetCaption = Locator.css(".df-facet-caption");
+            public Locator.CssLocator dimension = Locator.css(".df-facet-caption > span");
+            public Locator.CssLocator member = Locator.css(".df-member");
+            public Locator.CssLocator memberName = Locator.css(".df-member-name");
+            public Locator.CssLocator memberCount = Locator.css(".df-member-count");
+            public Locator.CssLocator selectedMemberCheck = Locator.css(".df-member .df-member-indicator.selected");
+            public Locator.CssLocator emptyMemberName = Locator.css(".ng-scope.df-empty-member .df-member-name");
+            public Locator.CssLocator nonEmptyMemberName = Locator.css(".ng-scope.df-member:not(.df-empty-member) .df-member-name");
+            public Locator.CssLocator nonEmptyNonSelectedMemberName = Locator.css(".ng-scope.df-member:not(.df-empty-member):not(.df-selected-member) .df-member-name");
+            public Locator.CssLocator selectedMemberName = Locator.css(".ng-scope.df-selected-member .df-member-name");
+            public Locator.CssLocator clearFilters = Locator.css(".df-clear-filter");
         }
     }
 
@@ -687,8 +687,8 @@ public class DataFinderPage extends LabKeyPage
 
         private class Elements
         {
-            public Locator memberName = Locator.css(".member-name");
-            public Locator memberCount = Locator.css(".member-count");
+            public Locator memberName = Locator.css(".df-member-name");
+            public Locator memberCount = Locator.css(".df-member-count");
         }
     }
 }

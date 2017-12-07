@@ -102,19 +102,19 @@
                         <span ng-if="isGroupNotFound()" class="fa fa-exclamation-circle" data-qtip="{{currentGroup.groupNotFound}}"></span>
                     </div>
 
-                    <div class="navbar navbar-default ">
-                        <ul class="nav navbar-nav">
-                            <li id="manageMenu" class="labkey-dropdown" ng-mouseover="openMenu($event, true)">
+                    <div class="df-navbar df-navbar-default ">
+                        <ul class="df-nav df-navbar-nav">
+                            <li id="df-manageMenu" class="labkey-dropdown" ng-mouseover="openMenu($event, true)">
                                 <a href="#"><i class="fa fa-cog"></i></a>
                                 <ul class="labkey-dropdown-menu" ng-show="!isGuest">
-                                    <li class="x4-menu-item-text"><a class="menu-item-link" href="<%=h(new ActionURL("study", "manageParticipantCategories", getContainer()))%>">Manage Groups</a></li>
+                                    <li class="x4-menu-item-text"><a class="df-menu-item-link" href="<%=h(new ActionURL("study", "manageParticipantCategories", getContainer()))%>">Manage Groups</a></li>
                                 </ul>
                             </li>
                             <li id="loadMenu" class="labkey-dropdown" >
                                 <a ng-class="{'labkey-text-link' : loadedStudiesShown(), 'labkey-disabled-text-link': !loadedStudiesShown()} " class="no-arrow" style="margin-right: 0.8em" href="#" ng-mouseover="openMenu($event, false)">Load <i class="fa fa-caret-down"></i></a>
                                 <ul class="labkey-dropdown-menu" ng-show="loadedStudiesShown() && groupsAvailable()" >
                                     <li class="x4-menu-item-text" ng-repeat="group in groupList">
-                                        <a class="menu-item-link" ng-click="applySubjectGroupFilter(group, $event)">{{group.label}}</a>
+                                        <a class="df-menu-item-link" ng-click="applySubjectGroupFilter(group, $event)">{{group.label}}</a>
                                     </li>
                                 </ul>
                             </li>
@@ -122,12 +122,12 @@
                                 <a ng-class="{'labkey-text-link' : loadedStudiesShown(), 'labkey-disabled-text-link': !loadedStudiesShown()} " class="no-arrow" style="margin-right: 0.8em" href="#" ng-mouseover="openMenu($event, false)" ng-mouseleave="closeMenu($event)">Save <i class="fa fa-caret-down"></i> </a>
                                 <ul class="labkey-dropdown-menu" ng-if="!isGuest && loadedStudiesShown()">
                                     <li class="x4-menu-item-text" ng-repeat="opt in saveOptions" ng-class="{'inactive' : !opt.isActive}">
-                                        <a class="menu-item-link" ng-class="{'inactive' : !opt.isActive}" ng-click="saveSubjectGroup(opt.id, false, $event)">{{opt.label}}</a>
+                                        <a class="df-menu-item-link" ng-class="{'inactive' : !opt.isActive}" ng-click="saveSubjectGroup(opt.id, false, $event)">{{opt.label}}</a>
                                     </li>
                                 </ul>
                                 <ul class="labkey-dropdown-menu" ng-if="isGuest">
                                     <li class="x4-menu-item-text">
-                                        <span class="menu-item-link">You must be logged in to save a group.</span>
+                                        <span class="df-menu-item-link">You must be logged in to save a group.</span>
                                     </li>
                                 </ul>
                             </li>
@@ -135,7 +135,7 @@
                                 <a ng-class="{'labkey-text-link' : !isGuest && loadedStudiesShown(), 'labkey-disabled-text-link': isGuest || !loadedStudiesShown()} " class="no-arrow" href="#" ng-click="sendSubjectGroup($event)">Send</a>
                             </li>
                         </ul>
-                        <span class="clear-filter active" ng-show="hasFilters()" ng-click="clearAllClick();">[clear all]</span>
+                        <span class="df-clear-filter active" ng-show="hasFilters()" ng-click="clearAllClick();">[clear all]</span>
                     </div>
 
                 </div>
@@ -143,9 +143,9 @@
             </td>
             <td>
                 <div class="studyfinder-header">
-                    <span class="search-box">
+                    <span class="df-search-box">
                         <i class="fa fa-search"></i>&nbsp;
-                        <input placeholder="Studies" id="searchTerms" name="q" class="search-box"  ng-model="searchTerms" ng-change="onSearchTermsChanged()" type="search">
+                        <input placeholder="Studies" id="searchTerms" name="q" class="df-search-box"  ng-model="searchTerms" ng-change="onSearchTermsChanged()" type="search">
                     </span>
                     <span class="labkey-study-search">
                         <select ng-model="studySubset" name="studySubsetSelect" ng-change="onStudySubsetChanged()">
@@ -154,10 +154,10 @@
                     </span>
                     <span class="study-search">{{searchMessage}}</span>
                 </div>
-		<div class="search-message">
+		<div class="df-search-message">
                     <span id="message" class="labkey-filter-message" ng-if="!loadedStudiesShown()">No data are available for participants since you are viewing unloaded studies.</span>
 		</div>
-		<div class="help-links">
+		<div class="df-help-links">
                 <%=textLink("quick help", "#", "start_tutorial()", "showTutorial")%>
                 <%=textLink("Export Study Datasets", ImmPortController.ExportStudyDatasetsAction.class)%>
                 <%
@@ -173,19 +173,19 @@
             </td>
         </tr>
         <tr>
-            <td class="selection-panel">
+            <td class="df-selection-panel">
                 <div id="selectionPanel">
                     <div>
-                        <div class="facet" id="summaryArea" >
-                            <div class="facet-header"><span class="facet-caption">Summary</span></div>
+                        <div class="df-facet" id="summaryArea" >
+                            <div class="df-facet-header"><span class="df-facet-caption">Summary</span></div>
                             <ul>
-                                <li class="member" style="cursor: default">
-                                    <span class="member-name">Studies</span>
-                                    <span class="member-count">{{dimStudy.summaryCount}}</span>
+                                <li class="df-member" style="cursor: default">
+                                    <span class="df-member-name">Studies</span>
+                                    <span class="df-member-count">{{dimStudy.summaryCount}}</span>
                                 </li>
-                                <li class="member" style="cursor: default">
-                                    <span class="member-name">Participants</span>
-                                    <span class="member-count">{{formatNumber(dimSubject.allMemberCount||0)}}</span>
+                                <li class="df-member" style="cursor: default">
+                                    <span class="df-member-name">Participants</span>
+                                    <span class="df-member-count">{{formatNumber(dimSubject.allMemberCount||0)}}</span>
                                 </li>
                             </ul>
                         </div>
@@ -211,7 +211,7 @@
 <div id="filterPopup" class="labkey-filter-popup" style="top:{{filterChoice.y}}px; left:{{filterChoice.x}}px;" ng-if="filterChoice.show" ng-mouseleave="filterChoice.show = false">
     <ul class="labkey-dropdown-menu" ng-if="filterChoice.options.length > 1">
         <li class="x4-menu-item-text" ng-repeat="option in filterChoice.options">
-            <a class="menu-item-link" ng-click="setFilterType(filterChoice.dimName,option.type)">{{option.caption}}</a>
+            <a class="df-menu-item-link" ng-click="setFilterType(filterChoice.dimName,option.type)">{{option.caption}}</a>
         </li>
     </ul>
 </div>
@@ -236,30 +236,30 @@
 
 
 <script type="text/ng-template" id="/facet.html">
-    <div id="group_{{dim.name}}" class="facet"
+    <div id="group_{{dim.name}}" class="df-facet"
          ng-class="{expanded:dim.expanded, collapsed:!dim.expanded, noneSelected:(0==dim.filters.length)}">
-        <div class="facet-header">
-            <div class="facet-caption active" ng-click="dim.expanded=!dim.expanded" ng-mouseover="filterChoice.show = false">
+        <div class="df-facet-header">
+            <div class="df-facet-caption active" ng-click="dim.expanded=!dim.expanded" ng-mouseover="filterChoice.show = false">
                 <i class="fa fa-plus-square"></i>
                 <i class="fa fa-minus-square"></i>
                 &nbsp;
                 <span>{{dim.caption || dim.name}}</span>
-                <span ng-if="dim.filters.length" class="clear-filter active" ng-click="selectMember(dim.name,null,$event);">[clear]</span>
+                <span ng-if="dim.filters.length" class="df-clear-filter active" ng-click="selectMember(dim.name,null,$event);">[clear]</span>
             </div>
             <div class="labkey-filter-options" ng-if="dim.filters.length > 1 && dim.filterOptions.length > 0" >
                 <a ng-click="displayFilterChoice(dim.name, $event)" ng-mouseover="displayFilterChoice(dim.name,$event);"  class="x4-menu-item-text" ng-class="{inactive: dim.filterOptions.length < 2}" href="#">{{dim.filterCaption}} <i ng-if="dim.filterOptions.length > 1" class="fa fa-caret-down"></i></a>
             </div>
         </div>
         <ul>
-            <li ng-repeat="member in dim.members | filter:isMemberVisible" id="m_{{dim.name}}_{{member.uniqueName}}" style="position:relative;" class="member"
-                 ng-class="{'selected-member':member.selected, 'empty-member':(!member.selected && member.count == 0)}"
+            <li ng-repeat="member in dim.members | filter:isMemberVisible" id="m_{{dim.name}}_{{member.uniqueName}}" style="position:relative;" class="df-member"
+                 ng-class="{'df-selected-member':member.selected, 'df-empty-member':(!member.selected && member.count == 0)}"
                  ng-click="selectMember(dim.name,member,$event)">
-                <span class="active member-indicator" ng-class="{selected:member.selected, 'none-selected':!dim.filters.length, 'not-selected':!member.selected}" ng-click="toggleMember(dim.name,member,$event)">
+                <span class="active df-member-indicator" ng-class="{selected:member.selected, 'df-none-selected':!dim.filters.length, 'not-selected':!member.selected}" ng-click="toggleMember(dim.name,member,$event)">
                 </span>
-                <span class="member-name">{{member.name}}</span>
+                <span class="df-member-name">{{member.name}}</span>
                 &nbsp;
-                <span class="member-count">{{formatNumber(member.count)}}</span>
-                <span ng-class="{'bar-selected':member.selected}" class="bar" ng-show="member.count" style="width:{{member.percent}}%;"></span>
+                <span class="df-member-count">{{formatNumber(member.count)}}</span>
+                <span ng-class="{'df-bar-selected':member.selected}" class="df-bar" ng-show="member.count" style="width:{{member.percent}}%;"></span>
             </li>
         </ul>
     </div>

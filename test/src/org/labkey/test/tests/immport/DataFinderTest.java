@@ -513,17 +513,17 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         demData.openFilterDialog("gender");
         assertEquals("Demographics data set doesn't have same number of genders as filtered study finder",
                 Locator.css(".labkey-filter-dialog .labkey-link").findElements(getDriver()).size(), numGender);
-        clickButton("CANCEL", 0);
+        clickButton("Cancel", 0);
 
         demData.openFilterDialog("race");
         assertEquals("Demographics dataset doesn't have same number of races as filtered study finder",
                 Locator.css(".labkey-filter-dialog .labkey-link").findElements(getDriver()).size(), numRace);
-        clickButton("CANCEL", 0);
+        clickButton("Cancel", 0);
 
         demData.openFilterDialog("species");
         assertEquals("Demographics dataset doesn't have same number of species as filtered study finder",
                 Locator.css(".labkey-filter-dialog .labkey-link").findElements(getDriver()).size(), numSpecies);
-        clickButton("CANCEL", 0);
+        clickButton("Cancel", 0);
 
         assertEquals("Demographics dataset doesn't have same number of participants as filtered study finder",
                 demData.getDataRowCount(), finderSummaryCounts.get(Dimension.SUBJECTS).intValue());

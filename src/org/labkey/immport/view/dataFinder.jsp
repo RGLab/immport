@@ -347,7 +347,7 @@ LABKEY.help.Tour.register({
     id: "immport.dataFinder",
     steps: [
         {
-            target: $('.labkey-wp')[0],
+            target: $('[name=webpart]')[0],
             title: "Data Finder",
             content: "Welcome to the Data Finder. A tool for searching, accessing and combining data across studies available on ImmuneSpace.",
             placement: "top",

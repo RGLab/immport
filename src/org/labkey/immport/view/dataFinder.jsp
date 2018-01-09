@@ -344,7 +344,7 @@ new dataFinder(studyData, loaded_studies, <%=me.getGroupId()%>, "dataFinderApp")
 
 
 LABKEY.help.Tour.register({
-    id: "immport.dataFinder",
+    id: "immport-dataFinder-tour",
     steps: [
         {
             target: $('[name=webpart]')[0],
@@ -387,7 +387,7 @@ LABKEY.help.Tour.register({
 
 function start_tutorial()
 {
-    LABKEY.help.Tour.show("immport.dataFinder");
+    LABKEY.help.Tour.show("immport-dataFinder-tour");
     return false;
 }
 

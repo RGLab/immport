@@ -1229,7 +1229,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                 Ext4.get(dataFinderAppId).removeCls("x-hidden");
                 loadMask.hide();
                 loadMask = null;
-                LABKEY.help.Tour.autoShow('immport.dataFinder');
+                LABKEY.help.Tour.autoShow('immport-dataFinder-tour');
             }
 
             // I don't like this, but it seems to keep layout from breaking

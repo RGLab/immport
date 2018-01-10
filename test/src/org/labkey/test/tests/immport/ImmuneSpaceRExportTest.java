@@ -6,7 +6,6 @@ import org.junit.experimental.categories.Category;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.TestFileUtils;
-import org.labkey.test.TestTimeoutException;
 import org.labkey.test.categories.Git;
 import org.labkey.test.util.DataRegionExportHelper;
 import org.labkey.test.util.DataRegionTable;
@@ -20,8 +19,6 @@ import static org.junit.Assert.assertTrue;
 @Category({Git.class})
 public class ImmuneSpaceRExportTest extends BaseWebDriverTest implements PostgresOnlyTest
 {
-    {setIsBootstrapWhitelisted(true);}
-
     private final String IMMPORT_STUDY = "Study 123";
     private final String NON_IMMPORT_STUDY = "Study 456";
     private final String DATASET_NAME = "ELISA";
@@ -46,6 +43,7 @@ public class ImmuneSpaceRExportTest extends BaseWebDriverTest implements Postgre
     {
         _containerHelper.createProject(getProjectName(), "Study");
         importFolderFromZip(TestFileUtils.getSampleData("HIPC/ImmuneSpaceRExport.folder.zip"), false, 1);
+        _containerHelper.setFolderType("Dataspace");
     }
 
     @Test
@@ -70,7 +68,7 @@ public class ImmuneSpaceRExportTest extends BaseWebDriverTest implements Postgre
         goToProjectHome();
         clickFolder(IMMPORT_STUDY);
         clickAndWait(Locator.linkContainingText(DATASET_NAME));
-        verifyRExportScript(true, IMMPORT_STUDY, "Dataset", "study", DATASET_NAME.toLowerCase(), DATASET_COLUMN_NAME, "study");
+        verifyRExportScript(false, IMMPORT_STUDY, "Dataset", "study", DATASET_NAME.toLowerCase(), DATASET_COLUMN_NAME, "study");
     }
 
     @Test
@@ -132,7 +130,7 @@ public class ImmuneSpaceRExportTest extends BaseWebDriverTest implements Postgre
         rScript = rScript.replaceAll("&lt;", "<");
 
         assertTrue("Script is missing ImmuneSpaceR library", rScript.contains("library(ImmuneSpaceR)"));
-        assertTrue("Script is missing CreateConnection call", rScript.contains(noun + " <- CreateConnection(\"" + connContainerName + "\")"));
+        assertTrue("Script is missing CreateConnection call", rScript.contains(noun + " <- CreateConnection(\"\")"));
         if (filterColName != null)
         {
             assertTrue("Script is missing Rlabkey library", rScript.contains("library(Rlabkey)"));

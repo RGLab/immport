@@ -503,7 +503,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
 
         $scope.groupsAvailable = function ()
         {
-            return $scope.groupList.length > 0;
+            return $scope.groupList && $scope.groupList.length > 0;
         };
 
         $scope.saveParticipantIdGroupInSession = function (participantIds)
@@ -1229,7 +1229,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                 Ext4.get(dataFinderAppId).removeCls("x-hidden");
                 loadMask.hide();
                 loadMask = null;
-                LABKEY.help.Tour.autoShow('immport.dataFinder');
+                LABKEY.help.Tour.autoShow('immport-dataFinder-tour');
             }
 
             // I don't like this, but it seems to keep layout from breaking

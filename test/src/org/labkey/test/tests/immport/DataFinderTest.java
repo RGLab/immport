@@ -17,7 +17,6 @@
 package org.labkey.test.tests.immport;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.SystemUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpDelete;
@@ -32,6 +31,7 @@ import org.labkey.remoteapi.CommandException;
 import org.labkey.remoteapi.Connection;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
+import org.labkey.test.Locators;
 import org.labkey.test.TestFileUtils;
 import org.labkey.test.TestTimeoutException;
 import org.labkey.test.WebTestHelper;
@@ -40,6 +40,7 @@ import org.labkey.test.components.ParticipantListWebPart;
 import org.labkey.test.components.core.NotificationPanelItem;
 import org.labkey.test.components.core.UserNotificationsPanel;
 import org.labkey.test.components.dumbster.EmailRecordTable;
+import org.labkey.test.components.ext4.Checkbox;
 import org.labkey.test.components.ext4.Window;
 import org.labkey.test.components.immport.StudySummaryWindow;
 import org.labkey.test.components.study.StudyOverviewWebPart;
@@ -97,7 +98,7 @@ import static org.labkey.test.util.PermissionsHelper.MemberType;
 @Category({Git.class})
 public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTest, ReadOnlyTest
 {
-    private static File immPortArchive = TestFileUtils.getSampleData("HIPC/ANIMAL_STUDIES-DR20.zip");
+    private static File immPortArchive = TestFileUtils.getSampleData("HIPC/ANIMAL_STUDIES-DR23.zip");
     private static File TEMPLATE_ARCHIVE = TestFileUtils.getSampleData("HIPC/SDY_template.zip");
     private static String[] ANIMAL_STUDIES = {"SDY99", "SDY139", "SDY147", "SDY208", "SDY215", "SDY217"};
     private static String[] STUDY_SUBFOLDERS = {"SDY139", "SDY147", "SDY208", "SDY217"};
@@ -109,7 +110,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
     @Override
     protected String getProjectName()
     {
-        return "ImmuneSpace Test Data Finder";
+        return "ImmuneSpace Test Data Finder DR23";
     }
 
     @Override
@@ -129,7 +130,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
     @BeforeClass
     public static void initTest()
     {
-        if (WebTestHelper.getDatabaseType().compareTo(WebTestHelper.DatabaseType.PostgreSQL) != 0)
+        if (WebTestHelper.getDatabaseType() != WebTestHelper.DatabaseType.PostgreSQL)
         {
             Assert.fail("Unsupported DB. This must be run against a Postgres DB.");
         }
@@ -429,7 +430,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
             String studyAccession = studyCard.getAccession();
             foundAccessions.add(studyAccession);
             studyCard.clickGoToStudy();
-            WebElement title = Locator.css(".labkey-folder-title > a").waitForElement(shortWait());
+            WebElement title = Locators.bodyTitle().waitForElement(shortWait());
             assertEquals("Study card " + studyAccession + " linked to wrong study", studyAccession, title.getText());
             goBack();
         }
@@ -512,17 +513,17 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         demData.openFilterDialog("gender");
         assertEquals("Demographics data set doesn't have same number of genders as filtered study finder",
                 Locator.css(".labkey-filter-dialog .labkey-link").findElements(getDriver()).size(), numGender);
-        clickButton("CANCEL", 0);
+        clickButton("Cancel", 0);
 
         demData.openFilterDialog("race");
         assertEquals("Demographics dataset doesn't have same number of races as filtered study finder",
                 Locator.css(".labkey-filter-dialog .labkey-link").findElements(getDriver()).size(), numRace);
-        clickButton("CANCEL", 0);
+        clickButton("Cancel", 0);
 
         demData.openFilterDialog("species");
         assertEquals("Demographics dataset doesn't have same number of species as filtered study finder",
                 Locator.css(".labkey-filter-dialog .labkey-link").findElements(getDriver()).size(), numSpecies);
-        clickButton("CANCEL", 0);
+        clickButton("Cancel", 0);
 
         assertEquals("Demographics dataset doesn't have same number of participants as filtered study finder",
                 demData.getDataRowCount(), finderSummaryCounts.get(Dimension.SUBJECTS).intValue());
@@ -963,7 +964,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
 
         log("Find the notification that is for the study group: " + groupsSent.get(SENT_CLICK_IN_PANEL).groupName);
 
-        final NotificationPanelItem notificationPanelItem = notificationsPanel.findNotificationInList(groupsSent.get(SENT_CLICK_IN_PANEL).groupName, UserNotificationsPanel.NotificationTypes.STUDY);
+        final NotificationPanelItem notificationPanelItem = notificationsPanel.findNotificationInList(groupsSent.get(SENT_CLICK_IN_PANEL).groupName, "Study");
 
         assertTrue("Did not find a notice with the group name '" + groupsSent.get(SENT_CLICK_IN_PANEL).groupName + "' in it.", notificationPanelItem != null);
         assertTrue("Item in panel did not have the expected created by.", notificationPanelItem.getCreatedBy().contains("Today -"));
@@ -993,7 +994,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
 
         notificationsPanel = UserNotificationsPanel.clickInbox(this);
 
-        NotificationPanelItem notificationPanelItem2 = notificationsPanel.findNotificationInList(groupsSent.get(SENT_MARK_AS_READ).groupName, UserNotificationsPanel.NotificationTypes.STUDY);
+        NotificationPanelItem notificationPanelItem2 = notificationsPanel.findNotificationInList(groupsSent.get(SENT_MARK_AS_READ).groupName, "Study");
 
         assertTrue("Did not find a notice with the group name '" + groupsSent.get(SENT_MARK_AS_READ).groupName + "' in it.", notificationPanelItem2 != null);
 
@@ -1292,24 +1293,25 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
     public void testExportDataWithFiles() throws Exception
     {
         PortalHelper portalHelper = new PortalHelper(this);
-        List<String> controlFileList = Arrays.asList("Fig7_Compensation Controls_Blue E 530,2f,30 Stained Control.fcs",
-                "Fig7_Compensation Controls_Violet B 450,2f,50 Stained Control.fcs",
-                "Fig7_Compensation Controls_Unstained Control.fcs",
-                "Fig7_Compensation Controls_Red C 670,2f,14 Stained Control.fcs",
-                "Fig7_Compensation Controls_Red A 780,2f,60 Stained Control.fcs",
-                "Fig7_Compensation Controls_Violet A 550,5c,50 Stained Control.fcs",
-                "Fig7_Compensation Controls_Blue A 780,2f,60 Stained Control.fcs",
-                "Fig7_Compensation Controls_Blue B 670LP Stained Control.fcs",
-                "Fig7_Compensation Controls_Blue D 585,2f,42 Stained Control.fcs",
-                "Compensation Controls_Blue A 780,2f,60 Stained Control.fcs",
-                "Compensation Controls_Unstained Control.fcs",
-                "Compensation Controls_Violet A 550,5c,50 Stained Control.fcs",
-                "Compensation Controls_Blue D 585,2f,42 Stained Control.fcs",
-                "Compensation Controls_Red C 670,2f,14 Stained Control.fcs",
-                "Compensation Controls_Blue B 670LP Stained Control.fcs",
-                "Compensation Controls_Red A 780,2f,60 Stained Control.fcs",
-                "Compensation Controls_Violet B 450,2f,50 Stained Control.fcs",
-                "Compensation Controls_Blue E 530,2f,30 Stained Control.fcs");
+        List<String> controlFileList = Arrays.asList(
+                "Fig7_Compensation Controls_Blue E 530,2f,30 Stained Control.297194.fcs",
+                "Fig7_Compensation Controls_Violet B 450,2f,50 Stained Control.297200.fcs",
+                "Fig7_Compensation Controls_Unstained Control.297193.fcs",
+                "Fig7_Compensation Controls_Red C 670,2f,14 Stained Control.297198.fcs",
+                "Fig7_Compensation Controls_Red A 780,2f,60 Stained Control.297199.fcs",
+                "Fig7_Compensation Controls_Violet A 550,5c,50 Stained Control.297201.fcs",
+                "Fig7_Compensation Controls_Blue A 780,2f,60 Stained Control.297197.fcs",
+                "Fig7_Compensation Controls_Blue B 670LP Stained Control.297196.fcs",
+                "Fig7_Compensation Controls_Blue D 585,2f,42 Stained Control.297195.fcs",
+                "Compensation Controls_Blue A 780,2f,60 Stained Control.297084.fcs",
+                "Compensation Controls_Unstained Control.297089.fcs",
+                "Compensation Controls_Violet A 550,5c,50 Stained Control.297088.fcs",
+                "Compensation Controls_Blue D 585,2f,42 Stained Control.297082.fcs",
+                "Compensation Controls_Red C 670,2f,14 Stained Control.297085.fcs",
+                "Compensation Controls_Blue B 670LP Stained Control.297083.fcs",
+                "Compensation Controls_Red A 780,2f,60 Stained Control.297086.fcs",
+                "Compensation Controls_Violet B 450,2f,50 Stained Control.297087.fcs",
+                "Compensation Controls_Blue E 530,2f,30 Stained Control.297081.fcs");
         File fl;
         boolean createdFolder;
 
@@ -1381,12 +1383,12 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         waitForElements(Locator.xpath("//td[@role='gridcell']//div").withText("File"), 2, 30000);
 
         log("Limit the export to only the fcs control files.");
-        List<WebElement> chkBoxes = Locator.css("div.x4-grid-cell-inner-checkcolumn").findElements(getDriver());
-        chkBoxes.get(chkBoxes.size()-1).click();  // Yes this is bad, but for now the checkbox we are interested in will be at the end of the list.
+        String controlFilesDatasetId = "5019";
+        Checkbox controlFilesChecker = Checkbox.Ext4Checkbox().locatedBy(Locator.css("tr[data-recordid='" + controlFilesDatasetId + "f'] div.x4-grid-cell-inner-checkcolumn img")).find(getDriver());
+        controlFilesChecker.check();
+        Locator.id("summaryData").childTag("div").withText("Files number: 45").waitForElement(getDriver(), WAIT_FOR_JAVASCRIPT);
 
-        log("Download the zip file.");
-        File download = clickAndWaitForDownload(Locator.xpath("//*[@id='downloadBtn']"));
-        log("download file name: " + download.getName());
+        File download = clickAndWaitForDownload(Locator.id("downloadBtn"));
 
         log("Look at zip file and make sure the expected files are there.");
         Set<String> filesInZip = new HashSet<>();
@@ -1402,17 +1404,15 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
             }
         }
 
-        String folder;
-        if(SystemUtils.IS_OS_WINDOWS)
-            folder = "fcs_control_files\\";
-        else
-            folder = "fcs_control_files/";
+        String folder = "fcs_control_files" + File.separator;
+        assertTrue("Did not find any individual control files in zip export: " + download.getName(),
+                filesInZip.stream().anyMatch(file -> file.startsWith(folder)));
 
         for (String controlFile : controlFileList)
         {
-            assertTrue("Did not find file: " + controlFile, filesInZip.contains(folder + controlFile));
+            assertTrue("Did not find file '" + controlFile + "' in zip export: " + download.getName(),
+                    filesInZip.contains(folder + controlFile));
         }
-
     }
 
     @LogMethod(quiet = true)

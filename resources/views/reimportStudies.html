@@ -24,8 +24,13 @@ LABKEY.Utils.onReady(function()
         var studies = [];
         data.rows.forEach(function(row){
             var study = row.Label;
-            if (study.substring(0,3) == 'SDY')
+            if (study != null && study.substring(0,3) == 'SDY')
                 studies.push(study);
+        });
+        studies.sort(function(a, b){
+            a = a.replace('SDY', '');
+            b = b.replace('SDY', '');
+            return Number(a) - Number(b);
         });
         renderPage(studies);
     }
@@ -48,7 +53,7 @@ function renderPage(studies)
     studies.forEach(function(study){
             html.push('<input class="study_accession_checkbox" type=checkbox value="' + h(study) + '">' + h(study) + '<br>');
     });
-    html.push('<input type=submit value="Import Studies" onclick="return FORM_onSubmit();">');
+    html.push('<input id="buttonSubmit" type=submit value="Import Studies" onclick="return FORM_onSubmit();">');
 //    html.push("</form>");
     $('#reimportDiv').html(html.join(''));
 }
@@ -63,7 +68,10 @@ function FORM_onSubmit()
           studies.push(el.value);
     });
     if (studies.length > 0)
+    {
+        $("input").prop('disabled', true);
         importStudies(studies);
+    }
     return false;
 }
 

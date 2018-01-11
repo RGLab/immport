@@ -511,6 +511,7 @@ public class DataFinderPage extends LabKeyPage
             {
                 String name = elements.memberName.findElement(member).getText();
                 String countText = elements.memberCount.findElement(member).getText();
+                log("getMemberCounts: name: " + name + " countText: " + countText);
                 Integer count = null==countText ? null : Integer.parseInt(countText);
                 countMap.put(name, count);
             }

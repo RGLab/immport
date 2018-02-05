@@ -347,11 +347,12 @@ LABKEY.help.Tour.register({
     id: "immport-dataFinder-tour",
     steps: [
         {
-            target: $('a[name="Data Finder"]')[0],
+            target: $('[name=webpart]')[0],
             title: "Data Finder",
             content: "Welcome to the Data Finder. A tool for searching, accessing and combining data across studies available on ImmuneSpace.",
-            placement: "right",
-            yOffset: -20,
+            placement: "top",
+            yOffset: 40,
+            xOffset: 120,
             showNextButton: true
         },{
             target: "studypanel",

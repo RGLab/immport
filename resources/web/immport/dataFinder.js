@@ -780,6 +780,8 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
 
         $scope.hasFilters = function ()
         {
+            if ($scope.searchTerms)
+                return true;
             for (var d in dataspace.dimensions)
             {
                 if (!dataspace.dimensions.hasOwnProperty(d))

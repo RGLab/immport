@@ -135,7 +135,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                 $scope.closeMenu($event);
 
             var groupLabel = "";
-            if (option == "update") {
+            if (option === "update") {
                 if ($scope.currentGroup.id == null)
                     return;
 
@@ -239,7 +239,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
             $scope.clearAllFilters(false);
             $scope._applyGroupFilters(group.filters);
 
-            $scope.updateCountsAsync(true);
+            $scope.doSearchTermsChanged();
             $scope.saveFilterState();
             $scope.updateCurrentGroup(group);
             $scope.currentGroupHasChanges = false;
@@ -255,7 +255,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                 {
                     var filter = filters[f];
 
-                    if (filter.name == "Search")
+                    if (filter.name === "Search")
                     {
                         $scope.$emit("searchTermsAppliedFromFilter", filter.members);
                     }
@@ -431,7 +431,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                 success : function(res)
                 {
                     var json = Ext4.decode(res.responseText);
-                    if (json.success && json.groups.length == 1)
+                    if (json.success && json.groups.length === 1)
                     {
                         // stash the loaded group label so we can use it in Save As
                         $scope.loadGroupLabel = json.groups[0].label;
@@ -443,7 +443,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
 
                         $scope.clearAllFilters(false);
                         $scope._applyGroupFilters(groupFilters);
-                        $scope.updateCountsAsync();
+                        $scope.doSearchTermsChanged();
                         $scope.saveFilterState();
                     }
                     else
@@ -863,7 +863,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
 
             if (!member)
             {
-                if (0 == filterMembers.length)  // no change
+                if (0 === filterMembers.length)  // no change
                     return;
                 $scope._clearFilter(dimName);
             }
@@ -878,10 +878,10 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                 var index = -1;
                 for (m = 0; m < filterMembers.length; m++)
                 {
-                    if (member.uniqueName == filterMembers[m].uniqueName)
+                    if (member.uniqueName === filterMembers[m].uniqueName)
                         index = m;
                 }
-                if (index == -1) // unselected -> selected
+                if (index === -1) // unselected -> selected
                 {
                     filterMembers.push(member);
                     member.selected = true;
@@ -914,21 +914,12 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                 $scope._clearFilter(d);
             }
 
+            $scope.searchMessage = "";
+            $scope.searchTerms = "";
+            $scope.searchStudyFilter = null; // force requery
+
             if (updateCounts)
-            {
-                if ($scope.searchTerms)
-                {
-                    $scope.searchTerms = null;
-                    $scope.onSearchTermsChanged();
-                }
-                else {
-                    $scope.updateCountsAsync();
-                }
-            }
-            else
-            {
-                $scope.searchTerms = null;
-            }
+                $scope.onSearchTermsChanged();
 
             $scope.$broadcast("filterSelectionCleared", false);
         };
@@ -946,7 +937,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
 
         $scope.removeFilterMember = function (dim, member)
         {
-            if (!dim || 0 == dim.filters.length) //  0 == dataspace.filters[dim.name].length)
+            if (!dim || 0 === dim.filters.length) //  0 == dataspace.filters[dim.name].length)
                 return;
             var filterMembers = dim.filters; // dataspace.filters[dim.name];
             var index = -1;
@@ -1290,7 +1281,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
             if (changed || oldSearchStudyFilter.length===0) // check len==0 because this might be the first call to updateCountsAsync
             {
                 $scope.searchStudyFilter = filterMembers;
-                $scope.updateCountsAsync();
+                    $scope.updateCountsAsync();
             }
         };
 
@@ -1309,7 +1300,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                 $scope.saveFilterState();
                 $scope.clearSearchStudyFilter();
             }
-        }   ;
+        };
 
         $scope.doSearchTermsChanged_promise = null;
 

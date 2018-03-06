@@ -36,6 +36,13 @@ public class DataFinderPage extends LabKeyPage
         super(test);
     }
 
+    private Integer parseInt(String s)
+    {
+        if (null == s)
+            return null;
+        return Integer.parseInt(s.trim().replace(",",""));
+    }
+
     @Override
     protected void waitForPage()
     {
@@ -150,7 +157,7 @@ public class DataFinderPage extends LabKeyPage
         {
             String[] parts = value.split("\n");
             Dimension dimension = Dimension.fromString(parts[0].toLowerCase());
-            Integer count = Integer.parseInt(parts[1].trim());
+            Integer count = parseInt(parts[1]);
             countMap.put(dimension, count);
         }
         return countMap;
@@ -683,7 +690,7 @@ public class DataFinderPage extends LabKeyPage
 
         public Integer getCount()
         {
-            return Integer.parseInt(elements.memberCount.findElement(memberElement).getText());
+            return parseInt(elements.memberCount.findElement(memberElement).getText());
         }
 
         private class Elements

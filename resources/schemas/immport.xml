@@ -457,6 +457,13 @@
             <column columnName="reagent_accession"/>
         </columns>
     </table>
+    <table tableName="lk_disease_stage" tableDbType="TABLE">
+        <columns>
+            <column columnName="name"/>
+            <column columnName="description"/>
+            <column columnName="link"/>
+        </columns>
+    </table>
     <table tableName="planned_visit" tableDbType="TABLE">
         <columns>
             <column columnName="planned_visit_accession"/>
@@ -566,6 +573,21 @@
             <column columnName="link"/>
         </columns>
     </table>
+    <table tableName="lk_subject_location" tableDbType="TABLE">
+        <columns>
+            <column columnName="name"/>
+            <column columnName="description"/>
+            <column columnName="link"/>
+        </columns>
+    </table>
+    <table tableName="lk_disease" tableDbType="TABLE">
+        <columns>
+            <column columnName="name"/>
+            <column columnName="disease_ontology_id"/>
+            <column columnName="description"/>
+            <column columnName="link"/>
+        </columns>
+    </table>
     <table tableName="reference_range" tableDbType="TABLE">
         <columns>
             <column columnName="reference_range_accession"/>
@@ -609,6 +631,23 @@
             <column columnName="subject_accession"/>
             <column columnName="workspace_id"/>
             <column columnName="study_day"/>
+        </columns>
+    </table>
+    <table tableName="immune_exposure" tableDbType="TABLE">
+        <columns>
+            <column columnName="exposure_accession"/>
+            <column columnName="arm_accession"/>
+            <column columnName="disease_ontology_id"/>
+            <column columnName="disease_preferred"/>
+            <column columnName="disease_reported"/>
+            <column columnName="disease_stage_preferred"/>
+            <column columnName="disease_stage_reported"/>
+            <column columnName="exposure_material_id"/>
+            <column columnName="exposure_material_preferred"/>
+            <column columnName="exposure_material_reported"/>
+            <column columnName="exposure_process_preferred"/>
+            <column columnName="exposure_process_reported"/>
+            <column columnName="subject_accession"/>
         </columns>
     </table>
     <table tableName="lk_protocol_type" tableDbType="TABLE">
@@ -659,6 +698,31 @@
             <column columnName="visible"/>
         </columns>
     </table>
+    <table tableName="rna_seq_result" tableDbType="TABLE">
+        <columns>
+            <column columnName="result_id"/>
+            <column columnName="arm_accession"/>
+            <column columnName="biosample_accession"/>
+            <column columnName="comments"/>
+            <column columnName="experiment_accession"/>
+            <column columnName="expsample_accession"/>
+            <column columnName="reference_repository_name"/>
+            <column columnName="reference_transcript_id"/>
+            <column columnName="repository_accession"/>
+            <column columnName="repository_name"/>
+            <column columnName="result_unit_preferred"/>
+            <column columnName="result_unit_reported"/>
+            <column columnName="study_accession"/>
+            <column columnName="study_time_collected"/>
+            <column columnName="study_time_collected_unit"/>
+            <column columnName="subject_accession"/>
+            <column columnName="transcript_type_preferred"/>
+            <column columnName="transcript_type_reported"/>
+            <column columnName="value_preferred"/>
+            <column columnName="value_reported"/>
+            <column columnName="workspace_id"/>
+        </columns>
+    </table>
     <table tableName="lk_sample_type" tableDbType="TABLE">
         <columns>
             <column columnName="name"/>
@@ -667,6 +731,13 @@
         </columns>
     </table>
     <table tableName="lk_study_file_type" tableDbType="TABLE">
+        <columns>
+            <column columnName="name"/>
+            <column columnName="description"/>
+            <column columnName="link"/>
+        </columns>
+    </table>
+    <table tableName="lk_transcript_type" tableDbType="TABLE">
         <columns>
             <column columnName="name"/>
             <column columnName="description"/>
@@ -706,6 +777,23 @@
             <column columnName="original_file_name"/>
             <column columnName="type"/>
             <column columnName="workspace_id"/>
+        </columns>
+    </table>
+    <table tableName="v_results_summary" tableDbType="VIEW">
+        <columns>
+            <column columnName="assay"/>
+            <column columnName="name"/>
+            <column columnName="label"/>
+            <column columnName="study_accession"/>
+        </columns>
+    </table>
+    <table tableName="dimstudyassay" tableDbType="TABLE">
+        <columns>
+            <column columnName="study"/>
+            <column columnName="assay"/>
+            <column columnName="name"/>
+            <column columnName="label"/>
+            <column columnName="categorylabel"/>
         </columns>
     </table>
     <table tableName="contract_grant_2_study" tableDbType="TABLE">
@@ -929,6 +1017,13 @@
             <column columnName="repository_name"/>
         </columns>
     </table>
+    <table tableName="lk_exposure_process" tableDbType="TABLE">
+        <columns>
+            <column columnName="name"/>
+            <column columnName="description"/>
+            <column columnName="link"/>
+        </columns>
+    </table>
     <table tableName="elisa_result" tableDbType="TABLE">
         <columns>
             <column columnName="result_id"/>
@@ -1087,6 +1182,7 @@
             <column columnName="status"/>
             <column columnName="study_accession"/>
             <column columnName="workspace_id"/>
+            <column columnName="result_schema"/>
         </columns>
     </table>
     <table tableName="reported_early_termination" tableDbType="TABLE">
@@ -1182,6 +1278,14 @@
             <column columnName="link"/>
         </columns>
     </table>
+    <table tableName="lk_exposure_material" tableDbType="TABLE">
+        <columns>
+            <column columnName="name"/>
+            <column columnName="exposure_material_id"/>
+            <column columnName="description"/>
+            <column columnName="link"/>
+        </columns>
+    </table>
     <table tableName="lk_organization" tableDbType="TABLE">
         <columns>
             <column columnName="name"/>
@@ -1213,6 +1317,8 @@
             <column columnName="gene_id"/>
             <column columnName="gene_name"/>
             <column columnName="gene_symbol"/>
+            <column columnName="gene_symbol_preferred"/>
+            <column columnName="gene_symbol_reported"/>
             <column columnName="other_gene_accession"/>
             <column columnName="study_accession"/>
             <column columnName="study_time_collected"/>
@@ -1336,22 +1442,4 @@
             <column columnName="organization"/>
         </columns>
     </table>
-    <table tableName="dimstudyassay" tableDbType="TABLE">
-        <columns>
-            <column columnName="study"/>
-            <column columnName="assay"/>
-            <column columnName="name"/>
-            <column columnName="label"/>
-            <column columnName="categorylabel"/>
-        </columns>
-    </table>
-    <table tableName="v_results_summary" tableDbType="VIEW">
-        <columns>
-            <column columnName="assay"/>
-            <column columnName="name"/>
-            <column columnName="label"/>
-            <column columnName="study_accession"/>
-        </columns>
-    </table>
-
 </tables>

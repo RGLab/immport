@@ -351,6 +351,8 @@ LABKEY.help.Tour.register({
             title: "Data Finder",
             content: "Welcome to the Data Finder. A tool for searching, accessing and combining data across studies available on ImmuneSpace.",
             placement: "top",
+            yOffset: 40,
+            xOffset: 120,
             showNextButton: true
         },{
             target: "studypanel",

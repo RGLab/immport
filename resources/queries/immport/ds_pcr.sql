@@ -8,6 +8,8 @@ PARAMETERS($STUDY VARCHAR DEFAULT NULL)
 SELECT
   subject_accession || '.' || SUBSTRING(study_accession,4) as participantid,
   COALESCE(study_time_collected,9999.0000) as sequencenum,
+
+  result_id,
   gene_id AS entrez_gene_id,
   result.arm_accession,
   result.biosample_accession,

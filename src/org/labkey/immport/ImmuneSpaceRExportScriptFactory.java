@@ -34,11 +34,11 @@ public class ImmuneSpaceRExportScriptFactory extends RExportScriptFactory
             // the ImmuneSpaceR export script only applies to containers with the ImmPort module enabled and QueryViews that are study datasets
             Container container = getQueryView().getContainer();
             Study study = container != null ? StudyService.get().getStudy(container) : null;
-            boolean isDataspaceProject = container != null && StudyService.DATASPACE_FOLDERTYPE_NAME.equalsIgnoreCase(container.getFolderType().getName());
+            boolean isStudyContainer = container != null && ("Study".equalsIgnoreCase(container.getFolderType().getName()) || container.isDataspace()); //Issue 33601
             boolean isImmPortModuleEnabled = container != null && container.getActiveModules().contains(ModuleLoader.getInstance().getModule(ImmPortModule.class));
             boolean isStudyDataset = study != null && "study".equals(getSchemaName()) && study.getDatasetByName(getQueryName()) != null;
             boolean isSupportedView = StringUtils.isEmpty(getViewName()) || "full".equalsIgnoreCase(getViewName()); //Issue 29755
-            if (!isDataspaceProject || !isImmPortModuleEnabled || !isStudyDataset || !isSupportedView)
+            if (!isStudyContainer || !isImmPortModuleEnabled || !isStudyDataset || !isSupportedView)
                 return super.getScriptExportText();
 
             return StringUtils.join(getScriptCommands(),"\n");

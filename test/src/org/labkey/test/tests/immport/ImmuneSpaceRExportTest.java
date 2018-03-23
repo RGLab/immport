@@ -51,7 +51,7 @@ public class ImmuneSpaceRExportTest extends BaseWebDriverTest implements Postgre
     {
         goToProjectHome();
         clickAndWait(Locator.linkContainingText(DATASET_NAME));
-        verifyRExportScript(true, getProjectName(), "Dataset", "study", DATASET_NAME.toLowerCase(), DATASET_COLUMN_NAME, "project");
+        verifyRExportScript(true, "", "Dataset", "study", DATASET_NAME.toLowerCase(), DATASET_COLUMN_NAME, "project");
     }
 
     @Test
@@ -59,7 +59,7 @@ public class ImmuneSpaceRExportTest extends BaseWebDriverTest implements Postgre
     {
         goToProjectHome();
         clickAndWait(Locator.linkContainingText(LIST_NAME));
-        verifyRExportScript(false, getProjectName(), "query", "lists", LIST_NAME, LIST_COLUMN_NAME, null);
+        verifyRExportScript(false, "", "query", "lists", LIST_NAME, LIST_COLUMN_NAME, null);
     }
 
     @Test
@@ -68,7 +68,7 @@ public class ImmuneSpaceRExportTest extends BaseWebDriverTest implements Postgre
         goToProjectHome();
         clickFolder(IMMPORT_STUDY);
         clickAndWait(Locator.linkContainingText(DATASET_NAME));
-        verifyRExportScript(false, IMMPORT_STUDY, "Dataset", "study", DATASET_NAME.toLowerCase(), DATASET_COLUMN_NAME, "study");
+        verifyRExportScript(true, IMMPORT_STUDY, "Dataset", "study", DATASET_NAME.toLowerCase(), DATASET_COLUMN_NAME, "study");
     }
 
     @Test
@@ -130,7 +130,7 @@ public class ImmuneSpaceRExportTest extends BaseWebDriverTest implements Postgre
         rScript = rScript.replaceAll("&lt;", "<");
 
         assertTrue("Script is missing ImmuneSpaceR library", rScript.contains("library(ImmuneSpaceR)"));
-        assertTrue("Script is missing CreateConnection call", rScript.contains(noun + " <- CreateConnection(\"\")"));
+        assertTrue("Script is missing CreateConnection call", rScript.contains(noun + " <- CreateConnection(\"" + connContainerName + "\")"));
         if (filterColName != null)
         {
             assertTrue("Script is missing Rlabkey library", rScript.contains("library(Rlabkey)"));

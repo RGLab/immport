@@ -18,7 +18,6 @@ package org.labkey.test.tests.immport;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
-import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.junit.Assert;
@@ -146,7 +145,12 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
     @Override
     public boolean needsSetup()
     {
-        return HttpStatus.SC_NOT_FOUND == WebTestHelper.getHttpResponse(WebTestHelper.buildURL("project", getProjectName(), "begin")).getResponseCode();
+        for (String subfolder : STUDY_SUBFOLDERS)
+        {
+            if (!_studyHelper.doesStudyExist(getProjectName() + "/" + subfolder))
+                return true;
+        }
+        return false;
     }
 
     private void setupProject()

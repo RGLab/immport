@@ -845,7 +845,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         recipients.add(USER1);
         recipients.add(USER3);
         String errorMessage = sendStudyGroup(recipients, groupName, true);
-        Assert.assertTrue("Error message not as expected.", errorMessage.equals("User does not have permissions to this container: " + USER3));
+        Assert.assertTrue("Error message not as expected.", errorMessage.equals("User does not have permissions to this folder: " + USER3));
 
         log("Error message was as expected. Cancel out of this form.");
         clickButton("Cancel");

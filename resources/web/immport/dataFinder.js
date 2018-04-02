@@ -169,13 +169,11 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                                 }
                             });
 
+                            $scope.currentGroupHasChanges = false;
+                            console_log("currentGroupHasChanges = false");
                             if (goToSendAfterSave)
                                 $scope.goToSend($scope.currentGroup.id);
-                            else
-                                $scope.currentGroupHasChanges = false;
                         }
-
-
                     },
                     failure : function(response, options)
                     {
@@ -219,10 +217,10 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                                 $scope.updateCurrentGroup(group);
                                 $scope.updateSaveOptions();
 
+                                $scope.currentGroupHasChanges = false;
+                                console_log("currentGroupHasChanges = false");
                                 if (goToSend)
                                     $scope.goToSend(group.id);
-                                else
-                                    $scope.currentGroupHasChanges = false;
                             }
                         }
                     });
@@ -243,6 +241,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
             $scope.saveFilterState();
             $scope.updateCurrentGroup(group);
             $scope.currentGroupHasChanges = false;
+            console_log("currentGroupHasChanges = false (applySubjectGroupFilter)");
 
             $scope.clearLoadGroupInfo();
         };
@@ -445,6 +444,8 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                         $scope._applyGroupFilters(groupFilters);
                         $scope.doSearchTermsChanged();
                         $scope.saveFilterState();
+                        $scope.currentGroupHasChanges = false;
+                        console_log("currentGroupHasChanges = false (loadParticipantGroupFiltersFromId)");
                     }
                     else
                     {
@@ -560,10 +561,6 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
             }
         });
 
-        $scope.$on("updateCountsAsync", function() {
-            $scope.currentGroupHasChanges = true;
-        });
-
         $scope.$on("clearAllClicked", function() {
             $scope.clearLoadGroupInfo();
         });
@@ -669,6 +666,8 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
         $scope.dimType = dataspace.dimensions.Type;
         $scope.dimCategory = dataspace.dimensions.Category;
 
+        $scope.currentGroupHasChanges = true;
+        console_log("currentGroupHasChanges = true (dataFinderApp.init)");
 
 
         $scope.cube = LABKEY.query.olap.CubeManager.getCube({
@@ -775,7 +774,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
 
         $scope.loadedStudiesShown = function ()
         {
-            return $scope.studySubset != 'UnloadedImmPort';
+            return $scope.studySubset !== 'UnloadedImmPort';
         };
 
         $scope.hasFilters = function ()
@@ -795,7 +794,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
 
         $scope.dimensionHasFilter = function (dim)
         {
-            return (dim.filters && dim.filters.length) ? true : false;
+            return !!(dim.filters && dim.filters.length);
         };
 
         $scope.toggleFilterChoiceDisplay = function()
@@ -822,26 +821,6 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
             };
             if ($event.stopPropagation)
                 $event.stopPropagation();
-        };
-
-        $scope.setFilterType = function (dimName, type)
-        {
-            $scope.filterChoice.show = false;
-            var dim = dataspace.dimensions[dimName];
-            if (!dim)
-                return;
-            if (dim.filterType === type)
-                return;
-            for (var f = 0; f < dim.filterOptions.length; f++)
-            {
-                if (dim.filterOptions[f].type == type)
-                {
-                    dim.filterType = type;
-                    dim.filterCaption = dim.filterOptions[f].caption;
-                    $scope.updateCountsAsync();
-                    return;
-                }
-            }
         };
 
         $scope.selectMember = function (dimName, member, $event)
@@ -895,6 +874,8 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
             }
 
             $scope.updateCountsAsync();
+            $scope.currentGroupHasChanges = true;
+            console_log("currentGroupHasChanges = true (_selectMember)");
             if ($event.stopPropagation)
                 $event.stopPropagation();
         };
@@ -951,6 +932,8 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
             filterMembers[index].selected = false;
             filterMembers.splice(index, 1);
             $scope.updateCountsAsync();
+            $scope.currentGroupHasChanges = true;
+            console_log("currentGroupHasChanges = true (removeFilterMember)");
         };
 
 
@@ -1281,7 +1264,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
             if (changed || oldSearchStudyFilter.length===0) // check len==0 because this might be the first call to updateCountsAsync
             {
                 $scope.searchStudyFilter = filterMembers;
-                    $scope.updateCountsAsync();
+                $scope.updateCountsAsync();
             }
         };
 
@@ -1396,6 +1379,8 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                 $scope.saveFilterState();
                 $scope.doSearchTermsChanged();
             }, 500);
+            $scope.currentGroupHasChanges = true;
+            console_log("currentGroupHasChanges = true (onSearchTermsChanged)");
         };
 
         // save just the filtered uniqueNames for each dimension into local storage
@@ -1683,4 +1668,9 @@ if (!String.prototype.includes) {
     String.prototype.includes = function() {'use strict';
         return String.prototype.indexOf.apply(this, arguments) !== -1;
     };
+}
+
+function console_log(msg)
+{
+    //console.log(msg);
 }

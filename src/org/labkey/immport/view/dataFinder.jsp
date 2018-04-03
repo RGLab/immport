@@ -198,12 +198,16 @@
             </td>
             <td class="study-panel">
                 <div id="studypanel" ng-class="{'x-hidden':(activeTab!=='Studies')}">
-                    <div ng-include="'/studycard.html'" ng-repeat="study in studies | filter:countForStudy"></div>
+                    <div id="emptymsg" ng-if="!loading && 0!=dimStudies.members.length && 0==getVisibleStudies().length" >
+                        <div style="padding:20px;">
+                        No participants match the current criteria.  Edit your filters to select a valid cohort.
+                        </div>
+                    </div>
+                    <div ng-include="'/studycard.html'" ng-repeat="study in getVisibleStudies()"></div>
                 </div>
             </td>
         </tr>
     </table>
-
 
 
 <div id="studyPopup"></div>

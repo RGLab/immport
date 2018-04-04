@@ -634,7 +634,11 @@ public class DataLoader extends PipelineJob
         new SharedCopyConfig("lk_age_event"),
         new SharedCopyConfig("lk_data_completeness"),
 //        new LookupCopyConfig("lk_data_format"),
+        new LookupCopyConfig("lk_disease"),
+        new LookupCopyConfig("lk_disease_stage"),
         new LookupCopyConfig("lk_ethnicity"),
+        new LookupCopyConfig("lk_exposure_material"),
+        new LookupCopyConfig("lk_exposure_process"),
         new SharedCopyConfig("lk_exp_measurement_tech"),
         new LookupCopyConfig("lk_expsample_result_schema"),
 //        new LookupCopyConfig("lk_experiment_purpose"),
@@ -656,8 +660,10 @@ public class DataLoader extends PipelineJob
         new SharedCopyConfig("lk_study_file_type"),
         new SharedCopyConfig("lk_study_panel"),
         new LookupCopyConfig("lk_study_type"),
+        new LookupCopyConfig("lk_subject_location"),
         new SharedCopyConfig("lk_t0_event"),
         new SharedCopyConfig("lk_time_unit"),
+        new LookupCopyConfig("lk_transcript_type"),
         new SharedCopyConfig("lk_unit_of_measure"),
 
             // high-level tables
@@ -721,6 +727,7 @@ public class DataLoader extends PipelineJob
             {
             }
         },
+        new ArmCopyConfig("immune_exposure"),
 
             // results
         new StudyCopyConfig("elisa_result"),
@@ -733,6 +740,7 @@ public class DataLoader extends PipelineJob
         new StudyCopyConfig("neut_ab_titer_result"),
         new StudyCopyConfig("pcr_result"),
         new StudyCopyConfig("subject_measure_result"),
+        new StudyCopyConfig("rna_seq_result"),
 
             // junction tables
         new ArmCopyConfig("arm_2_subject"),

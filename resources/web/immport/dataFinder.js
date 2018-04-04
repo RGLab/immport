@@ -135,7 +135,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                 $scope.closeMenu($event);
 
             var groupLabel = "";
-            if (option == "update") {
+            if (option === "update") {
                 if ($scope.currentGroup.id == null)
                     return;
 
@@ -169,13 +169,11 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                                 }
                             });
 
+                            $scope.currentGroupHasChanges = false;
+                            console_log("currentGroupHasChanges = false");
                             if (goToSendAfterSave)
                                 $scope.goToSend($scope.currentGroup.id);
-                            else
-                                $scope.currentGroupHasChanges = false;
                         }
-
-
                     },
                     failure : function(response, options)
                     {
@@ -219,10 +217,10 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                                 $scope.updateCurrentGroup(group);
                                 $scope.updateSaveOptions();
 
+                                $scope.currentGroupHasChanges = false;
+                                console_log("currentGroupHasChanges = false");
                                 if (goToSend)
                                     $scope.goToSend(group.id);
-                                else
-                                    $scope.currentGroupHasChanges = false;
                             }
                         }
                     });
@@ -239,10 +237,11 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
             $scope.clearAllFilters(false);
             $scope._applyGroupFilters(group.filters);
 
-            $scope.updateCountsAsync(true);
+            $scope.doSearchTermsChanged();
             $scope.saveFilterState();
             $scope.updateCurrentGroup(group);
             $scope.currentGroupHasChanges = false;
+            console_log("currentGroupHasChanges = false (applySubjectGroupFilter)");
 
             $scope.clearLoadGroupInfo();
         };
@@ -255,7 +254,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                 {
                     var filter = filters[f];
 
-                    if (filter.name == "Search")
+                    if (filter.name === "Search")
                     {
                         $scope.$emit("searchTermsAppliedFromFilter", filter.members);
                     }
@@ -431,7 +430,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                 success : function(res)
                 {
                     var json = Ext4.decode(res.responseText);
-                    if (json.success && json.groups.length == 1)
+                    if (json.success && json.groups.length === 1)
                     {
                         // stash the loaded group label so we can use it in Save As
                         $scope.loadGroupLabel = json.groups[0].label;
@@ -443,8 +442,10 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
 
                         $scope.clearAllFilters(false);
                         $scope._applyGroupFilters(groupFilters);
-                        $scope.updateCountsAsync();
+                        $scope.doSearchTermsChanged();
                         $scope.saveFilterState();
+                        $scope.currentGroupHasChanges = false;
+                        console_log("currentGroupHasChanges = false (loadParticipantGroupFiltersFromId)");
                     }
                     else
                     {
@@ -560,10 +561,6 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
             }
         });
 
-        $scope.$on("updateCountsAsync", function() {
-            $scope.currentGroupHasChanges = true;
-        });
-
         $scope.$on("clearAllClicked", function() {
             $scope.clearLoadGroupInfo();
         });
@@ -669,6 +666,8 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
         $scope.dimType = dataspace.dimensions.Type;
         $scope.dimCategory = dataspace.dimensions.Category;
 
+        $scope.currentGroupHasChanges = true;
+        console_log("currentGroupHasChanges = true (dataFinderApp.init)");
 
 
         $scope.cube = LABKEY.query.olap.CubeManager.getCube({
@@ -775,11 +774,13 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
 
         $scope.loadedStudiesShown = function ()
         {
-            return $scope.studySubset != 'UnloadedImmPort';
+            return $scope.studySubset !== 'UnloadedImmPort';
         };
 
         $scope.hasFilters = function ()
         {
+            if ($scope.searchTerms)
+                return true;
             for (var d in dataspace.dimensions)
             {
                 if (!dataspace.dimensions.hasOwnProperty(d))
@@ -793,7 +794,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
 
         $scope.dimensionHasFilter = function (dim)
         {
-            return (dim.filters && dim.filters.length) ? true : false;
+            return !!(dim.filters && dim.filters.length);
         };
 
         $scope.toggleFilterChoiceDisplay = function()
@@ -822,26 +823,6 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                 $event.stopPropagation();
         };
 
-        $scope.setFilterType = function (dimName, type)
-        {
-            $scope.filterChoice.show = false;
-            var dim = dataspace.dimensions[dimName];
-            if (!dim)
-                return;
-            if (dim.filterType === type)
-                return;
-            for (var f = 0; f < dim.filterOptions.length; f++)
-            {
-                if (dim.filterOptions[f].type == type)
-                {
-                    dim.filterType = type;
-                    dim.filterCaption = dim.filterOptions[f].caption;
-                    $scope.updateCountsAsync();
-                    return;
-                }
-            }
-        };
-
         $scope.selectMember = function (dimName, member, $event)
         {
             var shiftClick = $event && ($event.ctrlKey || $event.altKey || $event.metaKey);
@@ -861,7 +842,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
 
             if (!member)
             {
-                if (0 == filterMembers.length)  // no change
+                if (0 === filterMembers.length)  // no change
                     return;
                 $scope._clearFilter(dimName);
             }
@@ -876,10 +857,10 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                 var index = -1;
                 for (m = 0; m < filterMembers.length; m++)
                 {
-                    if (member.uniqueName == filterMembers[m].uniqueName)
+                    if (member.uniqueName === filterMembers[m].uniqueName)
                         index = m;
                 }
-                if (index == -1) // unselected -> selected
+                if (index === -1) // unselected -> selected
                 {
                     filterMembers.push(member);
                     member.selected = true;
@@ -893,6 +874,8 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
             }
 
             $scope.updateCountsAsync();
+            $scope.currentGroupHasChanges = true;
+            console_log("currentGroupHasChanges = true (_selectMember)");
             if ($event.stopPropagation)
                 $event.stopPropagation();
         };
@@ -912,21 +895,12 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                 $scope._clearFilter(d);
             }
 
+            $scope.searchMessage = "";
+            $scope.searchTerms = "";
+            $scope.searchStudyFilter = null; // force requery
+
             if (updateCounts)
-            {
-                if ($scope.searchTerms)
-                {
-                    $scope.searchTerms = null;
-                    $scope.onSearchTermsChanged();
-                }
-                else {
-                    $scope.updateCountsAsync();
-                }
-            }
-            else
-            {
-                $scope.searchTerms = null;
-            }
+                $scope.onSearchTermsChanged();
 
             $scope.$broadcast("filterSelectionCleared", false);
         };
@@ -944,7 +918,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
 
         $scope.removeFilterMember = function (dim, member)
         {
-            if (!dim || 0 == dim.filters.length) //  0 == dataspace.filters[dim.name].length)
+            if (!dim || 0 === dim.filters.length) //  0 == dataspace.filters[dim.name].length)
                 return;
             var filterMembers = dim.filters; // dataspace.filters[dim.name];
             var index = -1;
@@ -958,6 +932,8 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
             filterMembers[index].selected = false;
             filterMembers.splice(index, 1);
             $scope.updateCountsAsync();
+            $scope.currentGroupHasChanges = true;
+            console_log("currentGroupHasChanges = true (removeFilterMember)");
         };
 
 
@@ -1307,7 +1283,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                 $scope.saveFilterState();
                 $scope.clearSearchStudyFilter();
             }
-        }   ;
+        };
 
         $scope.doSearchTermsChanged_promise = null;
 
@@ -1403,6 +1379,8 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                 $scope.saveFilterState();
                 $scope.doSearchTermsChanged();
             }, 500);
+            $scope.currentGroupHasChanges = true;
+            console_log("currentGroupHasChanges = true (onSearchTermsChanged)");
         };
 
         // save just the filtered uniqueNames for each dimension into local storage
@@ -1690,4 +1668,9 @@ if (!String.prototype.includes) {
     String.prototype.includes = function() {'use strict';
         return String.prototype.indexOf.apply(this, arguments) !== -1;
     };
+}
+
+function console_log(msg)
+{
+    //console.log(msg);
 }

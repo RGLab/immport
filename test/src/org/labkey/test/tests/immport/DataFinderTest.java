@@ -768,7 +768,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         previewURL = returnedParts[1].replace(" ", "%20");
 
         log("Go get the url from the email message.");
-        String url = getSharedLinks(messageSubject, USER1);
+        String url = getSharedLinks(messageSubject);
         assertTrue("URL in email message not same as preview URL. URL from message: '" + url + "' Preview: '" + previewURL + "'", previewURL.equals(url));
         URL sharedUrl = new URL(url);
 
@@ -1260,24 +1260,19 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         return returnString;
     }
 
-    private String getSharedLinks(String msgSubject, String usrEmail)
+    private String getSharedLinks(String msgSubject)
     {
         String url;
-        String[] emailTo = {usrEmail};
 
         goToModule("Dumbster");
 
         EmailRecordTable emailRecordTable = new EmailRecordTable(this);
-        EmailRecordTable.EmailMessage msg = new EmailRecordTable.EmailMessage();
 
         log("Find the message based on subject and user.");
-        msg.setTo(emailTo);
-        msg.setSubject(msgSubject);
-        emailRecordTable.clickMessage(msg);
+        emailRecordTable.clickSubject(msgSubject);
         url = getAttribute(Locator.css("a[href*='dataFinder.view?groupId=']"), "href");
 
         return url;
-
     }
 
     private void validateSendDidNotError()

@@ -461,25 +461,25 @@ public class DataFinderPage extends LabKeyPage
         public List<String> getValues()
         {
             displayDimension();
-            return _test.getTexts(findElements(elements.member));
+            return getTexts(findElements(elements.member));
         }
 
         public List<String> getEmptyValues()
         {
             displayDimension();
-            return _test.getTexts(findElements(elements.emptyMemberName));
+            return getTexts(findElements(elements.emptyMemberName));
         }
 
         public List<String> getNonEmptyValues()
         {
             displayDimension();
-            return _test.getTexts(findElements(elements.nonEmptyMemberName));
+            return getTexts(findElements(elements.nonEmptyMemberName));
         }
 
         public List<String> getSelectedValues()
         {
             displayDimension();
-            return _test.getTexts(findElements(elements.selectedMemberName));
+            return getTexts(findElements(elements.selectedMemberName));
         }
 
         public void displayDimension()
@@ -522,12 +522,13 @@ public class DataFinderPage extends LabKeyPage
             Map<String, Integer> countMap = new HashMap<>();
             List<WebElement> members = findElements(elements.member);
             log("There are " + members.size() + " members in the list.");
+            log("getMemberCounts: dimension: " + getDimension().name());
             for (WebElement member : members)
             {
                 String name = elements.memberName.findElement(member).getText();
                 String countText = elements.memberCount.findElement(member).getText();
                 log("getMemberCounts: name: " + name + " countText: " + countText);
-                Integer count = null==countText ? null : Integer.parseInt(countText);
+                Integer count = parseInt(countText);
                 countMap.put(name, count);
             }
 

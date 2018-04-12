@@ -358,7 +358,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
             Map<String, Integer> memberCounts = panel.getMemberCounts();
             for (Map.Entry<String, Integer> memberCount : memberCounts.entrySet())
             {
-                assertEquals("Wrong counts for member " + memberCount.getKey() + " of dimension " + panel.getDimension() + " after selecting empty measure", 0, memberCount.getValue().intValue());
+                assertEquals("Wrong counts for member '" + memberCount.getKey() + "' of dimension '" + panel.getDimension() + "' after selecting empty measure", Integer.valueOf(0), memberCount.getValue());
             }
         }
     }

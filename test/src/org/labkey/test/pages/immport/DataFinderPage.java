@@ -1,6 +1,7 @@
 package org.labkey.test.pages.immport;
 
 import com.google.common.base.Predicate;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
@@ -38,9 +39,8 @@ public class DataFinderPage extends LabKeyPage
 
     private Integer parseInt(String s)
     {
-        if (null == s)
-            return null;
-        return Integer.parseInt(s.trim().replace(",",""));
+        s = StringUtils.trimToEmpty(s).replace(",", "");
+        return s.isEmpty() ? null : Integer.parseInt(s);
     }
 
     @Override

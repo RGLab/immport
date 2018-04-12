@@ -486,8 +486,15 @@ public class DataFinderPage extends LabKeyPage
         {
             if (!isDisplayed())
             {
+                log("Member list is not displayed.");
                 WebElement caption = findElement(elements.facetCaption);
+                log("Click facet: '" + caption.getText() + "'.");
                 caption.click();
+                sleep(500);
+            }
+            else
+            {
+                log("Member list is displayed.");
             }
         }
 
@@ -514,6 +521,7 @@ public class DataFinderPage extends LabKeyPage
             displayDimension();
             Map<String, Integer> countMap = new HashMap<>();
             List<WebElement> members = findElements(elements.member);
+            log("There are " + members.size() + " members in the list.");
             for (WebElement member : members)
             {
                 String name = elements.memberName.findElement(member).getText();

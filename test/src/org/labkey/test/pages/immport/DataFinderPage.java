@@ -489,6 +489,7 @@ public class DataFinderPage extends LabKeyPage
                 log("Member list is not displayed.");
                 WebElement caption = findElement(elements.facetCaption);
                 log("Click facet: '" + caption.getText() + "'.");
+                scrollIntoView(caption);
                 caption.click();
                 sleep(500);
             }
@@ -521,11 +522,20 @@ public class DataFinderPage extends LabKeyPage
             displayDimension();
             Map<String, Integer> countMap = new HashMap<>();
             List<WebElement> members = findElements(elements.member);
-            log("There are " + members.size() + " members in the list.");
             log("getMemberCounts: dimension: " + getDimension().name());
+            log("There are " + members.size() + " members in the list.");
             for (WebElement member : members)
             {
                 String name = elements.memberName.findElement(member).getText();
+
+                if(name.trim().length() == 0)
+                {
+                    // The panel wasn't expanded, try again.
+                    log("The dimension wasn't expanded trying again.");
+                    displayDimension();
+                    name = elements.memberName.findElement(member).getText();
+                }
+
                 String countText = elements.memberCount.findElement(member).getText();
                 log("getMemberCounts: name: " + name + " countText: " + countText);
                 Integer count = parseInt(countText);

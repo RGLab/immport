@@ -294,7 +294,7 @@ public class DataFinderPage extends LabKeyPage
         public static final Locator.CssLocator studyFinder = Locator.css("#dataFinderApp");
         public static final Locator.XPathLocator exportDatasets = Locator.linkWithText("Export Study Datasets");
         public static final Locator.CssLocator studySearchInput = studyFinder.append(Locator.css("#searchTerms"));
-        public static final Locator.NameLocator studySubsetChooser = Locator.name("studySubsetSelect");
+        public static final Locator studySubsetChooser = Locator.name("studySubsetSelect");
         public static final Locator.CssLocator studyCard = studyFinder.append(Locator.css(".labkey-study-card"));
         public static final Locator.CssLocator selectionPanel = studyFinder.append(Locator.css(".df-selection-panel"));
         public static final Locator.CssLocator facetPanel = selectionPanel.append(Locator.css("#facetPanel"));
@@ -304,7 +304,7 @@ public class DataFinderPage extends LabKeyPage
         public static final Locator.CssLocator clearAll = Locator.css("span[ng-click='clearAllFilters(true);']");
         public static final Locator.CssLocator clearAllFilters = Locator.css("span[ng-click='clearAllClick();']");
         public static final Locator.CssLocator groupLabel = Locator.css(".labkey-group-label");
-        public static final Locator.NameLocator groupLabelInput = Locator.name("groupLabel");
+        public static final Locator groupLabelInput = Locator.name("groupLabel");
         public static final Locator.CssLocator saveMenu = Locator.css("#saveMenu");
         public static final Locator.CssLocator loadMenu = Locator.css("#loadMenu");
         public static final Locator.CssLocator sendMenu = Locator.css("#sendMenu");

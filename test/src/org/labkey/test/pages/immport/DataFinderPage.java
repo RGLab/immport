@@ -1,6 +1,7 @@
 package org.labkey.test.pages.immport;
 
 import com.google.common.base.Predicate;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
@@ -38,9 +39,8 @@ public class DataFinderPage extends LabKeyPage
 
     private Integer parseInt(String s)
     {
-        if (null == s)
-            return null;
-        return Integer.parseInt(s.trim().replace(",",""));
+        s = StringUtils.trimToEmpty(s).replace(",", "");
+        return s.isEmpty() ? null : Integer.parseInt(s);
     }
 
     @Override
@@ -294,7 +294,7 @@ public class DataFinderPage extends LabKeyPage
         public static final Locator.CssLocator studyFinder = Locator.css("#dataFinderApp");
         public static final Locator.XPathLocator exportDatasets = Locator.linkWithText("Export Study Datasets");
         public static final Locator.CssLocator studySearchInput = studyFinder.append(Locator.css("#searchTerms"));
-        public static final Locator.NameLocator studySubsetChooser = Locator.name("studySubsetSelect");
+        public static final Locator studySubsetChooser = Locator.name("studySubsetSelect");
         public static final Locator.CssLocator studyCard = studyFinder.append(Locator.css(".labkey-study-card"));
         public static final Locator.CssLocator selectionPanel = studyFinder.append(Locator.css(".df-selection-panel"));
         public static final Locator.CssLocator facetPanel = selectionPanel.append(Locator.css("#facetPanel"));
@@ -304,7 +304,7 @@ public class DataFinderPage extends LabKeyPage
         public static final Locator.CssLocator clearAll = Locator.css("span[ng-click='clearAllFilters(true);']");
         public static final Locator.CssLocator clearAllFilters = Locator.css("span[ng-click='clearAllClick();']");
         public static final Locator.CssLocator groupLabel = Locator.css(".labkey-group-label");
-        public static final Locator.NameLocator groupLabelInput = Locator.name("groupLabel");
+        public static final Locator groupLabelInput = Locator.name("groupLabel");
         public static final Locator.CssLocator saveMenu = Locator.css("#saveMenu");
         public static final Locator.CssLocator loadMenu = Locator.css("#loadMenu");
         public static final Locator.CssLocator sendMenu = Locator.css("#sendMenu");
@@ -461,33 +461,41 @@ public class DataFinderPage extends LabKeyPage
         public List<String> getValues()
         {
             displayDimension();
-            return _test.getTexts(findElements(elements.member));
+            return getTexts(findElements(elements.member));
         }
 
         public List<String> getEmptyValues()
         {
             displayDimension();
-            return _test.getTexts(findElements(elements.emptyMemberName));
+            return getTexts(findElements(elements.emptyMemberName));
         }
 
         public List<String> getNonEmptyValues()
         {
             displayDimension();
-            return _test.getTexts(findElements(elements.nonEmptyMemberName));
+            return getTexts(findElements(elements.nonEmptyMemberName));
         }
 
         public List<String> getSelectedValues()
         {
             displayDimension();
-            return _test.getTexts(findElements(elements.selectedMemberName));
+            return getTexts(findElements(elements.selectedMemberName));
         }
 
         public void displayDimension()
         {
             if (!isDisplayed())
             {
+                log("Member list is not displayed.");
                 WebElement caption = findElement(elements.facetCaption);
+                log("Click facet: '" + caption.getText() + "'.");
+                scrollIntoView(caption);
                 caption.click();
+                sleep(500);
+            }
+            else
+            {
+                log("Member list is displayed.");
             }
         }
 
@@ -514,12 +522,23 @@ public class DataFinderPage extends LabKeyPage
             displayDimension();
             Map<String, Integer> countMap = new HashMap<>();
             List<WebElement> members = findElements(elements.member);
+            log("getMemberCounts: dimension: " + getDimension().name());
+            log("There are " + members.size() + " members in the list.");
             for (WebElement member : members)
             {
                 String name = elements.memberName.findElement(member).getText();
+
+                if(name.trim().length() == 0)
+                {
+                    // The panel wasn't expanded, try again.
+                    log("The dimension wasn't expanded trying again.");
+                    displayDimension();
+                    name = elements.memberName.findElement(member).getText();
+                }
+
                 String countText = elements.memberCount.findElement(member).getText();
                 log("getMemberCounts: name: " + name + " countText: " + countText);
-                Integer count = null==countText ? null : Integer.parseInt(countText);
+                Integer count = parseInt(countText);
                 countMap.put(name, count);
             }
 

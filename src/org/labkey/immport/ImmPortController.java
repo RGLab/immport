@@ -24,10 +24,9 @@ import org.json.JSONObject;
 import org.labkey.api.action.Action;
 import org.labkey.api.action.ActionType;
 import org.labkey.api.action.ApiAction;
-import org.labkey.api.action.ApiResponse;
-import org.labkey.api.action.ApiResponseWriter;
 import org.labkey.api.action.ApiSimpleResponse;
 import org.labkey.api.action.ExportAction;
+import org.labkey.api.action.FormArrayList;
 import org.labkey.api.action.FormViewAction;
 import org.labkey.api.action.HasBindParameters;
 import org.labkey.api.action.NullSafeBindException;
@@ -35,11 +34,11 @@ import org.labkey.api.action.RedirectAction;
 import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
 import org.labkey.api.admin.notification.NotificationService;
-import org.labkey.api.data.BaseSelector;
 import org.labkey.api.data.ColumnHeaderType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.ContainerFilterable;
+import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DbSchemaType;
 import org.labkey.api.data.DbScope;
@@ -50,7 +49,12 @@ import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.data.dialect.SqlDialect;
+import org.labkey.api.exp.AbstractFileXarSource;
+import org.labkey.api.exp.ExperimentException;
+import org.labkey.api.exp.XarSource;
+import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.files.FileContentService;
+import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.PipelineUrls;
@@ -76,6 +80,7 @@ import org.labkey.api.view.NavTree;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.api.view.RedirectException;
 import org.labkey.api.view.VBox;
+import org.labkey.api.view.ViewBackgroundInfo;
 import org.labkey.api.view.template.ClientDependency;
 import org.labkey.api.view.template.PageConfig;
 import org.labkey.api.writer.ZipFile;
@@ -96,6 +101,7 @@ import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileInputStream;
@@ -103,11 +109,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.zip.ZipException;
+
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.labkey.api.pipeline.PipelineService.PRIMARY_ROOT;
 
 
 public class ImmPortController extends SpringActionController
@@ -933,4 +945,290 @@ public class ImmPortController extends SpringActionController
             return new ApiSimpleResponse(ret);
         }
     }
+
+
+
+
+
+    public class PublishExpressionMatrixForm
+    {
+        public PublishExpressionMatrixForm()
+        {}
+
+        FormArrayList<Integer> rowIds = new FormArrayList<>(Integer.class);
+        String target = "a";
+
+        public FormArrayList<Integer> getRowIds()
+        {
+            return rowIds;
+        }
+
+        public void setRowIds(FormArrayList<Integer> rowIds)
+        {
+            this.rowIds = rowIds;
+        }
+
+        public void setRunList(String runlist)
+        {
+            Arrays.stream(runlist.split(",")).forEach((str)->
+                    {
+                        try
+                        {
+                            if (StringUtils.isNotBlank(str))
+                                rowIds.add(Integer.parseInt(str));
+                        }
+                        catch (NumberFormatException x)
+                        {
+                            // pass
+                        }
+                    }
+            );
+        }
+
+        public String getTarget()
+        {
+            return target;
+        }
+
+        public void setTarget(String target)
+        {
+            this.target = target;
+        }
+
+        public Container getTargetContainer()
+        {
+            if (target.startsWith("/"))
+                return ContainerManager.getForPath(target);
+            else
+                return ContainerManager.getForPath(getContainer().getPath() + "/" + target);
+        }
+
+        public File getTargetDir(Container c)
+        {
+            PipeRoot r = PipelineService.get().findPipelineRoot(c, PRIMARY_ROOT);
+            if (r == null)
+                return null;
+            File rootPath = r.getRootPath();
+            File d = new File(rootPath, "analysis/exprs_matrices");
+            d.mkdirs();
+            return d;
+        }
+
+        public String getRelativeTargetDir()
+        {
+            return "analysis/exprs_matrices";
+        }
+    }
+
+    @RequiresPermission(AdminPermission.class)
+    public class PublishExpressionMatrixAction extends FormViewAction<PublishExpressionMatrixForm>
+    {
+        @Override
+        protected PublishExpressionMatrixForm getCommand(HttpServletRequest req) throws Exception
+        {
+            return new PublishExpressionMatrixForm();
+        }
+
+        @Override
+        public void validateCommand(PublishExpressionMatrixForm form, Errors errors)
+        {
+            String path = form.getTarget();
+            if (null == path)
+            {
+                errors.rejectValue("target", ERROR_REQUIRED);
+                return;
+            }
+            Container target = form.getTargetContainer();
+            if (null == target)
+            {
+                errors.rejectValue("target", ERROR_MSG, "target folder not found: " + path);
+                return;
+            }
+            if (!target.hasPermission(getUser(),AdminPermission.class))
+            {
+                errors.rejectValue("target", ERROR_MSG, "You are not and admin in the target folder: " + path);
+                return;
+            }
+        }
+
+        @Override
+        public ModelAndView getView(PublishExpressionMatrixForm form, boolean reshow, BindException errors) throws Exception
+        {
+            return new JspView<>(ImmPortController.class, "view/publishExpressionMatrix.jsp", form, errors);
+        }
+
+        @Override
+        public boolean handlePost(PublishExpressionMatrixForm form, BindException errors) throws Exception
+        {
+            ExperimentService exp = ExperimentService.get();
+            File targetDir = form.getTargetDir(form.getTargetContainer());
+            if (null == targetDir)
+            {
+                errors.reject(ERROR_MSG, "Did not find file system for target container");
+                return false;
+            }
+            File exportFile = new File(targetDir, "matrix_export.xar");
+            Set<Integer> rowIds = form.getRowIds().stream()
+                    .filter((I)->null!=I && I.intValue()>0)
+                    .collect(Collectors.toSet());
+            if (rowIds.isEmpty())
+            {
+                errors.reject(ERROR_MSG, "Found nothing to export");
+                return false;
+            }
+            ExperimentService.XarExportOptions options = new ExperimentService.XarExportOptions();
+            options.setExportFile(targetDir);
+            options.setXarXmlFileName(exportFile.getName() + ".xml");
+            options.setFilterDataRoles(true);
+            options.setDataRoles(PageFlowUtil.set("AnalysisParameters","Samples","Data","log",(String)null));
+            exp.exportXarForRuns(getUser(), rowIds, null, options);
+            return true;
+        }
+
+        @Override
+        public URLHelper getSuccessURL(PublishExpressionMatrixForm form)
+        {
+            Container target = form.getTargetContainer();
+            return new ActionURL(ImportExpressionMatrixAction.class, form.getTargetContainer())
+                    .addParameter("xarPath",form.getRelativeTargetDir()+"/matrix_export.xar.xml");
+        }
+
+        @Override
+        public NavTree appendNavTrail(NavTree root)
+        {
+            root.addChild("Publish expression matrix runs to another folder");
+            return root;
+        }
+    }
+
+
+    public static class ImportExpressionMatrixForm
+    {
+        String xarPath = null;
+        public ImportExpressionMatrixForm()
+        {
+        }
+
+        public String getXarPath()
+        {
+            return xarPath;
+        }
+
+        public void setXarPath(String xarPath)
+        {
+            this.xarPath = xarPath;
+        }
+    }
+
+
+    @RequiresPermission(AdminPermission.class)
+    public class ImportExpressionMatrixAction extends FormViewAction<ImportExpressionMatrixForm>
+    {
+        @Override
+        public void validateCommand(ImportExpressionMatrixForm form, Errors errors)
+        {
+            if (isBlank(form.getXarPath()))
+            {
+                errors.reject("xarPath", ERROR_REQUIRED);
+            }
+            else
+            {
+                org.labkey.api.util.Path norm = org.labkey.api.util.Path.parse(form.getXarPath().trim()).normalize();
+                if (null == norm)
+                    errors.reject("xarPath", "invalid path");
+            }
+        }
+
+        @Override
+        public ModelAndView getView(ImportExpressionMatrixForm form, boolean reshow, BindException errors) throws Exception
+        {
+            return new JspView<>(ImportExpressionMatrixAction.class, "view/importExpressionMatrix.jsp", form, errors);
+        }
+
+        @Override
+        public boolean handlePost(ImportExpressionMatrixForm form, BindException errors) throws Exception
+        {
+            ExperimentService es = ExperimentService.get();
+            PipeRoot pipe = PipelineService.get().findPipelineRoot(getContainer(),PipelineService.PRIMARY_ROOT);
+            if (null == pipe)
+            {
+                errors.reject("Could not locate file system for current folder");
+                return false;
+            }
+            File base = pipe.getRootPath();
+            final File xarFile = new File(base,form.getXarPath());
+            if (!xarFile.isFile())
+            {
+                errors.reject("xarPath", "file not found: " + form.getXarPath());
+                return false;
+            }
+            PipelineJob job = new ImportPipelineJob(getViewBackgroundInfo(), pipe, xarFile);
+            job.setLogFile(new File(xarFile.getParentFile(),"import_" + xarFile.getName() + ".log"));
+            PipelineService.get().queueJob(job);
+            return true;
+        }
+
+        @Override
+        public URLHelper getSuccessURL(ImportExpressionMatrixForm importExpressionMatrixForm)
+        {
+            return new ActionURL("pipeline","begin", getContainer());
+        }
+
+        @Override
+        public NavTree appendNavTrail(NavTree root)
+        {
+            root.addChild("Import published expression matrix runs");
+            return root;
+        }
+    }
+
+    public static class ImportPipelineJob extends PipelineJob
+    {
+        File xarFile;
+
+        ImportPipelineJob(ViewBackgroundInfo info, PipeRoot pipe, File xarFile)
+        {
+            super(null, info, pipe);
+            this.xarFile = xarFile;
+        }
+        @Override
+        public URLHelper getStatusHref()
+        {
+            return null;
+        }
+        @Override
+        public String getDescription()
+        {
+            return "import published expression matrices";
+        }
+        @Override
+        public void run()
+        {
+            try
+            {
+                final XarSource source = new AbstractFileXarSource("Expression Matrix import", getContainer(), getUser())
+                {
+                    @Override
+                    public File getLogFile() throws IOException
+                    {
+                        return null;
+                    }
+                    @Override
+                    protected File getXmlFile()
+                    {
+                        return xarFile;
+                    }
+                };
+                ExperimentService es = ExperimentService.get();
+                ExperimentService.XarImportOptions options = new ExperimentService.XarImportOptions()
+                        .setUseOriginalDataFileUrl(true)
+                        .setStrictValidateExistingSampleSet(false);
+                es.importXar(source, this, options);
+            }
+            catch (ExperimentException ex)
+            {
+                throw new RuntimeException(ex);
+            }
+        }
+    };
 }

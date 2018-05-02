@@ -358,7 +358,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
             Map<String, Integer> memberCounts = panel.getMemberCounts();
             for (Map.Entry<String, Integer> memberCount : memberCounts.entrySet())
             {
-                assertEquals("Wrong counts for member " + memberCount.getKey() + " of dimension " + panel.getDimension() + " after selecting empty measure", 0, memberCount.getValue().intValue());
+                assertEquals("Wrong counts for member '" + memberCount.getKey() + "' of dimension '" + panel.getDimension() + "' after selecting empty measure", Integer.valueOf(0), memberCount.getValue());
             }
         }
     }
@@ -613,7 +613,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
             String name = (String)grid.getFieldValue(i, "name");
             String fieldValue = grid.getFieldValue(i, "numRows").toString();
             Long numRows;
-            if(NumberUtils.isNumber(fieldValue))
+            if(NumberUtils.isCreatable(fieldValue))
                 numRows = NumberUtils.createLong(fieldValue);
             else
                 numRows = 0L;
@@ -768,7 +768,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         previewURL = returnedParts[1].replace(" ", "%20");
 
         log("Go get the url from the email message.");
-        String url = getSharedLinks(messageSubject, USER1);
+        String url = getSharedLinks(messageSubject);
         assertTrue("URL in email message not same as preview URL. URL from message: '" + url + "' Preview: '" + previewURL + "'", previewURL.equals(url));
         URL sharedUrl = new URL(url);
 
@@ -1019,9 +1019,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         assertEquals("Count of notifications in the panel not as expected after marking one as read.", recipientCountBefore + unreadNotifications, recipientCountAfter);
 
         log("Go view all notifications.");
-        notificationsPanel.elements().viewAll.click();
-
-        notificationsPage = new UserNotificationsPage(getDriver());
+        notificationsPage = notificationsPanel.viewAll();
 
         log("Find the notification '" + groupsSent.get(SENT_MARK_AS_READ).groupName + "' and confirm it is read.");
         UserNotificationsPage.NotificationItem pageNotificationItem = notificationsPage.findNotificationInPage(groupsSent.get(SENT_MARK_AS_READ).groupName, UserNotificationsPage.NotificationTypes.STUDY);
@@ -1038,11 +1036,9 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
 
         log("Go back to the notifications page and click the 'Mark As Read' link.");
         notificationsPanel = UserNotificationsPanel.clickInbox(this);
-        notificationsPanel.elements().viewAll.click();
+        notificationsPage = notificationsPanel.viewAll();
 
         log("Find notification that was sent and validate that the 'Mark As Read' links works as expected.");
-        // Get a new instance of the notifications page.
-        notificationsPage = new UserNotificationsPage(getDriver());
         pageNotificationItem = notificationsPage.findNotificationInPage(groupsSent.get(SENT_CLICK_MARK_AS_READ).groupName, UserNotificationsPage.NotificationTypes.STUDY);
         assertTrue("Did not find the notification for group '" + groupsSent.get(SENT_CLICK_MARK_AS_READ).groupName + "' in the list of all notifications.", pageNotificationItem != null);
         log("Click 'Mark As Read'.");
@@ -1063,7 +1059,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
 
         log("Finally, from the panel click the 'Clear All' link and validate all messages are now marked as read.");
         notificationsPanel = UserNotificationsPanel.clickInbox(this);
-        notificationsPanel.elements().clearAll.click();
+        notificationsPanel.clearAll();
 
         // Wait a moment for the panel to clear.
         sleep(500);
@@ -1072,13 +1068,12 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         assertEquals("Count of notifications in the panel is not as expected.", 0, notificationsPanel.getNotificationCount());
 
         log("The text 'No new notifications' should be shown in the panel.");
-        assertTrue("Text 'No new notifications' was not present.", notificationsPanel.elements().noNotifications.isDisplayed());
+        assertTrue("Text 'No new notifications' was not present in notification panel.", notificationsPanel.getComponentElement().getText().contains("No new notifications"));
 
         log("The 'View All' link should still be valid.");
-        notificationsPanel.elements().viewAll.click();
+        notificationsPage = notificationsPanel.viewAll();
 
         log("Validate that all items on the page are marked as read.");
-        notificationsPage = new UserNotificationsPage(getDriver());
         List<UserNotificationsPage.NotificationItem> pageNotificationItems = notificationsPage.getNotificationsOfType(UserNotificationsPage.NotificationTypes.STUDY);
         for(UserNotificationsPage.NotificationItem pageItem : pageNotificationItems)
         {
@@ -1111,9 +1106,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         Assert.assertEquals("Count of notifications in the panel is not as expected.", (recipientCountBefore + unreadNotifications), notificationsPanel.getNotificationCount());
 
         log("Go view all notifications.");
-        notificationsPanel.elements().viewAll.click();
-
-        notificationsPage = new UserNotificationsPage(getDriver());
+        notificationsPage = notificationsPanel.viewAll();
 
         log("Validate that the 'Mark All As read' and 'Delete All' links are presnet at the top of the page.");
         assertElementVisible(UserNotificationsPage.Locators.markAllAsRead);
@@ -1260,24 +1253,19 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         return returnString;
     }
 
-    private String getSharedLinks(String msgSubject, String usrEmail)
+    private String getSharedLinks(String msgSubject)
     {
         String url;
-        String[] emailTo = {usrEmail};
 
         goToModule("Dumbster");
 
         EmailRecordTable emailRecordTable = new EmailRecordTable(this);
-        EmailRecordTable.EmailMessage msg = new EmailRecordTable.EmailMessage();
 
         log("Find the message based on subject and user.");
-        msg.setTo(emailTo);
-        msg.setSubject(msgSubject);
-        emailRecordTable.clickMessage(msg);
+        emailRecordTable.clickSubject(msgSubject);
         url = getAttribute(Locator.css("a[href*='dataFinder.view?groupId=']"), "href");
 
         return url;
-
     }
 
     private void validateSendDidNotError()
@@ -1408,8 +1396,8 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
             }
         }
 
-        String folder = "fcs_control_files" + File.separator;
-        assertTrue("Did not find any individual control files in zip export: " + download.getName(),
+        String folder = "fcs_control_files/";
+        assertTrue("Did not find any individual control files in zip export: " + download.getName() + "\nFound: \n" + String.join("\n", filesInZip),
                 filesInZip.stream().anyMatch(file -> file.startsWith(folder)));
 
         for (String controlFile : controlFileList)

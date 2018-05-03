@@ -27,21 +27,22 @@
             .addParameter("query.showRows","ALL");
     ActionURL importSpecimens = (new ActionURL("study-samples","showUploadSpecimens",c));
 %>
+<h3>Data loading</h3>
+
 <p>
-To load new ImmPort (archive)<br>
-<%=textLink("Import Archive", new ActionURL(ImmPortController.ImportArchiveAction.class, c))%>
-<%=textLink("Populate cube", new ActionURL(ImmPortController.PopulateCubeAction.class, c))%>
-<%=textLink("Data Finder", new ActionURL(ImmPortController.DataFinderAction.class, c))%>
-<%=textLink("Public/Restricted Studies", new ActionURL(ImmPortController.RestrictedStudiesAction.class, c))%>
+<b>To load new ImmPort archive</b><br>
+<%=textLink("Import Archive", new ActionURL(ImmPortController.ImportArchiveAction.class, c))%><br>
+<%=textLink("Populate cube", new ActionURL(ImmPortController.PopulateCubeAction.class, c))%><br>
+<%=textLink("Data Finder", new ActionURL(ImmPortController.DataFinderAction.class, c))%><br>
+<%=textLink("Public/Restricted Studies", new ActionURL(ImmPortController.RestrictedStudiesAction.class, c))%><br>
 </p>
 <p>
-Load or refresh data in a new study:<br>
-<%=textLink("Copy datasets for one study in this folder", new ActionURL("immport", "copyImmPortStudy", c))%>
+<b>Load or refresh data in a new study</b><br>
+<%=textLink("Copy datasets for one study in this folder", new ActionURL("immport", "copyImmPortStudy", c))%><br>
 </p>
 <p>
-Reload all data (should be executed from the /Studies container):<br>
-<%=textLink("Copy datasets for multiple child studies", new ActionURL("immport", "reimportStudies", c))%>
-</p>
+<b>Reload all data (should be executed from the /Studies container):</b><br>
+<%=textLink("Copy datasets for multiple child studies", new ActionURL("immport", "reimportStudies", c))%><br>
 <%--
 <p>
 To create a gender subject_groups<br>
@@ -49,12 +50,14 @@ To create a gender subject_groups<br>
 </p>
 <p>
 <%=textLink("Download Specimens",exportSpecimens)%>&nbsp;&nbsp;<%=textLink("Upload Specimens",importSpecimens)%>
-</p>
 --%>
-<p>
-  <hr>
-  Post loading tasks:<br>
-  <%=textLink("Hide empty datasets", new ActionURL("study", "datasetVisibility", c))%>
-  <%=textLink("Highligh study", new ActionURL("study", "manageStudyProperties", c))%>
-  <%=textLink("Update modules", new ActionURL("admin", "folderType", c).addParameter("tabId", "folderType"))%>
 </p>
+<h3>Post loading tasks</h3>
+  <%=textLink("Hide empty datasets", new ActionURL("study", "datasetVisibility", c))%><br>
+  <%=textLink("Highligh study", new ActionURL("study", "manageStudyProperties", c))%><br>
+  <%=textLink("Update modules", new ActionURL("admin", "folderType", c).addParameter("tabId", "folderType"))%><br>
+</p>
+
+<h3>Expression Matrix publish/import</h3>
+  <%=textLink("Export selected expression matrices", new ActionURL(ImmPortController.PublishExpressionMatrixAction.class, c))%><br>
+  <%=textLink("Import published expression matrices", new ActionURL(ImmPortController.ImportExpressionMatrixAction.class, c))%><br>

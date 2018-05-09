@@ -20,6 +20,35 @@ function renderExport(){
         storeId:'dataSets',
         fields:[ 'id', 'name', 'include', 'label', 'type', 'numRows', 'fileSize', 'files', 'final' ],
         data: { 'items': [] },
+        sorters: [{
+            sorterFn: function(o1, o2){
+
+                var type1 = o1.get('type');
+                var type2 = o2.get('type');
+                var sortOrder = 0;
+
+                if (type1 !== type2) {
+                    if(type1 === 'Dataset (TSV)') {
+                        sortOrder = -1;
+                    }
+                    else {
+                        sortOrder = 1;
+                    }
+                }
+                else {
+                    var label1 = o1.get('label');
+                    var label2 = o2.get('label');
+
+                    if (label1 < label2) {
+                        sortOrder = -1;
+                    }
+                    else if (label1 > label2) {
+                        sortOrder = 1;
+                    }
+                }
+                return sortOrder;
+            }
+        }],
         proxy: {
             type: 'memory',
             reader: {
@@ -88,7 +117,12 @@ function renderExport(){
 
                 updateSummary();
                 enableDownloadButton();
-            }, scope : this
+            },
+            failure : function (response, opts)
+            {
+                LABKEY.Utils.displayAjaxErrorResponse(response, opts);
+            },
+            scope : this
         });
     }
 
@@ -168,7 +202,7 @@ function renderExport(){
             include: true,
             id: record.get( 'id' ) + 'm',
             name: record.get( 'name' ),
-            label: 'Gene expression microarray matrices',
+            label: 'Gene expression matrices',
             type: -1,
             numRows: -1,
             fileSize: -1,
@@ -278,7 +312,8 @@ function renderExport(){
 
     /* This is an extension to allow the "Select All" checkbox in the header */
     Ext4.define('Ext.ux.CheckColumnPatch', {
-        override: 'Ext.ux.CheckColumn',
+        extend: 'Ext.ux.CheckColumn',
+        alias: 'widget.checkcolumnpatch',
 
         /**
         * @cfg {Boolean} [columnHeaderCheckbox=false]
@@ -389,7 +424,7 @@ function renderExport(){
         },
 
         getHeaderCheckboxImage: function (allChecked) {
-            return '<img class="x4-grid-checkcolumn ' + ( allChecked ? 'x4-grid-checkcolumn-checked' : '' ) + '">';
+            return this.renderer(allChecked);
         }
     });
 
@@ -406,7 +441,7 @@ function renderExport(){
                     resizable: false,
                     sortable: false,
                     width: 30,
-                    xtype: 'checkcolumn'
+                    xtype: 'checkcolumnpatch'
                 },{
                     dataIndex: 'label',
                     flex: 1,

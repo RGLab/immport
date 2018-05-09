@@ -27,12 +27,24 @@
     }
 %>
 
-<table>
+<style type="text/css">
+
+    table.export-datasets-panel {
+        width: 100%;
+    }
+
+    td.study-filter-section {
+        text-align: left;
+        width: 75%;
+    }
+</style>
+
+<table class='export-datasets-panel'>
     <tr>
         <td valign="top">
             <div id="datasetsPanel"></div>
         </td>
-        <td valign="top">
+        <td valign="top" class="study-filter-section">
             <div id="studyFilter"></div>
         </td>
     </tr>

@@ -10,73 +10,65 @@ import java.io.File;
 
 public class ImmPortBeginPage extends LabKeyPage
 {
+    private final BaseWebDriverTest test;
+
     public ImmPortBeginPage(BaseWebDriverTest test)
     {
-        super(test);
+        super(test.getDriver());
+        this.test = test;
     }
 
-    protected static String getController()
+    public static ImmPortBeginPage beginAt(BaseWebDriverTest test)
     {
-        return "immport";
-    }
-
-    protected static String getAction()
-    {
-        return "begin";
+        return beginAt(test, test.getCurrentContainerPath());
     }
 
     public static ImmPortBeginPage beginAt(BaseWebDriverTest test, String containerPath)
     {
-        test.beginAt(WebTestHelper.buildURL(getController(), containerPath, getAction()));
+        test.beginAt(WebTestHelper.buildURL("immport", containerPath, "begin"));
         return new ImmPortBeginPage(test);
     }
 
     @LogMethod
     public void importArchive(File archive, boolean restricted)
     {
-        pushLocation();
-        _test.checkErrors();
-        popLocation();
-        _test.clickAndWait(Locator.linkWithText("Import Archive"));
-        _test.setFormElement(Locator.name("path"), archive);
-        if (restricted) _test.checkCheckbox(Locator.name("restricted"));
-        _test.clickAndWait(Locator.css("form[name=importArchive] input[type=submit]"));
-        _test.waitForPipelineJobsToComplete(1, "Load ImmPort archive", false, 600000);
-        pushLocation();
-        _test.resetErrors();
-        popLocation();
+        test.checkErrors();
+        clickAndWait(Locator.linkWithText("Import Archive"));
+        setFormElement(Locator.name("path"), archive);
+        if (restricted) checkCheckbox(Locator.name("restricted"));
+        clickAndWait(Locator.css("form[name=importArchive] input[type=submit]"));
+        test.waitForPipelineJobsToComplete(1, "Load ImmPort archive", false, 600000);
+        test.resetErrors();
     }
 
     @LogMethod
     public void populateCube()
     {
-        _test.clickAndWait(Locator.linkWithText("Populate cube"));
-        _test.clickAndWait(Locator.css("form[name=populateCube] input[type=submit]"), 120000);
+        clickAndWait(Locator.linkWithText("Populate cube"));
+        clickAndWait(Locator.css("form[name=populateCube] input[type=submit]"), 120000);
     }
 
     //TODO: Create RestrictedStudiesPage
     public LabKeyPage goToRestrictedStudies()
     {
-        _test.clickAndWait(Locator.linkWithText("Public/Restricted Studies"));
-
-        return new LabKeyPage(_test);
+        clickAndWait(Locator.linkWithText("Public/Restricted Studies"));
+        return null;
     }
 
     public CopyImmPortStudyPage copyDatasetsForOneStudy()
     {
-        _test.clickAndWait(Locator.linkWithText("Copy datasets for one study in this folder"));
-
-        return new CopyImmPortStudyPage(_test);
+        clickAndWait(Locator.linkWithText("Copy datasets for one study in this folder"));
+        return new CopyImmPortStudyPage(getDriver());
     }
 
     public File downloadSpecimens()
     {
-        return _test.clickAndWaitForDownload(Locator.linkWithText("Import Archive"));
+        return clickAndWaitForDownload(Locator.linkWithText("Import Archive"));
     }
 
     public LabKeyPage uploadSpecimens()
     {
-        _test.clickAndWait(Locator.linkWithText("Import Archive"));
+        clickAndWait(Locator.linkWithText("Import Archive"));
         //TODO: Finish implementation
         return null;
     }

@@ -2,121 +2,137 @@ package org.labkey.test.components.immport;
 
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
+import org.labkey.test.components.Component;
+import org.labkey.test.components.WebDriverComponent;
+import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class StudySummaryPanel
+public class StudySummaryPanel extends WebDriverComponent<StudySummaryPanel.Elements>
 {
-    protected BaseWebDriverTest _test;
-    protected WebElement _panel;
+    private final WebDriver _driver;
+    private final WebElement _panel;
 
-    public StudySummaryPanel(BaseWebDriverTest test)
+    public StudySummaryPanel(WebDriver driver)
     {
-        _test = test;
-        _panel = Locators.self.waitForElement(test.getDriver(), BaseWebDriverTest.WAIT_FOR_JAVASCRIPT);
-        elements().accession.waitForElement(_panel, BaseWebDriverTest.WAIT_FOR_JAVASCRIPT);
+        _driver = driver;
+        _panel = Locator.css("div#demographics.study-demographics").waitForElement(driver, BaseWebDriverTest.WAIT_FOR_JAVASCRIPT);
+        elementCache().accession.isDisplayed();
+    }
+
+    @Override
+    protected WebDriver getDriver()
+    {
+        return _driver;
+    }
+
+    @Override
+    public WebElement getComponentElement()
+    {
+        return _panel;
     }
 
     public String getAccession()
     {
-        return elements().accession.findElement(_panel).getText();
+        return elementCache().accession.getText();
     }
 
     public String getTitle()
     {
-        return elements().title.findElement(_panel).getText();
+        return elementCache().title.getText();
     }
 
     public String getPI()
     {
-        return elements().PI.findElement(_panel).getText();
+        return elementCache().PI.getText();
     }
 
     public String getOrganization()
     {
-        return elements().organization.findElement(_panel).getText();
+        return elementCache().organization.getText();
     }
 
     public WebElement getImmportLink()
     {
-        return elements().immportLink.findElement(_panel);
+        return elementCache().immportLink;
     }
 
     public List<Paper> getPapers()
     {
-        List<WebElement> paperEls = elements().paper.findElements(_panel);
-        List<Paper> papers = new ArrayList<>();
-
-        for (WebElement el : paperEls)
-        {
-            papers.add(new Paper(el));
-        }
-
-        return papers;
+        return elementCache().getPapers();
     }
 
-    protected Elements elements()
+    @Override
+    protected Elements newElementCache()
     {
         return new Elements();
     }
 
-    protected class Elements
+    protected class Elements extends Component.ElementCache
     {
-        Locator.CssLocator accession = Locator.css(".study-accession");
-        Locator.CssLocator title = Locator.css(".study-title");
-        Locator.CssLocator PI = Locator.css(".study-pi");
-        Locator.CssLocator organization = Locator.css(".study-organization");
-        Locator.CssLocator paper = Locator.css(".study-papers > p");
-        Locator immportLink = Locator.linkWithText("ImmPort");
+        protected final WebElement accession = Locator.css(".study-accession").findWhenNeeded(this);
+        protected final WebElement title = Locator.css(".study-title").findWhenNeeded(this);
+        protected final WebElement PI = Locator.css(".study-pi").findWhenNeeded(this);
+        protected final WebElement organization = Locator.css(".study-organization").findWhenNeeded(this);
+        protected final WebElement immportLink = Locator.linkWithText("ImmPort").findWhenNeeded(this);
+
+        private List<Paper> papers;
+        protected List<Paper> getPapers()
+        {
+            if (papers == null)
+            {
+                papers = new ArrayList<>();
+                List<WebElement> paperEls = Locator.css(".study-papers > p").findElements(_panel);
+
+                for (WebElement el : paperEls)
+                {
+                    papers.add(new Paper(el));
+                }
+            }
+            return papers;
+        }
     }
 
-    private static class Locators
+    private class Paper extends Component
     {
-        private static Locator self = Locator.css("div#demographics.study-demographics");
-    }
-
-    private class Paper
-    {
-        private WebElement paper;
+        private final WebElement paper;
 
         private Paper(WebElement el)
         {
             this.paper = el;
         }
 
+        @Override
+        public WebElement getComponentElement()
+        {
+            return paper;
+        }
+
         public String getJournal()
         {
-            return elements().journal.findElement(paper).getText();
+            return journal.getText();
         }
 
         public String getYear()
         {
-            return elements().year.findElement(paper).getText();
+            return year.getText();
         }
 
         public String getTitle()
         {
-            return elements().title.findElement(paper).getText();
+            return title.getText();
         }
 
         public WebElement getPubMedLink()
         {
-            return elements().pubMedLink.findElement(paper);
+            return pubMedLink;
         }
 
-        private Elements elements()
-        {
-            return new Elements();
-        }
-
-        private class Elements
-        {
-            Locator journal = Locator.css(".pub-journal");
-            Locator year = Locator.css(".pub-year");
-            Locator title = Locator.css(".pub-title");
-            Locator pubMedLink = Locator.linkWithText("PubMed");
-        }
+        protected final WebElement journal = Locator.css(".pub-journal").findWhenNeeded(this);
+        protected final WebElement year = Locator.css(".pub-year").findWhenNeeded(this);
+        protected final WebElement title = Locator.css(".pub-title").findWhenNeeded(this);
+        protected final WebElement pubMedLink = Locator.linkWithText("PubMed").findWhenNeeded(this);
     }
 }

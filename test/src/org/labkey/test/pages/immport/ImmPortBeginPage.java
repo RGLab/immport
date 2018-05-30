@@ -72,4 +72,10 @@ public class ImmPortBeginPage extends LabKeyPage
         //TODO: Finish implementation
         return null;
     }
+
+    public PublishExpressionMatrixPage publishExpressionMatrix()
+    {
+        clickAndWait(Locator.linkWithText("Export selected expression matrices"));
+        return new PublishExpressionMatrixPage(getDriver());
+    }
 }

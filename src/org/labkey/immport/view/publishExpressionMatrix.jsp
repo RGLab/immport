@@ -1,29 +1,27 @@
 <%@ taglib prefix="labkey" uri="http://www.labkey.org/taglib" %>
 <%@ page import="org.apache.commons.lang3.StringUtils" %>
-<%@ page import="org.labkey.api.query.DefaultSchema" %>
-<%@ page import="org.labkey.api.query.QuerySchema" %>
-<%@ page import="java.sql.ResultSet" %>
-<%@ page import="org.labkey.api.query.QueryService" %>
-<%@ page import="java.util.Set" %>
-<%@ page import="java.util.HashSet" %>
-<%@ page import="org.labkey.api.data.RuntimeSQLException" %>
-<%@ page import="java.sql.SQLException" %>
-<%@ page import="org.labkey.api.data.ContainerManager" %>
-<%@ page import="org.labkey.api.data.Container" %>
-<%@ page import="org.labkey.api.security.permissions.AdminPermission" %>
-<%@ page import="java.util.List" %>
-<%@ page import="java.util.ArrayList" %>
-<%@ page import="org.labkey.api.query.QueryDefinition" %>
-<%@ page import="org.labkey.api.view.ViewContext" %>
-<%@ page import="org.labkey.api.query.QueryException" %>
-<%@ page import="org.labkey.api.data.TableInfo" %>
 <%@ page import="org.labkey.api.data.ColumnInfo" %>
-<%@ page import="org.labkey.api.util.PageFlowUtil" %>
-<%@ page import="java.util.Collection" %>
-<%@ page import="org.labkey.api.query.FieldKey" %>
-<%@ page import="java.util.Map" %>
-<%@ page import="org.labkey.api.data.ContainerFilterable" %>
+<%@ page import="org.labkey.api.data.Container" %>
 <%@ page import="org.labkey.api.data.ContainerFilter" %>
+<%@ page import="org.labkey.api.data.ContainerFilterable" %>
+<%@ page import="org.labkey.api.data.ContainerManager" %>
+<%@ page import="org.labkey.api.data.RuntimeSQLException" %>
+<%@ page import="org.labkey.api.data.TableInfo" %>
+<%@ page import="org.labkey.api.query.DefaultSchema" %>
+<%@ page import="org.labkey.api.query.FieldKey" %>
+<%@ page import="org.labkey.api.query.QueryDefinition" %>
+<%@ page import="org.labkey.api.query.QueryException" %>
+<%@ page import="org.labkey.api.query.QuerySchema" %>
+<%@ page import="org.labkey.api.query.QueryService" %>
+<%@ page import="org.labkey.api.security.permissions.AdminPermission" %>
+<%@ page import="org.labkey.api.util.PageFlowUtil" %>
+<%@ page import="java.sql.ResultSet" %>
+<%@ page import="java.sql.SQLException" %>
+<%@ page import="java.util.ArrayList" %>
+<%@ page import="java.util.HashSet" %>
+<%@ page import="java.util.List" %>
+<%@ page import="java.util.Map" %>
+<%@ page import="java.util.Set" %>
 <%@ page extends="org.labkey.api.jsp.JspBase"%>
 
 <labkey:errors/>
@@ -93,12 +91,13 @@
     %><p><%= h("Found " + runs.size() + " run(s) in " + folders.size() + " folder(s).")%></p><%
 
 
-    %><labkey:form method="POST">
+    %><labkey:form method="POST" name="publishExpressionMatrix">
     <input type="hidden" name="runList" value="<%= h(StringUtils.join(runs, ",")) %>"><%
 
     Container root = ContainerManager.getRoot();
     List<Container> targets = ContainerManager.getAllChildren(root, getUser(), AdminPermission.class);
-    %><p>Target Folder:&nbsp;<select name="target"><%
+    %><p>Target Folder:&nbsp;<select title="Target Folder" required name="target">
+    <option></option><%
     for (Container c : targets)
     {
         %>

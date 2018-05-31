@@ -1211,7 +1211,7 @@ public class ImmPortController extends SpringActionController
                     @Override
                     public File getLogFile() throws IOException
                     {
-                        return null;
+                        return ImportPipelineJob.this.getLogFile();
                     }
                     @Override
                     protected File getXmlFile()
@@ -1219,14 +1219,27 @@ public class ImmPortController extends SpringActionController
                         return xarFile;
                     }
                 };
+                setStatus(TaskStatus.running);
+                getLogger().info("Start importing: " + xarFile.getPath());
                 ExperimentService es = ExperimentService.get();
                 ExperimentService.XarImportOptions options = new ExperimentService.XarImportOptions()
                         .setUseOriginalDataFileUrl(true)
                         .setStrictValidateExistingSampleSet(false);
                 es.importXar(source, this, options);
+                getLogger().info("Finished importing: " + xarFile.getPath());
+                if (getActiveTaskStatus() != TaskStatus.error)
+                    setStatus(TaskStatus.complete);
             }
-            catch (ExperimentException ex)
+            catch (RuntimeException ex)
             {
+                this.getLogger().error(ex.getMessage(), ex);
+                setStatus(TaskStatus.error);
+                throw ex;
+            }
+            catch (Exception ex)
+            {
+                this.getLogger().error(ex.getMessage(), ex);
+                setStatus(TaskStatus.error);
                 throw new RuntimeException(ex);
             }
         }

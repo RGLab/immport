@@ -14,6 +14,7 @@ import org.labkey.test.util.Maps;
 import org.labkey.test.util.PipelineAnalysisHelper;
 import org.labkey.test.util.PipelineStatusTable;
 import org.labkey.test.util.PortalHelper;
+import org.labkey.test.util.PostgresOnlyTest;
 import org.openqa.selenium.NoSuchElementException;
 
 import java.io.File;
@@ -26,7 +27,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 @Category({Git.class})
-public class ExpressionMatrixPublishTest extends BaseExpressionMatrixTest
+public class ExpressionMatrixPublishTest extends BaseExpressionMatrixTest implements PostgresOnlyTest
 {
     private static final String PUBLISH_PROJECT = "Expression Matrix Publish Target";
     private static final String runName = "publishing_run";
@@ -83,9 +84,10 @@ public class ExpressionMatrixPublishTest extends BaseExpressionMatrixTest
         assertEquals("Expression matrix publish didn't go to the correct folder", "/" + PUBLISH_PROJECT, getCurrentContainerPath());
         assertEquals("Unexpected XAR selected for import", "analysis/exprs_matrices/matrix_export.xar.xml", importExpressionMatrixPage.getSelectedXar());
         PipelineStatusTable pipelineStatusTable = importExpressionMatrixPage.clickImport();
-        pipelineStatusTable.clickStatusLink(0); // todo waitForPipelineJobsToComplete(1, "import published expression matrices", false);
+        // todo waitForPipelineJobsToComplete(1, "import published expression matrices", false);
 
         goToManageAssays();
+        waitForElementWithRefresh(Locator.linkWithText(ASSAY_NAME), WAIT_FOR_PAGE); // TODO: remove after pipeline job status is correctly reported
         clickAndWait(Locator.linkWithText(ASSAY_NAME));
         // TODO Not linking to matching feature set
         // assertElementPresent(Locator.linkWithText(getFeatureSetName()));

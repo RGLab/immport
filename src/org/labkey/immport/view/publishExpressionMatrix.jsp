@@ -22,6 +22,7 @@
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.Map" %>
 <%@ page import="java.util.Set" %>
+<%@ page import="java.util.TreeSet" %>
 <%@ page extends="org.labkey.api.jsp.JspBase"%>
 
 <labkey:errors/>
@@ -48,7 +49,7 @@
         return;
     }
 
-    String expression_runs_sql  = "SELECT folder.rowid as folderId, folder.name as folderName, rowid as runId, name as runName FROM assay.expressionmatrix.\"" + assayName + "\".Runs";
+    String expression_runs_sql  = "SELECT folder.rowid as folderId, folder.name as folderName, rowid as runId, name as runName, featureSet.Name as featureSetName FROM assay.expressionmatrix.\"" + assayName + "\".Runs";
     QuerySchema study = DefaultSchema.get(getUser(), getContainer(), "study");
     if (null != study && null != study.getTable("participant"))
         expression_runs_sql += "\nWHERE folder IN (SELECT Container FROM study.participant)";
@@ -64,18 +65,22 @@
             FieldKey.fromParts("folderId"),
             FieldKey.fromParts("folderName"),
             FieldKey.fromParts("runId"),
-            FieldKey.fromParts("runName")
+            FieldKey.fromParts("runName"),
+            FieldKey.fromParts("featureSetName")
     ));
     Set<Integer> folders = new HashSet<>();
     Set<Integer> runs = new HashSet<>();
+    Set<String> featureSets = new TreeSet<>();
     try (ResultSet rs = QueryService.get().select(t, cols.values(), null, null);)
     {
         ColumnInfo runId = cols.get(FieldKey.fromParts("runId"));
         ColumnInfo folderId = cols.get(FieldKey.fromParts("folderId"));
+        ColumnInfo featureSetName = cols.get(FieldKey.fromParts("featureSetName"));
         while (rs.next())
         {
             runs.add(runId.getIntValue(rs));
             folders.add(folderId.getIntValue(rs));
+            featureSets.add(featureSetName.getStringValue(rs));
         }
     } catch (SQLException x)
     {
@@ -106,5 +111,12 @@
     }
     %></select><br>
     <input type="submit" value="Publish Expression Matrix">
-    </labkey:form><%
-%>
+    </labkey:form>
+
+Feature Annotation Sets used by these runs:
+<ul>
+    <%for (String name : featureSets)
+    {
+        %><li><%=h(name)%></li><%
+    }%>
+</ul>

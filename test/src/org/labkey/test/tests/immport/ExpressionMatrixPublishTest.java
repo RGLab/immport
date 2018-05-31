@@ -112,17 +112,7 @@ public class ExpressionMatrixPublishTest extends BaseExpressionMatrixTest implem
         goToSchemaBrowser();
         selectQuery("assay.ExpressionMatrix." + ASSAY_NAME, "FeatureDataBySample");
 
-        // TODO: duplicate key exception for samples on republish (supported?)
-//        log("Attempt to re-publish Expression Matrix run from " + getProjectName());
-//        goToProjectHome();
-//        goToModule("ImmPort");
-//        new ImmPortBeginPage(this)
-//                .publishExpressionMatrix()
-//                .selectTargetFolder(PUBLISH_PROJECT)
-//                .clickPublish()
-//                .clickImport();
-
-        //TODO: wait for import and verify
+        // Re-publish/merge not supported; sample set throws duplicate key error
     }
 
     @Test

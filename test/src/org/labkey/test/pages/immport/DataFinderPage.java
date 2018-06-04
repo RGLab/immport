@@ -12,6 +12,7 @@ import org.labkey.test.pages.LabKeyPage;
 import org.labkey.test.util.DataRegionTable;
 import org.labkey.test.util.LogMethod;
 import org.labkey.test.util.LoggedParam;
+import org.labkey.test.util.TestLogger;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
@@ -46,12 +47,12 @@ public class DataFinderPage extends LabKeyPage
     @Override
     protected void waitForPage()
     {
-        _test.waitForElement(pageSignal(COUNT_SIGNAL));
+        waitForElement(pageSignal(COUNT_SIGNAL));
     }
 
     protected void waitForGroupUpdate()
     {
-        _test.waitForElement(pageSignal(GROUP_UPDATED_SIGNAL));
+        waitForElement(pageSignal(GROUP_UPDATED_SIGNAL));
     }
 
     public static DataFinderPage goDirectlyToPage(BaseWebDriverTest test, String containerPath)
@@ -62,8 +63,8 @@ public class DataFinderPage extends LabKeyPage
 
     public ExportStudyDatasetsPage exportDatasets()
     {
-        _test.clickAndWait(Locators.exportDatasets);
-        return new ExportStudyDatasetsPage(_test.getDriver());
+        clickAndWait(Locators.exportDatasets);
+        return new ExportStudyDatasetsPage(getDriver());
     }
 
     public void showUnloadedImmPortStudies()
@@ -78,78 +79,78 @@ public class DataFinderPage extends LabKeyPage
 
     public void selectStudySubset(String text)
     {
-        String selectedText = _test.getSelectedOptionText(Locators.studySubsetChooser);
+        String selectedText = getSelectedOptionText(Locators.studySubsetChooser);
         if (!selectedText.equals(text))
         {
-            _test.doAndWaitForPageSignal(() -> _test.selectOptionByText(Locators.studySubsetChooser, text), COUNT_SIGNAL);
+            doAndWaitForPageSignal(() -> selectOptionByText(Locators.studySubsetChooser, text), COUNT_SIGNAL);
         }
     }
 
     @LogMethod
     public void studySearch(@LoggedParam final String search)
     {
-        _test.doAndWaitForPageSignal(() -> _test.setFormElement(Locators.studySearchInput, search), COUNT_SIGNAL);
+        doAndWaitForPageSignal(() -> setFormElement(Locators.studySearchInput, search), COUNT_SIGNAL);
     }
 
     @LogMethod(quiet = true)
     public void clearSearch()
     {
-        if (!_test.getFormElement(Locators.studySearchInput).isEmpty())
+        if (!getFormElement(Locators.studySearchInput).isEmpty())
             studySearch(" ");
     }
 
     public void saveGroup()
     {
         DataRegionTable.DataRegion(getDriver()).withName("demoDataRegion").waitFor();
-        _test.clickButtonContainingText("Save", BaseWebDriverTest.WAIT_FOR_EXT_MASK_TO_DISSAPEAR);
+        clickButtonContainingText("Save", BaseWebDriverTest.WAIT_FOR_EXT_MASK_TO_DISSAPEAR);
         waitForGroupUpdate();
     }
 
     public void saveGroup(String name)
     {
         DataRegionTable.DataRegion(getDriver()).withName("demoDataRegion").waitFor();
-        _test.setFormElement(Locators.groupLabelInput, name);
-        _test.clickButtonContainingText("Save", BaseWebDriverTest.WAIT_FOR_EXT_MASK_TO_DISSAPEAR);
+        setFormElement(Locators.groupLabelInput, name);
+        clickButtonContainingText("Save", BaseWebDriverTest.WAIT_FOR_EXT_MASK_TO_DISSAPEAR);
         waitForGroupUpdate();
     }
 
     public void saveAndSendGroup(String name)
     {
         DataRegionTable.DataRegion(getDriver()).withName("demoDataRegion").waitFor();
-        _test.setFormElement(Locators.groupLabelInput, name);
-        _test.clickButtonContainingText("Save and Send", BaseWebDriverTest.WAIT_FOR_EXT_MASK_TO_DISSAPEAR);
+        setFormElement(Locators.groupLabelInput, name);
+        clickButtonContainingText("Save and Send", BaseWebDriverTest.WAIT_FOR_EXT_MASK_TO_DISSAPEAR);
         waitForText("Message link:");
     }
 
     public String getGroupNameFromForm()
     {
         DataRegionTable.DataRegion(getDriver()).withName("demoDataRegion").waitFor();
-        return _test.getFormElement(Locators.groupLabelInput);
+        return getFormElement(Locators.groupLabelInput);
     }
 
     public String getGroupLabel()
     {
-        return Locators.groupLabel.findElement(_test.getDriver()).getText().trim();
+        return Locators.groupLabel.findElement(getDriver()).getText().trim();
     }
 
     public GroupMenu getMenu(Locator locator)
     {
-        return new GroupMenu(locator.findElement(_test.getDriver()));
+        return new GroupMenu(locator.findElement(getDriver()));
     }
 
     public boolean menuIsDisabled(Locator.CssLocator locator)
     {
-        return _test.isElementPresent(locator.append(" .labkey-disabled-text-link"));
+        return isElementPresent(locator.append(" .labkey-disabled-text-link"));
     }
 
     public void openMenu(Locator locator)
     {
-        locator.findElement(_test.getDriver()).click();
+        locator.findElement(getDriver()).click();
     }
 
     public Map<Dimension, Integer> getSummaryCounts()
     {
-        WebElement summaryElement = Locators.summaryArea.findElement(_test.getDriver());
+        WebElement summaryElement = Locators.summaryArea.findElement(getDriver());
         DimensionPanel summary = new DimensionPanel(summaryElement);
 
         Map<Dimension, Integer> countMap = new HashMap<>();
@@ -165,7 +166,7 @@ public class DataFinderPage extends LabKeyPage
 
     public List<StudyCard> getStudyCards()
     {
-        List<WebElement> studyCardEls = Locators.studyCard.findElements(_test.getDriver());
+        List<WebElement> studyCardEls = Locators.studyCard.findElements(getDriver());
         List<StudyCard> studyCards = new ArrayList<>();
 
         for (WebElement el : studyCardEls)
@@ -179,7 +180,7 @@ public class DataFinderPage extends LabKeyPage
     public List<DimensionMember> getSelectedMembers()
     {
         List<DimensionMember> members = new ArrayList<>();
-        for (WebElement el : Locators.selection.findElements(_test.getDriver()))
+        for (WebElement el : Locators.selection.findElements(getDriver()))
         {
             members.add(new DimensionMember(el));
         }
@@ -211,7 +212,7 @@ public class DataFinderPage extends LabKeyPage
 
     public Map<Dimension, DimensionPanel> getDimensionPanels(Locator locator)
     {
-        List<WebElement> dimensionPanelEls = locator.findElements(_test.getDriver());
+        List<WebElement> dimensionPanelEls = locator.findElements(getDriver());
         Map<Dimension, DimensionPanel> dimensionPanels = new HashMap<>();
 
         for (WebElement el : dimensionPanelEls)
@@ -227,10 +228,10 @@ public class DataFinderPage extends LabKeyPage
     {
         if(isElementPresent(Locators.clearAll))
         {
-            final WebElement clearAll = Locators.clearAll.findElement(_test.getDriver());
+            final WebElement clearAll = Locators.clearAll.findElement(getDriver());
             if (clearAll.isDisplayed())
             {
-                _test.doAndWaitForPageSignal(clearAll::click, COUNT_SIGNAL);
+                doAndWaitForPageSignal(clearAll::click, COUNT_SIGNAL);
             }
         }
         else
@@ -238,10 +239,10 @@ public class DataFinderPage extends LabKeyPage
             // If that element is not present see if the 'alternative element' is.
             if(isElementPresent(Locators.clearAllFilters))
             {
-                final WebElement clearAllFilters = Locators.clearAllFilters.findElement(_test.getDriver());
+                final WebElement clearAllFilters = Locators.clearAllFilters.findElement(getDriver());
                 if (clearAllFilters.isDisplayed())
                 {
-                    _test.doAndWaitForPageSignal(clearAllFilters::click, COUNT_SIGNAL);
+                    doAndWaitForPageSignal(clearAllFilters::click, COUNT_SIGNAL);
                 }
             }
         }
@@ -254,22 +255,22 @@ public class DataFinderPage extends LabKeyPage
         click(Locators.savedGroups.append(" a").containing(groupName));
     }
 
-    public SendParticipantPage clickSend(BaseWebDriverTest test)
+    public SendParticipantPage clickSend()
     {
         clickAndWait(Locators.sendMenu);
-        return new SendParticipantPage(test);
+        return new SendParticipantPage(getDriver());
     }
 
     public void dismissTour()
     {
-        _test.shortWait().until(new Predicate<WebDriver>()
+        shortWait().until(new Predicate<WebDriver>()
         {
             @Override
             public boolean apply(WebDriver webDriver)
             {
                 try
                 {
-                    return (Boolean) _test.executeScript("" +
+                    return (Boolean) executeScript("" +
                             "if (window.hopscotch)" +
                             "  return !hopscotch.endTour().isActive;" +
                             "else" +
@@ -398,8 +399,8 @@ public class DataFinderPage extends LabKeyPage
 
         public void chooseOption(String optionText, boolean waitForUpdate)
         {
-            _test.log("Choosing menu option " + optionText);
-            List<WebElement> activeOptions = findElements(elements.activeOption);
+            TestLogger.log("Choosing menu option " + optionText);
+            List<WebElement> activeOptions = elements.activeOption.findElements(this);
             for (WebElement option : activeOptions)
             {
                 if (optionText.equals(option.getText().trim()))
@@ -414,8 +415,8 @@ public class DataFinderPage extends LabKeyPage
 
         private List<String> getOptions(Locator locator)
         {
-            List<WebElement> options = findElements(locator);
-            List<String> optionStrings = new ArrayList<String>();
+            List<WebElement> options = locator.findElements(this);
+            List<String> optionStrings = new ArrayList<>();
             for (WebElement option : options)
             {
                 optionStrings.add(option.getText().trim());
@@ -461,25 +462,25 @@ public class DataFinderPage extends LabKeyPage
         public List<String> getValues()
         {
             displayDimension();
-            return getTexts(findElements(elements.member));
+            return getTexts(elements.member.findElements(this));
         }
 
         public List<String> getEmptyValues()
         {
             displayDimension();
-            return getTexts(findElements(elements.emptyMemberName));
+            return getTexts(elements.emptyMemberName.findElements(this));
         }
 
         public List<String> getNonEmptyValues()
         {
             displayDimension();
-            return getTexts(findElements(elements.nonEmptyMemberName));
+            return getTexts(elements.nonEmptyMemberName.findElements(this));
         }
 
         public List<String> getSelectedValues()
         {
             displayDimension();
-            return getTexts(findElements(elements.selectedMemberName));
+            return getTexts(elements.selectedMemberName.findElements(this));
         }
 
         public void displayDimension()
@@ -521,7 +522,7 @@ public class DataFinderPage extends LabKeyPage
         {
             displayDimension();
             Map<String, Integer> countMap = new HashMap<>();
-            List<WebElement> members = findElements(elements.member);
+            List<WebElement> members = elements.member.findElements(this);
             log("getMemberCounts: dimension: " + getDimension().name());
             log("There are " + members.size() + " members in the list.");
             for (WebElement member : members)
@@ -573,12 +574,12 @@ public class DataFinderPage extends LabKeyPage
 
         private void select(final WebElement value)
         {
-            _test.doAndWaitForPageSignal(value::click, COUNT_SIGNAL);
+            doAndWaitForPageSignal(value::click, COUNT_SIGNAL);
         }
 
         private void addToSelection(final WebElement value)
         {
-            _test.doAndWaitForPageSignal(() -> controlClick(value), COUNT_SIGNAL);
+            doAndWaitForPageSignal(() -> controlClick(value), COUNT_SIGNAL);
         }
 
         private void controlClick(WebElement el)
@@ -589,7 +590,7 @@ public class DataFinderPage extends LabKeyPage
             else
                 multiSelectKey = Keys.CONTROL;
 
-            Actions builder = new Actions(_test.getDriver());
+            Actions builder = new Actions(getDriver());
             builder.keyDown(multiSelectKey).build().perform();
             el.click();
             builder.keyUp(multiSelectKey).build().perform();
@@ -616,59 +617,51 @@ public class DataFinderPage extends LabKeyPage
         }
     }
 
-    public class StudyCard
+    public class StudyCard extends Component
     {
-        WebElement card;
-        Elements elements;
-        String title;
-        String accession;
-        String pi;
+        private final WebElement card;
 
         private StudyCard(WebElement card)
         {
             this.card = card;
-            elements = new Elements();
         }
 
-        public WebElement getCardElement()
+        public WebElement getComponentElement()
         {
             return card;
         }
 
         public StudySummaryWindow viewSummary()
         {
-            elements.viewStudyLink.findElement(card).click();
-            return new StudySummaryWindow(_test);
+            viewStudyLink.click();
+            return new StudySummaryWindow(getDriver());
         }
 
         public void clickGoToStudy()
         {
-            _test.clickAndWait(elements.goToStudyLink.findElement(card));
+            clickAndWait(goToStudyLink);
         }
 
         public String getAccession()
         {
-            return elements.name.findElement(card).getText();
+            return name.getText();
         }
 
         public String getPI()
         {
-            return elements.PI.findElement(card).getText();
+            return PI.getText();
         }
 
         public String getTitle()
         {
-            return elements.title.findElement(card).getText();
+            return titleLoc.getText();
         }
 
-        private class Elements
-        {
-            public Locator viewStudyLink = Locator.linkWithText("view summary");
-            public Locator goToStudyLink = Locator.linkWithText("go to study");
-            public Locator name = Locator.css(".labkey-study-card-accession");
-            public Locator PI = Locator.css(".labkey-study-card-pi");
-            public Locator title = Locator.css(".labkey-study-card-description");
-        }
+        private final WebElement viewStudyLink = Locator.linkWithText("view summary").findWhenNeeded(this);
+        private final WebElement goToStudyLink = Locator.linkWithText("go to study").findWhenNeeded(this);
+        private final WebElement name = Locator.css(".labkey-study-card-accession").findWhenNeeded(this);
+        private final WebElement PI = Locator.css(".labkey-study-card-pi").findWhenNeeded(this);
+        private final WebElement titleLoc = Locator.css(".labkey-study-card-description").findWhenNeeded(this);
     }
 
     public class DimensionMember extends Component

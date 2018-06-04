@@ -158,10 +158,10 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                         if (res.success)
                         {
                             // find and replace the record's filters in the groupList
-                            var updatedFilters = res.group.filters == undefined ? [] : Ext4.decode(res.group.filters);
+                            var updatedFilters = res.group.filters === undefined ? [] : Ext4.decode(res.group.filters);
                             Ext4.each($scope.groupList, function(listGroup)
                             {
-                                if (listGroup.id == res.group.rowId)
+                                if (listGroup.id === res.group.rowId)
                                 {
                                     listGroup.filters = updatedFilters;
                                     $scope.applySubjectGroupFilter(listGroup);
@@ -320,7 +320,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
 
         $scope.updateCurrentGroup = function(newCurrent)
         {
-            if ($scope.currentGroup.id == newCurrent.id)
+            if ($scope.currentGroup.id === newCurrent.id)
                 return;
 
             $scope.currentGroup = newCurrent;
@@ -367,7 +367,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                         var groups = [];
                         for (var i = 0; i < json.groups.length; i++)
                         {
-                            if (json.groups[i].filters != undefined)
+                            if (json.groups[i].filters !== undefined)
                             {
                                 var groupFilters = Ext4.decode(json.groups[i].filters);
 
@@ -478,9 +478,9 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                     buttonText: allowSave ? {yes: 'Save', no: 'Save As'} : {ok: 'Save'},
                     fn: function(buttonId)
                     {
-                        if (buttonId == 'yes')
+                        if (buttonId === 'yes')
                             $scope.saveSubjectGroup("update", true);
-                        else if (buttonId == 'no' || buttonId == 'ok')
+                        else if (buttonId === 'no' || buttonId === 'ok')
                             $scope.saveSubjectGroup("saveNew", true);
                     }
                 });
@@ -500,7 +500,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                     returnUrl: LABKEY.ActionURL.buildURL('immport', 'dataFinder')
                 });
             }
-        },
+        };
 
         $scope.groupsAvailable = function ()
         {
@@ -509,23 +509,13 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
 
         $scope.saveParticipantIdGroupInSession = function (participantIds)
         {
-            if ($scope.subjects.length == 0 && $scope.dimStudy.filters.length > 0)
-            {
-                LABKEY.Ajax.request({
-                    method: "DELETE",
-                    url: LABKEY.ActionURL.buildURL("participant-group", "sessionParticipantGroup.api")
-                });
-            }
-            else
-            {
-                LABKEY.Ajax.request({
-                    method: "POST",
-                    url: LABKEY.ActionURL.buildURL("participant-group", "sessionParticipantGroup.api"),
-                    jsonData: {
-                        participantIds: $scope.subjects
-                    }
-                });
-            }
+            LABKEY.Ajax.request({
+                method: "POST",
+                url: LABKEY.ActionURL.buildURL("participant-group", "sessionParticipantGroup.api"),
+                jsonData: {
+                    participantIds: $scope.subjects
+                }
+            });
         };
 
         $scope.saveLoadedGroupInSession = function(groupId)
@@ -574,6 +564,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
         $scope.filterChoice = {
             show: false
         };
+        $scope.loading = true;
         $scope.subjects = [];
         $scope.timeout = $timeout;
         $scope.http = $http;
@@ -686,7 +677,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                 $scope.loadFilterState();
 
                 // init study list according to studySubset
-                if (loaded_study_list.length == 0)
+                if (loaded_study_list.length === 0)
                     $scope.studySubset = "UnloadedImmPort";
                 $scope.onStudySubsetChanged();
                 // doShowAllStudiesChanged() has side-effect of calling updateCountsAsync()
@@ -746,6 +737,17 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
         $scope.isMemberVisible = function(m)
         {
             return !m.hidden;
+        };
+
+        $scope.getVisibleStudies = function()
+        {
+            var ret = [];
+            $scope.studies.forEach(function(study)
+            {
+                if ($scope.countForStudy(study))
+                    ret.push(study);
+            });
+            return ret;
         };
 
         $scope.countForStudy = function (study)
@@ -1187,7 +1189,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                 for (m = 0; m < dim.members.length; m++)
                 {
                     member = dim.members[m];
-                    member.percent = max == 0 ? 0 : (100.0 * member.count) / max;
+                    member.percent = max === 0 ? 0 : (100.0 * member.count) / max;
                 }
             }
 
@@ -1200,6 +1202,8 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
 
         $scope.doneRendering = function ()
         {
+            $scope.loading = false;
+
             if (loadMask)
             {
                 Ext4.get(dataFinderAppId).removeCls("x-hidden");
@@ -1394,7 +1398,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
             {
                 if (!dataspace.dimensions.hasOwnProperty(d))
                     continue;
-                if (d == "Study" && $scope.filterByLevel == "[Study].[Name]")
+                if (d === "Study" && $scope.filterByLevel === "[Study].[Name]")
                     continue;
 
                 var dim = dataspace.dimensions[d];
@@ -1420,7 +1424,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                     "operator" : "OR"
                 }
             }
-            if (filterSet.length == 0)
+            if (filterSet.length === 0)
                 $scope.localStorageService.remove("filterSet");
             else
                 $scope.localStorageService.set("filterSet", filterSet);
@@ -1440,7 +1444,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                 {
                     if (filterSet.hasOwnProperty(f))
                     {
-                        if (filterSet[f].name == "Search")
+                        if (filterSet[f].name === "Search")
                         {
                             $scope.$emit("searchTermsAppliedFromFilter", filterSet[f].members);
                         }
@@ -1483,21 +1487,11 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                     containers.push(study.containerId);
             }
 
-            if (containers.length === 0)
-            {
-                LABKEY.Ajax.request({
-                    url: LABKEY.ActionURL.buildURL('study-shared', 'sharedStudyContainerFilter.api'),
-                    method: 'DELETE'
-                });
-            }
-            else
-            {
-                LABKEY.Ajax.request({
-                    url: LABKEY.ActionURL.buildURL('study-shared', 'sharedStudyContainerFilter.api'),
-                    method: 'POST',
-                    jsonData: {containers: containers}
-                });
-            }
+            LABKEY.Ajax.request({
+                url: LABKEY.ActionURL.buildURL('study-shared', 'sharedStudyContainerFilter.api'),
+                method: 'POST',
+                jsonData: {containers: containers}
+            });
         };
 
         $scope.showStudyPopup = function (study_accession)
@@ -1619,9 +1613,9 @@ function resizeToViewport(el, width, height, paddingX, paddingY, offsetX, offset
         return null;
 
     var padding = [];
-    if (offsetX == undefined || offsetX == null)
+    if (offsetX === undefined || offsetX == null)
         offsetX = 35;
-    if (offsetY == undefined || offsetY == null)
+    if (offsetY === undefined || offsetY == null)
         offsetY = 35;
 
     if (paddingX !== undefined && paddingX != null)

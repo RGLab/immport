@@ -1,29 +1,28 @@
 <%@ taglib prefix="labkey" uri="http://www.labkey.org/taglib" %>
 <%@ page import="org.apache.commons.lang3.StringUtils" %>
-<%@ page import="org.labkey.api.query.DefaultSchema" %>
-<%@ page import="org.labkey.api.query.QuerySchema" %>
-<%@ page import="java.sql.ResultSet" %>
-<%@ page import="org.labkey.api.query.QueryService" %>
-<%@ page import="java.util.Set" %>
-<%@ page import="java.util.HashSet" %>
-<%@ page import="org.labkey.api.data.RuntimeSQLException" %>
-<%@ page import="java.sql.SQLException" %>
-<%@ page import="org.labkey.api.data.ContainerManager" %>
-<%@ page import="org.labkey.api.data.Container" %>
-<%@ page import="org.labkey.api.security.permissions.AdminPermission" %>
-<%@ page import="java.util.List" %>
-<%@ page import="java.util.ArrayList" %>
-<%@ page import="org.labkey.api.query.QueryDefinition" %>
-<%@ page import="org.labkey.api.view.ViewContext" %>
-<%@ page import="org.labkey.api.query.QueryException" %>
-<%@ page import="org.labkey.api.data.TableInfo" %>
 <%@ page import="org.labkey.api.data.ColumnInfo" %>
-<%@ page import="org.labkey.api.util.PageFlowUtil" %>
-<%@ page import="java.util.Collection" %>
-<%@ page import="org.labkey.api.query.FieldKey" %>
-<%@ page import="java.util.Map" %>
-<%@ page import="org.labkey.api.data.ContainerFilterable" %>
+<%@ page import="org.labkey.api.data.Container" %>
 <%@ page import="org.labkey.api.data.ContainerFilter" %>
+<%@ page import="org.labkey.api.data.ContainerFilterable" %>
+<%@ page import="org.labkey.api.data.ContainerManager" %>
+<%@ page import="org.labkey.api.data.RuntimeSQLException" %>
+<%@ page import="org.labkey.api.data.TableInfo" %>
+<%@ page import="org.labkey.api.query.DefaultSchema" %>
+<%@ page import="org.labkey.api.query.FieldKey" %>
+<%@ page import="org.labkey.api.query.QueryDefinition" %>
+<%@ page import="org.labkey.api.query.QueryException" %>
+<%@ page import="org.labkey.api.query.QuerySchema" %>
+<%@ page import="org.labkey.api.query.QueryService" %>
+<%@ page import="org.labkey.api.security.permissions.AdminPermission" %>
+<%@ page import="org.labkey.api.util.PageFlowUtil" %>
+<%@ page import="java.sql.ResultSet" %>
+<%@ page import="java.sql.SQLException" %>
+<%@ page import="java.util.ArrayList" %>
+<%@ page import="java.util.HashSet" %>
+<%@ page import="java.util.List" %>
+<%@ page import="java.util.Map" %>
+<%@ page import="java.util.Set" %>
+<%@ page import="java.util.TreeSet" %>
 <%@ page extends="org.labkey.api.jsp.JspBase"%>
 
 <labkey:errors/>
@@ -50,7 +49,7 @@
         return;
     }
 
-    String expression_runs_sql  = "SELECT folder.rowid as folderId, folder.name as folderName, rowid as runId, name as runName FROM assay.expressionmatrix.\"" + assayName + "\".Runs";
+    String expression_runs_sql  = "SELECT folder.rowid as folderId, folder.name as folderName, rowid as runId, name as runName, featureSet.Name as featureSetName FROM assay.expressionmatrix.\"" + assayName + "\".Runs";
     QuerySchema study = DefaultSchema.get(getUser(), getContainer(), "study");
     if (null != study && null != study.getTable("participant"))
         expression_runs_sql += "\nWHERE folder IN (SELECT Container FROM study.participant)";
@@ -66,18 +65,22 @@
             FieldKey.fromParts("folderId"),
             FieldKey.fromParts("folderName"),
             FieldKey.fromParts("runId"),
-            FieldKey.fromParts("runName")
+            FieldKey.fromParts("runName"),
+            FieldKey.fromParts("featureSetName")
     ));
     Set<Integer> folders = new HashSet<>();
     Set<Integer> runs = new HashSet<>();
+    Set<String> featureSets = new TreeSet<>();
     try (ResultSet rs = QueryService.get().select(t, cols.values(), null, null);)
     {
         ColumnInfo runId = cols.get(FieldKey.fromParts("runId"));
         ColumnInfo folderId = cols.get(FieldKey.fromParts("folderId"));
+        ColumnInfo featureSetName = cols.get(FieldKey.fromParts("featureSetName"));
         while (rs.next())
         {
             runs.add(runId.getIntValue(rs));
             folders.add(folderId.getIntValue(rs));
+            featureSets.add(featureSetName.getStringValue(rs));
         }
     } catch (SQLException x)
     {
@@ -93,12 +96,13 @@
     %><p><%= h("Found " + runs.size() + " run(s) in " + folders.size() + " folder(s).")%></p><%
 
 
-    %><labkey:form method="POST">
+    %><labkey:form method="POST" name="publishExpressionMatrix">
     <input type="hidden" name="runList" value="<%= h(StringUtils.join(runs, ",")) %>"><%
 
     Container root = ContainerManager.getRoot();
     List<Container> targets = ContainerManager.getAllChildren(root, getUser(), AdminPermission.class);
-    %><p>Target Folder:&nbsp;<select name="target"><%
+    %><p>Target Folder:&nbsp;<select title="Target Folder" required name="target">
+    <option></option><%
     for (Container c : targets)
     {
         %>
@@ -107,5 +111,12 @@
     }
     %></select><br>
     <input type="submit" value="Publish Expression Matrix">
-    </labkey:form><%
-%>
+    </labkey:form>
+
+Feature Annotation Sets used by these runs:
+<ul>
+    <%for (String name : featureSets)
+    {
+        %><li><%=h(name)%></li><%
+    }%>
+</ul>

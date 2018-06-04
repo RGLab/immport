@@ -1,27 +1,21 @@
 package org.labkey.test.pages.immport;
 
-import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.pages.LabKeyPage;
+import org.openqa.selenium.WebDriver;
 
 import java.util.List;
 
 public class SendParticipantPage extends LabKeyPage
 {
-    public SendParticipantPage(BaseWebDriverTest test)
+    public SendParticipantPage(WebDriver driver)
     {
-        super(test.getDriver());
+        super(driver);
     }
 
     public void setRecipients(List<String> recipients)
     {
-        String fullList = "";
-        for(String recipient : recipients)
-        {
-            fullList += recipient + "\n";
-        }
-
-        setFormElement(Locators.recipientsList, fullList);
+        setFormElement(Locators.recipientsList, String.join("\n", recipients));
     }
 
     public String getRecipients()
@@ -77,5 +71,4 @@ public class SendParticipantPage extends LabKeyPage
         public static final Locator.XPathLocator linkText = Locator.xpath("//form//b[contains(text(), 'Message link:')]//following-sibling::div[1]");
         public static final Locator errorMessage = org.labkey.test.Locators.labkeyError;
     }
-
 }

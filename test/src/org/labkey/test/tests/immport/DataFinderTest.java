@@ -91,6 +91,8 @@ import java.util.zip.ZipInputStream;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.labkey.test.util.PermissionsHelper.MemberType;
 
@@ -374,7 +376,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
 
         finder.studySearch(searchString);
 
-        shortWait().until(ExpectedConditions.stalenessOf(studyCards.get(1).getCardElement()));
+        shortWait().until(ExpectedConditions.stalenessOf(studyCards.get(1).getComponentElement()));
         studyCards = finder.getStudyCards();
 
         assertEquals("Wrong number of studies after search", 1, studyCards.size());
@@ -769,7 +771,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
 
         log("Go get the url from the email message.");
         String url = getSharedLinks(messageSubject);
-        assertTrue("URL in email message not same as preview URL. URL from message: '" + url + "' Preview: '" + previewURL + "'", previewURL.equals(url));
+        assertEquals("URL in email message not same as preview URL.", previewURL, url);
         URL sharedUrl = new URL(url);
 
         log("Impersonate one of the recipients and validate that the link works as expected.");
@@ -782,7 +784,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         log("Validate that the facets are as expected.");
         filters = finder.getSelectedMembers();
         assertEquals("Count of filters is not as expected.", 1, filters.size());
-        assertTrue("Filter name not as expected. Expected: '" + filter + "' found: '" + filters.get(0).getName() + "'", filters.get(0).getName().equals(filter));
+        assertEquals("Filter name not as expected.", filter, filters.get(0).getName());
 
         log("Validate card count."); // Not going to look at cards because filtering is tested elsewhere.
         assertEquals("Count of cards not as expected.", 2, finder.getStudyCards().size());
@@ -803,13 +805,13 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         log("Validate that the facets are as expected.");
         filters = finder.getSelectedMembers();
         assertEquals("Count of filters is not as expected.", 1, filters.size());
-        assertTrue("Filter name not as expected. Expected: '" + filter + "' found: '" + filters.get(0).getName() + "'", filters.get(0).getName().equals(filter));
+        assertEquals("Filter name not as expected.", filter, filters.get(0).getName());
 
         log("Validate card count.");
         assertEquals("Count of cards not as expected.", 1, finder.getStudyCards().size());
 
         log("Validate that the card shown to User2 is the only one they are allowed to see.");
-        Assert.assertTrue("Study card shown was not limited to the one User2 can see '" + USER2_FOLDER + "'.", finder.getStudyCards().get(0).getAccession().equals(USER2_FOLDER));
+        Assert.assertEquals("Study card shown was not limited to the one User2 can see", USER2_FOLDER, finder.getStudyCards().get(0).getAccession());
 
         log("Validate this user can save the group.");
         saveMenu = finder.getMenu(DataFinderPage.Locators.saveMenu);
@@ -817,7 +819,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         saveMenu.chooseOption("Save As", false);
         String defaultGroupName = finder.getGroupNameFromForm();
 
-        Assert.assertTrue("Default group name not as expected. Expected: '" + groupName + "' Found: '" + defaultGroupName + "'.", defaultGroupName.equals(groupName));
+        Assert.assertEquals("Default group name not as expected.", groupName, defaultGroupName);
         clickButtonContainingText("Close", BaseWebDriverTest.WAIT_FOR_EXT_MASK_TO_DISSAPEAR);
 
         saveMenu = finder.getMenu(DataFinderPage.Locators.saveMenu);
@@ -845,7 +847,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         recipients.add(USER1);
         recipients.add(USER3);
         String errorMessage = sendStudyGroup(recipients, groupName, true);
-        Assert.assertTrue("Error message not as expected.", errorMessage.equals("User does not have permissions to this folder: " + USER3));
+        Assert.assertEquals("Error message not as expected.", "User does not have permissions to this folder: " + USER3, errorMessage);
 
         log("Error message was as expected. Cancel out of this form.");
         clickButton("Cancel");
@@ -888,7 +890,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         recipients.add(USER1);
 
         log("Fill out the 'Send Participant Group' form.");
-        sendPage = new SendParticipantPage(this);
+        sendPage = new SendParticipantPage(getDriver());
         sendPage.setRecipients(recipients);
         sendPage.setMessageSubject(sendPage.getMessageSubject() + " named: " + groupName);
         sendPage.clickSubmit();
@@ -970,10 +972,10 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
 
         final NotificationPanelItem notificationPanelItem = notificationsPanel.findNotificationInList(groupsSent.get(SENT_CLICK_IN_PANEL).groupName, "Study");
 
-        assertTrue("Did not find a notice with the group name '" + groupsSent.get(SENT_CLICK_IN_PANEL).groupName + "' in it.", notificationPanelItem != null);
+        assertNotNull("Did not find a notice with the group name '" + groupsSent.get(SENT_CLICK_IN_PANEL).groupName + "' in it.", notificationPanelItem);
         assertTrue("Item in panel did not have the expected created by.", notificationPanelItem.getCreatedBy().contains("Today -"));
         assertTrue("Item in panel did not have the expected body.", notificationPanelItem.getBody().contains("A participant group has been sent: " + groupsSent.get(SENT_CLICK_IN_PANEL).groupName));
-        assertTrue("Icon for item in panel not as expected.", notificationPanelItem.getIconType().equals("fa-users"));
+        assertEquals("Icon for item in panel not as expected.", "fa-users", notificationPanelItem.getIconType());
 
         log("Click on the item in the list and validate we go to the correct page.");
         doAndWaitForPageToLoad(notificationPanelItem::click);
@@ -1000,7 +1002,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
 
         NotificationPanelItem notificationPanelItem2 = notificationsPanel.findNotificationInList(groupsSent.get(SENT_MARK_AS_READ).groupName, "Study");
 
-        assertTrue("Did not find a notice with the group name '" + groupsSent.get(SENT_MARK_AS_READ).groupName + "' in it.", notificationPanelItem2 != null);
+        assertNotNull("Did not find a notice with the group name '" + groupsSent.get(SENT_MARK_AS_READ).groupName + "' in it.", notificationPanelItem2);
 
         log("Expand the notification. Why? Just because we can, and make sure no errors occur.");
         notificationPanelItem2.toggleExpand();
@@ -1023,13 +1025,13 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
 
         log("Find the notification '" + groupsSent.get(SENT_MARK_AS_READ).groupName + "' and confirm it is read.");
         UserNotificationsPage.NotificationItem pageNotificationItem = notificationsPage.findNotificationInPage(groupsSent.get(SENT_MARK_AS_READ).groupName, UserNotificationsPage.NotificationTypes.STUDY);
-        assertTrue("Did not find the 'Read' notification in the list of all notifications.", pageNotificationItem != null);
+        assertNotNull("Did not find the 'Read' notification in the list of all notifications.", pageNotificationItem);
         assertTrue("The 'Read' notification is not marked as read in the list.", pageNotificationItem.isRead());
-        assertTrue("Text for the 'Read On:' is not as expected.", pageNotificationItem.getReadOnText().equals("Read On: Today"));
+        assertEquals("Text for the 'Read On:' is not as expected.", "Read On: Today", pageNotificationItem.getReadOnText());
 
         log("Find notification for group '" + groupsSent.get(SENT_CLICK_VIEW_LINK).groupName + "' that was sent and validate that the 'view' links takes you to the expected page.");
         final UserNotificationsPage.NotificationItem pageNotificationItem2 = notificationsPage.findNotificationInPage(groupsSent.get(SENT_CLICK_VIEW_LINK).groupName, UserNotificationsPage.NotificationTypes.STUDY);
-        assertTrue("Did not find the 'going to view' notification in the list of all notifications.", pageNotificationItem2 != null);
+        assertNotNull("Did not find the 'going to view' notification in the list of all notifications.", pageNotificationItem2);
         log("Click the 'view' link.");
         doAndWaitForPageToLoad(pageNotificationItem2::clickView);
         assertTrue("URL for page is not as expected. We should be at dataFinder.view", getURL().getPath().contains("dataFinder.view"));
@@ -1040,22 +1042,22 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
 
         log("Find notification that was sent and validate that the 'Mark As Read' links works as expected.");
         pageNotificationItem = notificationsPage.findNotificationInPage(groupsSent.get(SENT_CLICK_MARK_AS_READ).groupName, UserNotificationsPage.NotificationTypes.STUDY);
-        assertTrue("Did not find the notification for group '" + groupsSent.get(SENT_CLICK_MARK_AS_READ).groupName + "' in the list of all notifications.", pageNotificationItem != null);
+        assertNotNull("Did not find the notification for group '" + groupsSent.get(SENT_CLICK_MARK_AS_READ).groupName + "' in the list of all notifications.", pageNotificationItem);
         log("Click 'Mark As Read'.");
         pageNotificationItem.clickMarkAsRead();
         assertTrue("The notification is not marked as read in the list.", pageNotificationItem.isRead());
-        assertTrue("Text for the 'Read On:' is not as expected.", pageNotificationItem.getReadOnText().equals("Read On: Today"));
+        assertEquals("Text for the 'Read On:' is not as expected.", "Read On: Today", pageNotificationItem.getReadOnText());
 
         log("Find notification '" + groupsSent.get(SENT_CLICK_DISMISS_LINK).groupName + "' that was sent and validate that the 'Dismiss' links works as expected.");
         // Get a new instance of the notifications page.
         notificationsPage = new UserNotificationsPage(getDriver());
         pageNotificationItem = notificationsPage.findNotificationInPage(groupsSent.get(SENT_CLICK_DISMISS_LINK).groupName, UserNotificationsPage.NotificationTypes.STUDY);
-        assertTrue("Did not find the notification for group '" + groupsSent.get(SENT_CLICK_DISMISS_LINK).groupName + "' in the list of all notifications.", pageNotificationItem != null);
+        assertNotNull("Did not find the notification for group '" + groupsSent.get(SENT_CLICK_DISMISS_LINK).groupName + "' in the list of all notifications.", pageNotificationItem);
         log("Click 'Delete'.");
         pageNotificationItem.clickDelete();
         sleep(500);
         pageNotificationItem = notificationsPage.findNotificationInPage(groupsSent.get(SENT_CLICK_DISMISS_LINK).groupName, UserNotificationsPage.NotificationTypes.STUDY);
-        assertTrue("Found the notification for group '" + groupsSent.get(SENT_CLICK_DISMISS_LINK).groupName + "' in the list of all notifications. It should not be there.", pageNotificationItem == null);
+        assertNull("Found the notification for group '" + groupsSent.get(SENT_CLICK_DISMISS_LINK).groupName + "' in the list of all notifications. It should not be there.", pageNotificationItem);
 
         log("Finally, from the panel click the 'Clear All' link and validate all messages are now marked as read.");
         notificationsPanel = UserNotificationsPanel.clickInbox(this);
@@ -1231,7 +1233,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
 
         log("Send the link to the list of recipients.");
         finder = new DataFinderPage(this);
-        sendPage = finder.clickSend(this);
+        sendPage = finder.clickSend();
         sendPage.setRecipients(recipients);
         msgSubject = sendPage.getMessageSubject() + " named: " + groupName;
         sendPage.setMessageSubject(msgSubject);
@@ -1275,7 +1277,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         // If send worked you should be on another page now.
         if(getURL().getPath().contains("sendParticipantGroup.view?"))
         {
-            sendPage = new SendParticipantPage(this);
+            sendPage = new SendParticipantPage(getDriver());
             assertFalse("An error was shown on the send page. Error message is: " + sendPage.getErrorMessage(), isElementPresent(SendParticipantPage.Locators.errorMessage));
             Assert.fail("Did not navigate away from 'study-sendParticipantGroup.view' after clicking send (should have). And no error message was shown on the page (and there should have been).");
         }

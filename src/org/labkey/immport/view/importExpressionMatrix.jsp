@@ -1,28 +1,22 @@
 <%@ taglib prefix="labkey" uri="http://www.labkey.org/taglib" %>
+<%@ page import="org.apache.commons.io.FileUtils" %>
+<%@ page import="org.apache.commons.io.IOCase" %>
+<%@ page import="org.apache.commons.io.filefilter.DirectoryFileFilter" %>
+<%@ page import="org.apache.commons.io.filefilter.SuffixFileFilter" %>
 <%@ page import="org.apache.commons.lang3.StringUtils" %>
-<%@ page import="org.labkey.api.data.Container" %>
-<%@ page import="org.labkey.api.data.ContainerManager" %>
 <%@ page import="org.labkey.api.pipeline.PipeRoot" %>
 <%@ page import="org.labkey.api.pipeline.PipelineService" %>
-<%@ page import="org.labkey.api.security.permissions.AdminPermission" %>
+<%@ page import="org.labkey.api.util.Path" %>
+<%@ page import="org.labkey.api.view.BadRequestException" %>
+<%@ page import="static org.labkey.api.reports.RserveScriptEngine.PIPELINE_ROOT" %>
 <%@ page import="org.labkey.api.view.HttpView" %>
 <%@ page import="org.labkey.immport.ImmPortController" %>
 <%@ page import="java.io.File" %>
-<%@ page import="static org.labkey.api.reports.RserveScriptEngine.PIPELINE_ROOT" %>
 <%@ page import="java.util.ArrayList" %>
-<%@ page import="java.util.List" %>
-<%@ page import="org.labkey.api.util.Path" %>
-<%@ page import="org.labkey.api.view.BadRequestException" %>
-<%@ page import="java.nio.file.FileVisitResult" %>
-<%@ page import="java.io.IOException" %>
-<%@ page import="java.nio.file.attribute.BasicFileAttributes" %>
-<%@ page import="java.nio.file.SimpleFileVisitor" %>
 <%@ page import="java.util.Collection" %>
-<%@ page import="org.apache.commons.io.FileUtils" %>
-<%@ page import="org.apache.commons.io.filefilter.RegexFileFilter" %>
-<%@ page import="org.apache.commons.io.filefilter.DirectoryFileFilter" %>
-<%@ page import="org.apache.commons.io.filefilter.SuffixFileFilter" %>
-<%@ page import="org.apache.commons.io.IOCase" %>
+<%@ page import="java.util.LinkedHashSet" %>
+<%@ page import="java.util.List" %>
+<%@ page import="java.util.Set" %>
 <%@ page extends="org.labkey.api.jsp.JspBase"%>
 
 <labkey:errors/>
@@ -36,7 +30,7 @@
         return;
     }
     File base = pipe.getRootPath();
-    List<String> paths = new ArrayList<>();
+    Set<String> paths = new LinkedHashSet<>();
     String selectedPath = null;
 
     // first see if there is a target on the url
@@ -52,15 +46,17 @@
             paths.add(selectedPath);
         }
     }
+    if (paths.isEmpty())
+    {
+        paths.add("");
+    }
     paths.addAll(xarListing(base));
 
 %>
-    <labkey:form method="POST" action="<%=h(getViewContext().cloneActionURL().deleteParameters())%>">
+    <labkey:form method="POST" name="importExpressionMatrix" action="<%=h(getViewContext().cloneActionURL().deleteParameters())%>">
 <%
-    Container root = ContainerManager.getRoot();
-    List<Container> targets = ContainerManager.getAllChildren(root, getUser(), AdminPermission.class);
     boolean foundSelected = false;
-    %><p>Xar file:&nbsp;<select name="xarPath"><%
+    %><p>Xar file:&nbsp;<select title="Xar File" required name="xarPath"><%
         for (String path : paths)
         {
             boolean selectedOption = false;

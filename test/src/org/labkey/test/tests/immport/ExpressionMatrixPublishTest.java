@@ -71,6 +71,7 @@ public class ExpressionMatrixPublishTest extends BaseExpressionMatrixTest implem
     {
         log("Create publish target");
         _containerHelper.createProject(PUBLISH_PROJECT, null);
+        _containerHelper.enableModule("Microarray");
         log("Create feature set to match published expression matrix");
         createFeatureSet(getFeatureSetName(), new PortalHelper(this));
 
@@ -88,7 +89,8 @@ public class ExpressionMatrixPublishTest extends BaseExpressionMatrixTest implem
 
         goToManageAssays();
         clickAndWait(Locator.linkWithText(ASSAY_NAME));
-        assertElementPresent(Locator.linkWithText(getFeatureSetName()));
+        assertTrue("Imported expression matrices did get linked to existing feature set: " + getFeatureSetName(),
+                isElementPresent(Locator.linkWithText(getFeatureSetName())));
         clickAndWait(Locator.linkWithText(runName));
 
         log("Verify expression matrix results table");

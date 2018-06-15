@@ -1129,19 +1129,25 @@ public class ImmPortController extends SpringActionController
         {
             if (isBlank(form.getXarPath()))
             {
-                errors.reject("xarPath", ERROR_REQUIRED);
+                errors.rejectValue("xarPath", ERROR_REQUIRED);
             }
             else
             {
                 org.labkey.api.util.Path norm = org.labkey.api.util.Path.parse(form.getXarPath().trim()).normalize();
                 if (null == norm)
-                    errors.reject("xarPath", "invalid path");
+                    errors.rejectValue("xarPath", ERROR_MSG,"invalid path");
             }
+            QuerySchema microarray = DefaultSchema.get(getUser(), getContainer()).getSchema("Microarray");
+            if (null == microarray)
+                errors.reject(ERROR_MSG, "Microarray module is not enabled in this container.");
         }
 
         @Override
         public ModelAndView getView(ImportExpressionMatrixForm form, boolean reshow, BindException errors) throws Exception
         {
+            QuerySchema microarray = DefaultSchema.get(getUser(), getContainer()).getSchema("Microarray");
+            if (null == microarray)
+                errors.reject(ERROR_MSG, "Microarray module is not enabled in this container.");
             return new JspView<>(ImportExpressionMatrixAction.class, "view/importExpressionMatrix.jsp", form, errors);
         }
 

@@ -263,8 +263,15 @@ function renderExport(){
         });
     }
 
+    var taskUpdateSummary = new Ext4.util.DelayedTask(_updateSummary);
+
+    function updateSummary()
+    {
+        taskUpdateSummary.delay(100);
+    }
+
     // Update file and dataset summary in panel on right hand side
-    function updateSummary(){
+    function _updateSummary(){
         if ( dataStore && document.getElementById( 'summaryData' ) ){
             var totalFiles = 0, filesize = 0, data;
             for ( var i = 0; i < dataStore.getCount(); i ++ ){
@@ -355,14 +362,13 @@ function renderExport(){
         },
 
         onStoreDataUpdate: function () {
-            var allChecked,
-                image;
+            updateSummary();
 
             if (!this.updatingAll) {
-                allChecked = this.getStoreIsAllChecked();
+                var allChecked = this.getStoreIsAllChecked();
                 if (allChecked !== this.allChecked) {
                     this.allChecked = allChecked;
-                    image = this.getHeaderCheckboxImage(allChecked);
+                    var image = this.getHeaderCheckboxImage(allChecked);
                     this.setText(image);
                 }
             }
@@ -436,7 +442,6 @@ function renderExport(){
                     columnHeaderCheckbox: true,
                     dataIndex: 'include',
                     hideable: false,
-                    listeners: { checkchange: updateSummary },
                     menuDisabled: true,
                     resizable: false,
                     sortable: false,

@@ -72,7 +72,7 @@ function renderExport(){
                             id: rows[i].DataSetId,
                             name: rows[i].Name,
                             label: rows[i].Label,
-                            type: -1,
+                            type: 'Dataset (TSV)',
                             numRows: -1,
                             fileSize: -1,
                             final: false
@@ -155,7 +155,7 @@ function renderExport(){
                 id: record.get( 'id' ) + 'f',
                 name: record.get( 'name' ),
                 label: record.get( 'label' ),
-                type: -1,
+                type: 'File',
                 numRows: -1,
                 fileSize: -1,
                 final: false
@@ -203,7 +203,7 @@ function renderExport(){
             id: record.get( 'id' ) + 'm',
             name: record.get( 'name' ),
             label: 'Gene expression matrices',
-            type: -1,
+            type: 'File',
             numRows: -1,
             fileSize: -1,
             final: false

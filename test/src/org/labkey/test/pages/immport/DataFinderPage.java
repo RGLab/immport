@@ -1,6 +1,5 @@
 package org.labkey.test.pages.immport;
 
-import com.google.common.base.Predicate;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.labkey.test.BaseWebDriverTest;
@@ -23,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import static org.labkey.test.Locators.pageSignal;
 
@@ -263,18 +263,18 @@ public class DataFinderPage extends LabKeyPage
 
     public void dismissTour()
     {
-        shortWait().until(new Predicate<WebDriver>()
+        shortWait().until(new Function<WebDriver, Boolean>()
         {
             @Override
-            public boolean apply(WebDriver webDriver)
+            public Boolean apply(WebDriver webDriver)
             {
                 try
                 {
-                    return (Boolean) executeScript("" +
+                    return executeScript("" +
                             "if (window.hopscotch)" +
                             "  return !hopscotch.endTour().isActive;" +
                             "else" +
-                            "  return true;");
+                            "  return true;", Boolean.class);
                 }
                 catch (WebDriverException recheck)
                 {

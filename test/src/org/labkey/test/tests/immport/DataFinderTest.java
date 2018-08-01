@@ -1307,7 +1307,6 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
                 "Compensation Controls_Violet B 450,2f,50 Stained Control.297087.fcs",
                 "Compensation Controls_Blue E 530,2f,30 Stained Control.297081.fcs");
         File fl;
-        boolean createdFolder;
 
         log("Go to study: " + STUDY_SUBFOLDERS[0]);
         clickFolder(STUDY_SUBFOLDERS[0]);
@@ -1322,26 +1321,16 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         // However the export with folder feature was explicitly spec'd to look at @files and does not see the @pipeline.
 
         log("Check to see if a rawdata folder is there, if not create it.");
-        try
-        {
-            _fileBrowserHelper.checkFileBrowserFileCheckbox("rawdata");
-        }
-        catch(NoSuchElementException nse)
-        {
+        if(!_fileBrowserHelper.fileIsPresent("rawdata")) {
             log("No rawdata folder is there, going to create it.");
             _fileBrowserHelper.createFolder("rawdata");
         }
 
         doubleClick(Locator.xpath("//td[@role='gridcell']//span[contains(@style, 'display:')]").withText("rawdata"));
 
+        boolean createdFolder = false;
         log("Check to see if a flow_cytometry folder is there, if not create it.");
-        try
-        {
-            _fileBrowserHelper.checkFileBrowserFileCheckbox("flow_cytometry");
-            createdFolder = false;
-        }
-        catch(NoSuchElementException nse)
-        {
+        if(!_fileBrowserHelper.fileIsPresent("flow_cytometry")) {
             log("No flow_cytometry folder is there, going to create it.");
             _fileBrowserHelper.createFolder("flow_cytometry");
             createdFolder = true;

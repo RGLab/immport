@@ -44,6 +44,8 @@
 <%@ page import="org.labkey.api.rstudio.RStudioService" %>
 <%@ page import="org.labkey.api.services.ServiceRegistry" %>
 <%@ page import="org.labkey.api.util.URLHelper" %>
+<%@ page import="java.util.regex.Pattern" %>
+<%@ page import="java.util.regex.Matcher" %>
 <%@ page extends="org.labkey.api.jsp.JspBase"%>
 <%!
     @Override
@@ -297,6 +299,8 @@ var loaded_studies = {
 Container c = context.getContainer();
 if (!c.isRoot())
 {
+    Pattern sdyPattern = Pattern.compile("(SDY\\d+).*");
+
     comma = "\n";
     Container p = c.getProject();
     QuerySchema s = DefaultSchema.get(context.getUser(), p).getSchema("study");
@@ -316,12 +320,17 @@ if (!c.isRoot())
         if (null == studyContainer)
             continue;
         ActionURL url = studyContainer.getStartURL(context.getUser());
-        String study_accession = (String)map.get("study_accession");
-        String name = (String)map.get("Label");
+
+        String study_accession = null;
+        String name = StringUtils.defaultIfBlank((String)map.get("Label"),studyContainer.getName());
+        if (null != name)
+        {
+            Matcher m = sdyPattern.matcher(name);
+            if (m.matches())
+                study_accession = m.group(1);
+        }
         Date until = (Date)map.get("highlight_until");
         boolean highlight = null != until && until.getTime() > now;
-        if (StringUtils.isEmpty(study_accession) && StringUtils.startsWith(name,"SDY"))
-            study_accession = name;
         if (null != study_accession)
         {
             if (StringUtils.endsWithIgnoreCase(study_accession," Study"))

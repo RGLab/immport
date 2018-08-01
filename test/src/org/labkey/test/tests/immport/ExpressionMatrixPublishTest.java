@@ -71,6 +71,7 @@ public class ExpressionMatrixPublishTest extends BaseExpressionMatrixTest implem
     {
         log("Create publish target");
         _containerHelper.createProject(PUBLISH_PROJECT, null);
+        _containerHelper.enableModule("Microarray");
         log("Create feature set to match published expression matrix");
         createFeatureSet(getFeatureSetName(), new PortalHelper(this));
 
@@ -84,13 +85,12 @@ public class ExpressionMatrixPublishTest extends BaseExpressionMatrixTest implem
         assertEquals("Expression matrix publish didn't go to the correct folder", "/" + PUBLISH_PROJECT, getCurrentContainerPath());
         assertEquals("Unexpected XAR selected for import", "analysis/exprs_matrices/matrix_export.xar.xml", importExpressionMatrixPage.getSelectedXar());
         PipelineStatusTable pipelineStatusTable = importExpressionMatrixPage.clickImport();
-        // todo waitForPipelineJobsToComplete(1, "import published expression matrices", false);
+        waitForPipelineJobsToComplete(1, "import published expression matrices", false);
 
         goToManageAssays();
-        waitForElementWithRefresh(Locator.linkWithText(ASSAY_NAME), WAIT_FOR_PAGE); // TODO: remove after pipeline job status is correctly reported
         clickAndWait(Locator.linkWithText(ASSAY_NAME));
-        // TODO Not linking to matching feature set
-        // assertElementPresent(Locator.linkWithText(getFeatureSetName()));
+        assertTrue("Imported expression matrices did get linked to existing feature set: " + getFeatureSetName(),
+                isElementPresent(Locator.linkWithText(getFeatureSetName())));
         clickAndWait(Locator.linkWithText(runName));
 
         log("Verify expression matrix results table");

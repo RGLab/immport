@@ -31,6 +31,7 @@ import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.CoreSchema;
 import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.DbSchemaType;
 import org.labkey.api.data.DbScope;
 import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.Parameter;
@@ -67,6 +68,7 @@ import org.labkey.api.util.ConfigurationException;
 import org.labkey.api.util.DateUtil;
 import org.labkey.api.util.ExceptionUtil;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.Job;
 import org.labkey.api.util.Path;
 import org.labkey.api.util.URLHelper;
 import org.labkey.api.view.ViewBackgroundInfo;
@@ -275,6 +277,10 @@ public class DataLoader extends PipelineJob
                     return tl;
                 }
             }
+        }
+
+        protected void afterCopy(PipelineJob job)
+        {
         }
     }
 
@@ -525,20 +531,20 @@ public class DataLoader extends PipelineJob
                 return select;
 
             // OK wrapp the data iterator with a wrapper, that adds the "restricted" column;
-            DataIteratorBuilder dib;
-            dib = new DataIteratorBuilder()
-            {
-                @Override
-                public DataIterator getDataIterator(DataIteratorContext context)
+                DataIteratorBuilder dib;
+                dib = new DataIteratorBuilder()
                 {
-                    DataIterator in = select.getDataIterator(context);
-                    SimpleTranslator out = new SimpleTranslator(in, context);
-                    out.selectAll();
+                    @Override
+                    public DataIterator getDataIterator(DataIteratorContext context)
+                    {
+                        DataIterator in = select.getDataIterator(context);
+                        SimpleTranslator out = new SimpleTranslator(in, context);
+                        out.selectAll();
                     out.addConstantColumn("restricted", JdbcType.BOOLEAN, restricted);
-                    return out;
-                }
-            };
-            return dib;
+                        return out;
+                    }
+                };
+                return dib;
         }
     }
 
@@ -737,7 +743,18 @@ public class DataLoader extends PipelineJob
         new StudyCopyConfig("hla_typing_result"),
         new StudyCopyConfig("kir_typing_result"),
         new StudyCopyConfig("mbaa_result"),
-        new StudyCopyConfig("neut_ab_titer_result"),
+        new StudyCopyConfig("neut_ab_titer_result")
+        {
+            @Override
+            protected void afterCopy(PipelineJob job)
+            {
+                DbSchema s = DbSchema.get("immport", DbSchemaType.Module);
+                int count = new SqlExecutor(s).execute(
+                        "UPDATE immport.neut_ab_titer_result SET value_preferred=to_number(value_reported,'99999999999.9999') " +
+                        "WHERE value_preferred IS NULL and value_reported  ~ '^([0-9]+[.]?[0-9]*|[.][0-9]+)$'");
+                job.info("Updated value_preferred column: " + count + " rows");
+            }
+        },
         new StudyCopyConfig("pcr_result"),
         new StudyCopyConfig("subject_measure_result"),
         new StudyCopyConfig("rna_seq_result"),
@@ -906,6 +923,8 @@ public class DataLoader extends PipelineJob
                 }
 
                 int count = config.copyFrom(getContainer(), getUser(), context, source, this);
+                if (config instanceof ImmPortCopyConfig)
+                    ((ImmPortCopyConfig)config).afterCopy(DataLoader.this);
 
                 tx.commit();
 

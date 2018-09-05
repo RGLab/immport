@@ -919,14 +919,13 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
     }
 
     @Test
-    public void testNotifications() throws MalformedURLException
+    public void testNotifications()
     {
-
         UserNotificationsPanel notificationsPanel;
         UserNotificationsPage notificationsPage;
-        int unreadNotifications, recipientCountBefore, recipientCountAfter;
+        int expectedNotifications;
+        int notificationCount;
         ArrayList<studyGroupInfo> groupsSent;
-        URL previewUrl;
 
         // These are indexes to messages in groupsSent. The index indicates the test it is used for.
         final int TOTAL_NOTIFICATIONS_TO_SEND = 8;
@@ -943,16 +942,17 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
 
         goToProjectHome();
 
-        log("First thing, impersonate the recipient of the notices and get their notification count before we start.");
+        log("First thing, clear out any existing notifications.");
         impersonate(USER1);
-        recipientCountBefore = UserNotificationsPanel.getInboxCount(this);
+        UserNotificationsPage.beginAt(this).deleteAll();
         stopImpersonating();
 
         log("Create several different study groups that will cause notifications to be sent.");
         goToProjectHome();
         // I create several different groups/notifications because the last test run validates the "Clear All" functionality.
         groupsSent = createAllStudyGroupsForNotificationTest(TOTAL_NOTIFICATIONS_TO_SEND);
-        unreadNotifications = groupsSent.size();
+        expectedNotifications = TOTAL_NOTIFICATIONS_TO_SEND;
+        assertEquals("Failed to create expected number of initial notifications", expectedNotifications, groupsSent.size());
 
         log("Go home so we don't accidentally visit the page and cause a notification to disappear");
         goToHome();
@@ -960,13 +960,14 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         log("Impersonate the recipient and validate that they see notifications.");
         impersonate(USER1);
 
-        recipientCountAfter = UserNotificationsPanel.getInboxCount(this);
-        log("Message count on inbox: " + recipientCountAfter);
-        Assert.assertEquals("Notification count for the inbox is not as expected.", (recipientCountBefore + unreadNotifications), recipientCountAfter);
+        notificationCount = UserNotificationsPanel.getInboxCount(this);
+        log("Message count on inbox: " + notificationCount);
+        Assert.assertEquals("Notification count for the inbox is not as expected.", expectedNotifications, notificationCount);
 
         notificationsPanel = UserNotificationsPanel.clickInbox(this);
-        log("Message count in panel: " + notificationsPanel.getNotificationCount());
-        Assert.assertEquals("Count of notifications in the panel is not as expected.", (recipientCountBefore + unreadNotifications), notificationsPanel.getNotificationCount());
+        notificationCount = notificationsPanel.getNotificationCount();
+        log("Message count in panel: " + notificationCount);
+        Assert.assertEquals("Count of notifications in the panel is not as expected.", expectedNotifications, notificationCount);
 
         log("Find the notification that is for the study group: " + groupsSent.get(SENT_CLICK_IN_PANEL).groupName);
 
@@ -979,21 +980,21 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
 
         log("Click on the item in the list and validate we go to the correct page.");
         doAndWaitForPageToLoad(notificationPanelItem::click);
+        expectedNotifications--;
 
-        assertTrue("URL for page is not as expected. We should be at dataFinder.view", getURL().getPath().contains("dataFinder.view"));
-        unreadNotifications--;
+        String currentUrl = getDriver().getCurrentUrl();
+        assertTrue("URL for page is not as expected. We should be at dataFinder.view. Actually at: " + currentUrl, currentUrl.contains("dataFinder.view"));
 
         log("Validate that the notification count has gone down.");
-        recipientCountAfter = UserNotificationsPanel.getInboxCount(this);
-        assertEquals("Count after clicking the item in the panel was not as expected.", (recipientCountBefore + unreadNotifications), recipientCountAfter);
+        notificationCount = UserNotificationsPanel.getInboxCount(this);
+        assertEquals("Count after clicking the item in the panel was not as expected.", expectedNotifications, notificationCount);
 
         log("Visit the url link for a different group and confirm that this causes the notification count to go down.");
-        previewUrl = new URL(groupsSent.get(SENT_VISIT_URL).sharedURL);
-        goToURL(previewUrl, 10000);
-        unreadNotifications--;
+        beginAt(groupsSent.get(SENT_VISIT_URL).sharedURL);
+        expectedNotifications--;
 
-        recipientCountAfter = UserNotificationsPanel.getInboxCount(this);
-        assertEquals("Count after was not as expected.",  (recipientCountBefore + unreadNotifications), recipientCountAfter);
+        notificationCount = UserNotificationsPanel.getInboxCount(this);
+        assertEquals("Count was not as expected after visiting notification target directly.",  expectedNotifications, notificationCount);
 
         log("Go home, kind of resetting.");
         goToHome();
@@ -1012,13 +1013,10 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
 
         log("Mark the notification as being read.");
         notificationPanelItem2.markAsRead();
+        expectedNotifications--;
 
-        // Wait for the notification to be removed from the list.
-        sleep(500);
-        unreadNotifications--;
-
-        recipientCountAfter = notificationsPanel.getNotificationCount();
-        assertEquals("Count of notifications in the panel not as expected after marking one as read.", recipientCountBefore + unreadNotifications, recipientCountAfter);
+        notificationCount = notificationsPanel.getNotificationCount();
+        assertEquals("Count of notifications in the panel after marking one as read.", expectedNotifications, notificationCount);
 
         log("Go view all notifications.");
         notificationsPage = notificationsPanel.viewAll();
@@ -1027,14 +1025,14 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         UserNotificationsPage.NotificationItem pageNotificationItem = notificationsPage.findNotificationInPage(groupsSent.get(SENT_MARK_AS_READ).groupName, UserNotificationsPage.NotificationTypes.STUDY);
         assertNotNull("Did not find the 'Read' notification in the list of all notifications.", pageNotificationItem);
         assertTrue("The 'Read' notification is not marked as read in the list.", pageNotificationItem.isRead());
-        assertEquals("Text for the 'Read On:' is not as expected.", "Read On: Today", pageNotificationItem.getReadOnText());
+        assertEquals("Text for the 'Read On:'.", "Read On: Today", pageNotificationItem.getReadOnText());
 
         log("Find notification for group '" + groupsSent.get(SENT_CLICK_VIEW_LINK).groupName + "' that was sent and validate that the 'view' links takes you to the expected page.");
         final UserNotificationsPage.NotificationItem pageNotificationItem2 = notificationsPage.findNotificationInPage(groupsSent.get(SENT_CLICK_VIEW_LINK).groupName, UserNotificationsPage.NotificationTypes.STUDY);
         assertNotNull("Did not find the 'going to view' notification in the list of all notifications.", pageNotificationItem2);
         log("Click the 'view' link.");
         doAndWaitForPageToLoad(pageNotificationItem2::clickView);
-        assertTrue("URL for page is not as expected. We should be at dataFinder.view", getURL().getPath().contains("dataFinder.view"));
+        assertTrue("Wrong URL for page. We should be at dataFinder.view.", getURL().getPath().contains("dataFinder.view"));
 
         log("Go back to the notifications page and click the 'Mark As Read' link.");
         notificationsPanel = UserNotificationsPanel.clickInbox(this);
@@ -1046,7 +1044,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         log("Click 'Mark As Read'.");
         pageNotificationItem.clickMarkAsRead();
         assertTrue("The notification is not marked as read in the list.", pageNotificationItem.isRead());
-        assertEquals("Text for the 'Read On:' is not as expected.", "Read On: Today", pageNotificationItem.getReadOnText());
+        assertEquals("Text for the 'Read On:'.", "Read On: Today", pageNotificationItem.getReadOnText());
 
         log("Find notification '" + groupsSent.get(SENT_CLICK_DISMISS_LINK).groupName + "' that was sent and validate that the 'Dismiss' links works as expected.");
         // Get a new instance of the notifications page.
@@ -1063,11 +1061,8 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         notificationsPanel = UserNotificationsPanel.clickInbox(this);
         notificationsPanel.clearAll();
 
-        // Wait a moment for the panel to clear.
-        sleep(500);
-
-        assertEquals("Notification count for inbox is not as expected.", 0, UserNotificationsPanel.getInboxCount(this));
-        assertEquals("Count of notifications in the panel is not as expected.", 0, notificationsPanel.getNotificationCount());
+        assertEquals("Notification count for inbox.", 0, UserNotificationsPanel.getInboxCount(this));
+        assertEquals("Count of notifications in the panel.", 0, notificationsPanel.getNotificationCount());
 
         log("The text 'No new notifications' should be shown in the panel.");
         assertTrue("Text 'No new notifications' was not present in notification panel.", notificationsPanel.getComponentElement().getText().contains("No new notifications"));
@@ -1083,15 +1078,15 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         }
 
         log("Get the new unread count for this user (should be 0) and stop impersonating.");
-        recipientCountBefore = UserNotificationsPanel.getInboxCount(this);
+        assertEquals("Should be no more unread notifications", 0, UserNotificationsPanel.getInboxCount(this));
 
         stopImpersonating();
 
         log("Create a few more study groups and then validate that 'Mark All As Read' and 'Delete All' works as expected from the notification page.");
         goToProjectHome();
-        unreadNotifications = 2;
-        groupsSent = createAllStudyGroupsForNotificationTest(unreadNotifications);
-        unreadNotifications = groupsSent.size();
+        groupsSent = createAllStudyGroupsForNotificationTest(2);
+        expectedNotifications = 2;
+        assertEquals("Did not create correct number of groups", expectedNotifications, groupsSent.size());
 
         log("Go home again so we don't accidentally visit the page and cause a notification to disappear");
         goToHome();
@@ -1099,13 +1094,13 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         log("Again impersonate the recipient and validate that they see notifications.");
         impersonate(USER1);
 
-        recipientCountAfter = UserNotificationsPanel.getInboxCount(this);
-        log("Message count on inbox: " + recipientCountAfter);
-        Assert.assertEquals("Notification count for the inbox is not as expected.", (recipientCountBefore + unreadNotifications), recipientCountAfter);
+        notificationCount = UserNotificationsPanel.getInboxCount(this);
+        log("Message count on inbox: " + notificationCount);
+        Assert.assertEquals("Notification count for the inbox is not as expected.", expectedNotifications, notificationCount);
 
         notificationsPanel = UserNotificationsPanel.clickInbox(this);
         log("Message count in panel: " + notificationsPanel.getNotificationCount());
-        Assert.assertEquals("Count of notifications in the panel is not as expected.", (recipientCountBefore + unreadNotifications), notificationsPanel.getNotificationCount());
+        Assert.assertEquals("Count of notifications in the panel is not as expected.", expectedNotifications, notificationsPanel.getNotificationCount());
 
         log("Go view all notifications.");
         notificationsPage = notificationsPanel.viewAll();
@@ -1138,8 +1133,6 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
 
         log("We are done, turn off the experimental feature and go home");
         ExperimentalFeaturesHelper.setExperimentalFeature(cn, "experimental-notificationmenu", false);
-
-        goToHome();
     }
 
     private ArrayList<studyGroupInfo> createAllStudyGroupsForNotificationTest(int noticeCount)
@@ -1307,7 +1300,6 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
                 "Compensation Controls_Violet B 450,2f,50 Stained Control.297087.fcs",
                 "Compensation Controls_Blue E 530,2f,30 Stained Control.297081.fcs");
         File fl;
-        boolean createdFolder;
 
         log("Go to study: " + STUDY_SUBFOLDERS[0]);
         clickFolder(STUDY_SUBFOLDERS[0]);
@@ -1322,26 +1314,16 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         // However the export with folder feature was explicitly spec'd to look at @files and does not see the @pipeline.
 
         log("Check to see if a rawdata folder is there, if not create it.");
-        try
-        {
-            _fileBrowserHelper.checkFileBrowserFileCheckbox("rawdata");
-        }
-        catch(NoSuchElementException nse)
-        {
+        if(!_fileBrowserHelper.fileIsPresent("rawdata")) {
             log("No rawdata folder is there, going to create it.");
             _fileBrowserHelper.createFolder("rawdata");
         }
 
         doubleClick(Locator.xpath("//td[@role='gridcell']//span[contains(@style, 'display:')]").withText("rawdata"));
 
+        boolean createdFolder = false;
         log("Check to see if a flow_cytometry folder is there, if not create it.");
-        try
-        {
-            _fileBrowserHelper.checkFileBrowserFileCheckbox("flow_cytometry");
-            createdFolder = false;
-        }
-        catch(NoSuchElementException nse)
-        {
+        if(!_fileBrowserHelper.fileIsPresent("flow_cytometry")) {
             log("No flow_cytometry folder is there, going to create it.");
             _fileBrowserHelper.createFolder("flow_cytometry");
             createdFolder = true;

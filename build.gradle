@@ -1,6 +1,11 @@
+import org.labkey.gradle.util.BuildUtils;
+
 apply plugin: 'java'
 apply plugin: 'org.labkey.module'
 
-dependencies {
-   external 'org.apache.commons:commons-vfs2:2.0'
+dependencies
+        {
+    external 'org.apache.commons:commons-vfs2:2.0'
+
+    BuildUtils.addLabKeyDependency(project: project, config: "compile", depProjectPath: ":server:modules:dataintegration", depProjectConfig: "apiCompile")
 }

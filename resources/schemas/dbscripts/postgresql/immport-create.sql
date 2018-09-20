@@ -368,6 +368,13 @@ BEGIN
       FROM immport.study
       WHERE
         lower(official_title || ' ' || condition_studied) like '%hepatitis c%'
+        
+      UNION ALL
+
+      SELECT study_accession AS Study, 'Hepatitis B' as Condition
+      FROM immport.study
+      WHERE
+        lower(official_title || ' ' || condition_studied) like '%hepatitis b%'
 
       UNION ALL
 

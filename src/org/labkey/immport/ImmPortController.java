@@ -1192,11 +1192,21 @@ public class ImmPortController extends SpringActionController
     {
         File xarFile;
 
+        //For serialization
+        protected ImportPipelineJob() {}
+        
         ImportPipelineJob(ViewBackgroundInfo info, PipeRoot pipe, File xarFile)
         {
             super(null, info, pipe);
             this.xarFile = xarFile;
         }
+
+        @Override
+        public boolean hasJacksonSerialization()
+        {
+            return true;
+        }
+
         @Override
         public URLHelper getStatusHref()
         {

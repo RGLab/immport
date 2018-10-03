@@ -39,7 +39,6 @@ import org.labkey.test.components.ParticipantListWebPart;
 import org.labkey.test.components.core.NotificationPanelItem;
 import org.labkey.test.components.core.UserNotificationsPanel;
 import org.labkey.test.components.dumbster.EmailRecordTable;
-import org.labkey.test.components.ext4.Checkbox;
 import org.labkey.test.components.ext4.Window;
 import org.labkey.test.components.immport.StudySummaryWindow;
 import org.labkey.test.components.study.StudyOverviewWebPart;
@@ -1279,7 +1278,6 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
     @Test
     public void testExportDataWithFiles() throws Exception
     {
-        PortalHelper portalHelper = new PortalHelper(this);
         List<String> controlFileList = Arrays.asList(
                 "Fig7_Compensation Controls_Blue E 530,2f,30 Stained Control.297194.fcs",
                 "Fig7_Compensation Controls_Violet B 450,2f,50 Stained Control.297200.fcs",
@@ -1299,16 +1297,11 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
                 "Compensation Controls_Red A 780,2f,60 Stained Control.297086.fcs",
                 "Compensation Controls_Violet B 450,2f,50 Stained Control.297087.fcs",
                 "Compensation Controls_Blue E 530,2f,30 Stained Control.297081.fcs");
-        File fl;
 
         log("Go to study: " + STUDY_SUBFOLDERS[0]);
         clickFolder(STUDY_SUBFOLDERS[0]);
 
-        List<String> webParts = portalHelper.getWebPartTitles();
-        if(!webParts.contains("Files"))
-        {
-            portalHelper.addWebPart("Files");
-        }
+        goToModule("FileContent");
 
         // Would be nice to be able to use a pipeline to populate the files.
         // However the export with folder feature was explicitly spec'd to look at @files and does not see the @pipeline.
@@ -1319,7 +1312,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
             _fileBrowserHelper.createFolder("rawdata");
         }
 
-        doubleClick(Locator.xpath("//td[@role='gridcell']//span[contains(@style, 'display:')]").withText("rawdata"));
+        _fileBrowserHelper.selectFileBrowserItem("rawdata/");
 
         boolean createdFolder = false;
         log("Check to see if a flow_cytometry folder is there, if not create it.");
@@ -1329,14 +1322,14 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
             createdFolder = true;
         }
 
-        doubleClick(Locator.xpath("//td[@role='gridcell']//span[contains(@style, 'display:')]").withText("flow_cytometry"));
+        _fileBrowserHelper.selectFileBrowserItem("rawdata/flow_cytometry");
 
         if(createdFolder)
         {
             log("Had to create the folder so have to upload the control files.");
             for (String cntrlFileName : controlFileList)
             {
-                fl = TestFileUtils.getSampleData("HIPC/downloadFiles/rawdata/flow_cytometry/" + cntrlFileName);
+                File fl = TestFileUtils.getSampleData("HIPC/downloadFiles/rawdata/flow_cytometry/" + cntrlFileName);
                 _fileBrowserHelper.uploadFile(fl);
             }
         }
@@ -1347,24 +1340,22 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
 
         goToProjectHome();
         log("Limit export to the one sub folder.");
-        selectOptionByText(Locator.name("studySubsetSelect"), "ImmuneSpace studies");
-        setFormElement(Locator.id("searchTerms"), STUDY_SUBFOLDERS[0]);
+        DataFinderPage dataFinderPage = new DataFinderPage(this);
+        dataFinderPage.selectStudySubset("ImmuneSpace studies");
+        dataFinderPage.studySearch(STUDY_SUBFOLDERS[0]);
 
         log("Wait until the other study cards are gone.");
         waitForElementToDisappear(Locator.xpath("//div[contains(@class, 'labkey-study-card')]//span[text()='" + STUDY_SUBFOLDERS[1] + "']"));
 
         log("Export.");
-        click(Locator.linkWithText("Export Study Datasets"));
-
-        waitForElements(Locator.xpath("//td[@role='gridcell']//div").withText("File"), 2, 30000);
+        ExportStudyDatasetsPage exportPage = dataFinderPage.exportDatasets();
 
         log("Limit the export to only the fcs control files.");
         String controlFilesDatasetId = "5019";
-        Checkbox controlFilesChecker = Checkbox.Ext4Checkbox().locatedBy(Locator.css("tr[data-recordid='" + controlFilesDatasetId + "f'] div.x4-grid-cell-inner-checkcolumn img")).find(getDriver());
-        controlFilesChecker.check();
+        exportPage.selectDatasetFile(controlFilesDatasetId);
         Locator.id("summaryData").childTag("div").withText("Files number: 45").waitForElement(getDriver(), WAIT_FOR_JAVASCRIPT);
 
-        File download = clickAndWaitForDownload(Locator.id("downloadBtn"));
+        File download = exportPage.download();
 
         log("Look at zip file and make sure the expected files are there.");
         Set<String> filesInZip = new HashSet<>();

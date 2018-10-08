@@ -1265,7 +1265,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
             createdFolder = true;
         }
 
-        _fileBrowserHelper.selectFileBrowserItem("rawdata/flow_cytometry");
+        _fileBrowserHelper.selectFileBrowserItem("rawdata/flow_cytometry/");
 
         if(createdFolder)
         {

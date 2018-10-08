@@ -58,17 +58,11 @@ public class SendParticipantPage extends LabKeyPage
         clickButton("Cancel");
     }
 
-    public String getErrorMessage()
+    private static class Locators
     {
-        return getText(Locators.errorMessage);
-    }
-
-    public static class Locators
-    {
-        public static final Locator recipientsList = Locator.id("recipientList");
-        public static final Locator messageSubject = Locator.id("messageSubject");
-        public static final Locator messageBody = Locator.id("messageBody");
-        public static final Locator.XPathLocator linkText = Locator.xpath("//form//b[contains(text(), 'Message link:')]//following-sibling::div[1]");
-        public static final Locator errorMessage = org.labkey.test.Locators.labkeyError;
+        private static final Locator recipientsList = Locator.id("recipientList");
+        private static final Locator messageSubject = Locator.id("messageSubject");
+        private static final Locator messageBody = Locator.id("messageBody");
+        private static final Locator.XPathLocator linkText = Locator.xpath("//form//b[contains(text(), 'Message link:')]//following-sibling::div[1]");
     }
 }

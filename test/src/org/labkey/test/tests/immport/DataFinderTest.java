@@ -61,7 +61,6 @@ import org.labkey.test.util.PostgresOnlyTest;
 import org.labkey.test.util.ReadOnlyTest;
 import org.labkey.test.util.ext4cmp.Ext4CmpRef;
 import org.labkey.test.util.ext4cmp.Ext4GridRef;
-import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 
@@ -226,21 +225,18 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
     }
 
     @Before
-    public void preTest()
+    public void preTest() throws Exception
     {
         clearSharedStudyContainerFilter();
         goToProjectHome();
         DataFinderPage finder = new DataFinderPage(this);
+        finder.showAllImmuneSpaceStudies();
         finder.clearSearch();
-        try
-        {
-            finder.clearAllFilters();
-        }
-        catch (NoSuchElementException ignore) {}
+        finder.clearAllFilters();
         finder.dismissTour();
     }
 
-    public void clearSharedStudyContainerFilter()
+    public void clearSharedStudyContainerFilter() throws IOException, CommandException
     {
         Connection connection = createDefaultConnection(false);
         Command command = new Command("study-shared", "sharedStudyContainerFilter")
@@ -252,14 +248,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
             }
         };
 
-        try
-        {
-            command.execute(connection, getProjectName());
-        }
-        catch (CommandException | IOException fail)
-        {
-            throw new RuntimeException(fail);
-        }
+        command.execute(connection, getProjectName());
     }
 
     @Test
@@ -280,7 +269,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
     @Test
     public void testStudyCards()
     {
-        DataFinderPage finder = DataFinderPage.goDirectlyToPage(this, getProjectName());
+        DataFinderPage finder = new DataFinderPage(this);
 
         List<DataFinderPage.StudyCard> studyCards = finder.getStudyCards();
 
@@ -290,9 +279,8 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
     @Test
     public void testImmuneSpaceStudySubset()
     {
-        DataFinderPage finder = DataFinderPage.goDirectlyToPage(this, getProjectName());
+        DataFinderPage finder = new DataFinderPage(this);
 
-        finder.showAllImmuneSpaceStudies();
         assertEquals("Wrong ImmPort studies have LabKey study links", Arrays.asList(STUDY_SUBFOLDERS),
                 getTexts(Locator.tagWithClass("div", "labkey-study-card").withPredicate(Locator.linkWithText("go to study"))
                         .append(Locator.tagWithClass("span", "labkey-study-card-accession")).findElements(getDriver())));
@@ -341,8 +329,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         expectedCounts.put(Dimension.STUDIES, 0);
         expectedCounts.put(Dimension.SUBJECTS, 0);
 
-        DataFinderPage finder = DataFinderPage.goDirectlyToPage(this, getProjectName());
-        finder.showAllImmuneSpaceStudies();
+        DataFinderPage finder = new DataFinderPage(this);
 
         Map<Dimension, DataFinderPage.DimensionPanel> dimensionPanels = finder.getAllDimensionPanels();
 
@@ -367,7 +354,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
     @Test
     public void testSearch()
     {
-        DataFinderPage finder = DataFinderPage.goDirectlyToPage(this, getProjectName());
+        DataFinderPage finder = new DataFinderPage(this);
         finder.showUnloadedImmPortStudies();
 
         List<DataFinderPage.StudyCard> studyCards = finder.getStudyCards();
@@ -386,7 +373,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
     @Test
     public void testStudySummaryWindow()
     {
-        DataFinderPage finder = DataFinderPage.goDirectlyToPage(this, getProjectName());
+        DataFinderPage finder = new DataFinderPage(this);
 
         DataFinderPage.StudyCard studyCard = finder.getStudyCards().get(0);
 
@@ -542,8 +529,6 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
     public void testStickyFinderFilterOnStudyNavigator()
     {
         DataFinderPage finder = new DataFinderPage(this);
-        finder.showAllImmuneSpaceStudies();
-        finder.dismissTour();
         finder.getAllDimensionPanels().get(Dimension.CATEGORY).selectMember("Immune Response");
 
         List<String> assaysWithData = finder.getAllDimensionPanels().get(Dimension.ASSAY).getNonEmptyValues();
@@ -591,9 +576,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
     @Test
     public void testDatasetExport() throws IOException
     {
-        DataFinderPage finder = DataFinderPage.goDirectlyToPage(this, getProjectName());
-        finder.dismissTour();
-        finder.showAllImmuneSpaceStudies();
+        DataFinderPage finder = new DataFinderPage(this);
         finder.getAllDimensionPanels().get(Dimension.CATEGORY).selectMember("Immune Response");
 
         Map<Dimension, Integer> studyCounts = finder.getSummaryCounts();
@@ -650,16 +633,14 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
     {
         DataFinderPage finder = new DataFinderPage(this);
         finder.showUnloadedImmPortStudies();
-        Assert.assertTrue("Save menu should not be enabled for unloaded studies", finder.menuIsDisabled(DataFinderPage.Locators.saveMenu));
-        Assert.assertTrue("Load menu should not be enabled for unloaded studies", finder.menuIsDisabled(DataFinderPage.Locators.loadMenu));
+        Assert.assertFalse("Save menu should not be enabled for unloaded studies", finder.saveMenu().isEnabled());
+        Assert.assertFalse("Load menu should not be enabled for unloaded studies", finder.loadMenu().isEnabled());
     }
 
     @Test
     public void testGroupSaveAndLoad()
     {
         DataFinderPage finder = new DataFinderPage(this);
-        finder.showAllImmuneSpaceStudies();
-        finder.clearAllFilters();
         assertEquals("Group label not as expected", "Unsaved Group", finder.getGroupLabel());
 
         Map<Dimension, DataFinderPage.DimensionPanel> dimensionPanels = finder.getAllDimensionPanels();
@@ -669,16 +650,12 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         Map<Dimension, Integer> summaryCounts = finder.getSummaryCounts();
 
         // click on "Save" menu and assert "Save" is not active then assert "Save as" is active
-        DataFinderPage.GroupMenu saveMenu = finder.getMenu(DataFinderPage.Locators.saveMenu);
-        saveMenu.toggleMenu();
-        Assert.assertEquals("Unexpected number of inactive options", 1, saveMenu.getInactiveOptions().size());
-        Assert.assertTrue("'Save' option is not an inactive menu option but should be", saveMenu.getInactiveOptions().contains("Save"));
-
-        Assert.assertEquals("Unexpected number of active options", 1, saveMenu.getActiveOptions().size());
-        Assert.assertTrue("'Save as' option is not active but should be", saveMenu.getActiveOptions().contains("Save As"));
+        DataFinderPage.SaveMenu saveMenu = finder.saveMenu();
+        Assert.assertEquals("Inactive options", Arrays.asList("Save"), saveMenu.getInactiveOptions());
+        Assert.assertEquals("Active options", Arrays.asList("Save As"), saveMenu.getActiveOptions());
 
         String filterName = "testGroupSaveAndLoad" + System.currentTimeMillis();
-        saveMenu.chooseOption("Save As", false);
+        saveMenu.saveAs();
         // assert that popup has the proper number of Selected Studies and Subjects
         DataRegionTable subjectData = new DataRegionTable("demoDataRegion", this);
         Assert.assertEquals("Subject counts on save group window differ from those on data finder", summaryCounts.get(Dimension.SUBJECTS).intValue(), subjectData.getDataRowCount());
@@ -688,20 +665,16 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
 
         finder.clearAllFilters();
         //load group with test name
-        DataFinderPage.GroupMenu loadMenu = finder.getMenu(DataFinderPage.Locators.loadMenu);
-        loadMenu.toggleMenu();
-        Assert.assertTrue("Saved group does not appear in load menu", loadMenu.getActiveOptions().contains(filterName));
-        loadMenu.chooseOption(filterName, false);
+        DataFinderPage.LoadMenu loadMenu = finder.loadMenu();
+        loadMenu.loadGroup(filterName);
         assertEquals("Group label not as expected", "Saved group: " + filterName, finder.getGroupLabel());
 
         // assert the selected items are the same and the counts are the same as before.
         assertEquals("Summary counts not as expected after load", summaryCounts, finder.getSummaryCounts());
         assertEquals("Selected items not as expected after load", selections, finder.getSelectionValues());
         // assert that "Save" is now active in the menu
-        saveMenu = finder.getMenu(DataFinderPage.Locators.saveMenu);
-        saveMenu.toggleMenu();
-        Assert.assertTrue("'Save' option is not an active menu option but should be", saveMenu.getActiveOptions().contains("Save"));
-        saveMenu.toggleMenu(); // close the menu
+        saveMenu = finder.saveMenu();
+        Assert.assertEquals("Active options after saving group", Arrays.asList("Save", "Save As"), saveMenu.getActiveOptions());
 
         // Choose another dimension and save the summary counts
         log("selecting an Assay filter");
@@ -711,29 +684,20 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         assertEquals("Selected items not as expected after assay selection", selections, finder.getSelectionValues());
 
         // Save the filter
-        saveMenu = finder.getMenu(DataFinderPage.Locators.saveMenu);
-        saveMenu.toggleMenu();
-        saveMenu.chooseOption("Save", true);
-        sleep(1000); // Hack!  This seems necessary to give time for saving the filter before loading it again.  Waiting for signals doesn't seem to work...
+        finder.saveMenu().save();
 
         finder.clearAllFilters();
 
         // Load the filter
-        loadMenu = finder.getMenu(DataFinderPage.Locators.loadMenu);
-        loadMenu.toggleMenu();
-        Assert.assertTrue("Saved filter does not appear in menu", loadMenu.getActiveOptions().contains(filterName));
-        loadMenu.chooseOption(filterName, true);
+        finder.loadMenu().loadGroup(filterName);
 
         // assert that the selections are as expected.
         assertEquals("Summary counts not as expected after load", summaryCounts, finder.getSummaryCounts());
         assertEquals("Selected items not as expected after load", selections, finder.getSelectionValues());
 
         // manage group and delete the group that was created
-        DataFinderPage.GroupMenu manageMenu = finder.getMenu(DataFinderPage.Locators.manageMenu);
-        manageMenu.toggleMenu();
-        manageMenu.chooseOption("Manage Groups", false);
+        ManageParticipantGroupsPage managePage = finder.manageMenu().manageGroups();
         waitForText("Manage Participant Groups");
-        ManageParticipantGroupsPage managePage = new ManageParticipantGroupsPage(this);
         managePage.selectGroup(filterName);
         Assert.assertTrue("Delete should be enabled for group created through data finder", managePage.isDeleteEnabled());
         Assert.assertFalse("Edit should not be enabled for group created through data finder", managePage.isEditEnabled());
@@ -747,7 +711,6 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         DataFinderPage finder;
         Map<Dimension, String> selectedFacets = new HashMap<>();
         List<DataFinderPage.DimensionMember> filters;
-        DataFinderPage.GroupMenu saveMenu, sendMenu;
         List<String> recipients;
         Map<Dimension, DataFinderPage.DimensionPanel> dimensionPanels;
         SendParticipantPage sendPage;
@@ -813,17 +776,11 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         Assert.assertEquals("Study card shown was not limited to the one User2 can see", USER2_FOLDER, finder.getStudyCards().get(0).getAccession());
 
         log("Validate this user can save the group.");
-        saveMenu = finder.getMenu(DataFinderPage.Locators.saveMenu);
-        saveMenu.toggleMenu();
-        saveMenu.chooseOption("Save As", false);
+        finder.saveMenu().saveAs();
         String defaultGroupName = finder.getGroupNameFromForm();
 
         Assert.assertEquals("Default group name not as expected.", groupName, defaultGroupName);
-        clickButtonContainingText("Close", BaseWebDriverTest.WAIT_FOR_EXT_MASK_TO_DISSAPEAR);
 
-        saveMenu = finder.getMenu(DataFinderPage.Locators.saveMenu);
-        saveMenu.toggleMenu();
-        saveMenu.chooseOption("Save As", false);
         finder.saveGroup();
 
         stopImpersonating();
@@ -850,6 +807,8 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
 
         log("Error message was as expected. Cancel out of this form.");
         clickButton("Cancel");
+
+        enableEmailRecorder(); // Clear out previous messages
         goToProjectHome();
 
         sleep(1000); // Yes I know this is ugly, but running out of time and need to move on. Works around an issue where DataFinder page isn't completely loaded before clearAllFilters is called.
@@ -870,12 +829,9 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         }
 
         log("Try to send the filter without saving first.");
-        sendMenu = finder.getMenu(DataFinderPage.Locators.sendMenu);
-        sendMenu.toggleMenu();
+        Window window = finder.clickSendWithUnsavedGroup();
 
-        assertElementVisible(Locator.css("div.x4-message-box"));
-        Window window = new Window("Save Group Before Sending", getDriver());
-        assertTrue("Text in Message Box not as expected.", window.getBody().contains("You must save a group before you can send a copy."));
+        assertEquals("Text in Message Box not as expected.", "You must save a group before you can send a copy.", window.getBody());
 
         log("Choose 'Save' to dismiss the dialog.");
         clickButton("Save", "Save and Send");
@@ -891,16 +847,18 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         log("Fill out the 'Send Participant Group' form.");
         sendPage = new SendParticipantPage(getDriver());
         sendPage.setRecipients(recipients);
-        sendPage.setMessageSubject(sendPage.getMessageSubject() + " named: " + groupName);
+        String subject = sendPage.getMessageSubject() + " named: " + groupName;
+        sendPage.setMessageSubject(subject);
         sendPage.clickSubmit();
 
         log("Validate that the send did not error.");
         validateSendDidNotError();
 
-        log("We are done, going home now.");
-
-        goToHome();
-
+        EmailRecordTable emailRecordTable = goToEmailRecord();
+        assertEquals("Email messages", 1, emailRecordTable.getEmailCount());
+        EmailRecordTable.EmailMessage email = emailRecordTable.getEmailAtTableIndex(3); // EmailRecordTable row indexing is messed up
+        assertEquals("Email recipient", Arrays.asList(USER1), Arrays.asList(email.getTo()));
+        assertEquals("Email subject", subject, email.getSubject());
     }
 
     // This class is used to create an object that has an associated groupName with it's shared url.
@@ -1170,15 +1128,12 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         }
 
         return groupsSent;
-
     }
 
     private void createAndSaveStudyGroup(String groupName, Map<Dimension, String> facets)
     {
-
         createStudyGroup(facets);
         saveStudyGroup(groupName);
-
     }
 
     private void createStudyGroup(Map<Dimension, String> facets)
@@ -1200,20 +1155,14 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
             log("For '" + entry.getKey().toString() + "' select '" + entry.getValue() + "'");
             dimensionPanels.get(entry.getKey()).selectMember(entry.getValue());
         }
-
     }
 
     private void saveStudyGroup(String groupName)
     {
-        DataFinderPage finder;
-        DataFinderPage.GroupMenu saveMenu;
-
-        finder = new DataFinderPage(this);
+        DataFinderPage finder = new DataFinderPage(this);
 
         log("Save the group and name it: " + groupName);
-        saveMenu = finder.getMenu(DataFinderPage.Locators.saveMenu);
-        saveMenu.toggleMenu();
-        saveMenu.chooseOption("Save As", false);
+        finder.saveMenu().saveAs();
         finder.saveGroup(groupName);
     }
 
@@ -1235,7 +1184,8 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         if(shouldError)
         {
             log("An error was expected. Get the error message shown and return it.");
-            returnString = sendPage.getErrorMessage();
+            WebElement error = Locators.labkeyError.findElementOrNull(getDriver());
+            returnString = error != null ? error.getText() : null;
         }
         else
         {
@@ -1249,28 +1199,21 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
 
     private String getSharedLinks(String msgSubject)
     {
-        String url;
-
-        goToModule("Dumbster");
-
-        EmailRecordTable emailRecordTable = new EmailRecordTable(this);
+        EmailRecordTable emailRecordTable = goToEmailRecord();
 
         log("Find the message based on subject and user.");
         emailRecordTable.clickSubject(msgSubject);
-        url = getAttribute(Locator.css("a[href*='dataFinder.view?groupId=']"), "href");
-
-        return url;
+        return getAttribute(Locator.css("a[href*='dataFinder.view?groupId=']"), "href");
     }
 
     private void validateSendDidNotError()
     {
-        SendParticipantPage sendPage;
+        List<String> errors = getTexts(Locators.labkeyError.findElements(getDriver()));
+        assertTrue("Unexpected error(s) when sending group: [" + String.join(",", errors) + "]", errors.isEmpty());
 
         // If send worked you should be on another page now.
         if(getURL().getPath().contains("sendParticipantGroup.view?"))
         {
-            sendPage = new SendParticipantPage(getDriver());
-            assertFalse("An error was shown on the send page. Error message is: " + sendPage.getErrorMessage(), isElementPresent(SendParticipantPage.Locators.errorMessage));
             Assert.fail("Did not navigate away from 'study-sendParticipantGroup.view' after clicking send (should have). And no error message was shown on the page (and there should have been).");
         }
     }

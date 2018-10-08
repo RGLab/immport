@@ -2,13 +2,17 @@ package org.labkey.test.pages.immport;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
+import org.junit.Assert;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.WebTestHelper;
 import org.labkey.test.components.Component;
+import org.labkey.test.components.ext4.Window;
 import org.labkey.test.components.immport.StudySummaryWindow;
 import org.labkey.test.pages.LabKeyPage;
+import org.labkey.test.pages.study.ManageParticipantGroupsPage;
 import org.labkey.test.util.DataRegionTable;
+import org.labkey.test.util.Ext4Helper;
 import org.labkey.test.util.LogMethod;
 import org.labkey.test.util.LoggedParam;
 import org.labkey.test.util.TestLogger;
@@ -17,6 +21,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -50,9 +55,9 @@ public class DataFinderPage extends LabKeyPage
         waitForElement(pageSignal(COUNT_SIGNAL));
     }
 
-    protected void waitForGroupUpdate()
+    protected void doAndWaitForGroupUpdate(Runnable run)
     {
-        waitForElement(pageSignal(GROUP_UPDATED_SIGNAL));
+        doAndWaitForPageSignal(run, GROUP_UPDATED_SIGNAL);
     }
 
     public static DataFinderPage goDirectlyToPage(BaseWebDriverTest test, String containerPath)
@@ -101,25 +106,27 @@ public class DataFinderPage extends LabKeyPage
 
     public void saveGroup()
     {
-        DataRegionTable.DataRegion(getDriver()).withName("demoDataRegion").waitFor();
-        clickButtonContainingText("Save", BaseWebDriverTest.WAIT_FOR_EXT_MASK_TO_DISSAPEAR);
-        waitForGroupUpdate();
+        saveGroup(null);
     }
 
     public void saveGroup(String name)
     {
-        DataRegionTable.DataRegion(getDriver()).withName("demoDataRegion").waitFor();
-        setFormElement(Locators.groupLabelInput, name);
-        clickButtonContainingText("Save", BaseWebDriverTest.WAIT_FOR_EXT_MASK_TO_DISSAPEAR);
-        waitForGroupUpdate();
+        setGroupName(name);
+        doAndWaitForGroupUpdate(() -> clickButtonContainingText("Save", BaseWebDriverTest.WAIT_FOR_EXT_MASK_TO_DISSAPEAR));
     }
 
     public void saveAndSendGroup(String name)
     {
-        DataRegionTable.DataRegion(getDriver()).withName("demoDataRegion").waitFor();
-        setFormElement(Locators.groupLabelInput, name);
-        clickButtonContainingText("Save and Send", BaseWebDriverTest.WAIT_FOR_EXT_MASK_TO_DISSAPEAR);
+        setGroupName(name);
+        clickAndWait(Ext4Helper.Locators.ext4Button("Save and Send"));
         waitForText("Message link:");
+    }
+
+    private void setGroupName(String name)
+    {
+        DataRegionTable.DataRegion(getDriver()).withName("demoDataRegion").waitFor();
+        if (name != null)
+            setFormElement(Locators.groupLabelInput, name);
     }
 
     public String getGroupNameFromForm()
@@ -133,9 +140,19 @@ public class DataFinderPage extends LabKeyPage
         return Locators.groupLabel.findElement(getDriver()).getText().trim();
     }
 
-    public GroupMenu getMenu(Locator locator)
+    public SaveMenu saveMenu()
     {
-        return new GroupMenu(locator.findElement(getDriver()));
+        return new SaveMenu();
+    }
+
+    public LoadMenu loadMenu()
+    {
+        return new LoadMenu();
+    }
+
+    public ManageMenu manageMenu()
+    {
+        return new ManageMenu();
     }
 
     public boolean menuIsDisabled(Locator.CssLocator locator)
@@ -226,39 +243,23 @@ public class DataFinderPage extends LabKeyPage
 
     public void clearAllFilters()
     {
-        if(isElementPresent(Locators.clearAll))
+        final WebElement clearAll = Locator.findAnyElementOrNull(getDriver(), Locators.clearAll, Locators.clearAllFilters);
+        if (clearAll != null && clearAll.isDisplayed())
         {
-            final WebElement clearAll = Locators.clearAll.findElement(getDriver());
-            if (clearAll.isDisplayed())
-            {
-                doAndWaitForPageSignal(clearAll::click, COUNT_SIGNAL);
-            }
+            doAndWaitForPageSignal(clearAll::click, COUNT_SIGNAL);
         }
-        else
-        {
-            // If that element is not present see if the 'alternative element' is.
-            if(isElementPresent(Locators.clearAllFilters))
-            {
-                final WebElement clearAllFilters = Locators.clearAllFilters.findElement(getDriver());
-                if (clearAllFilters.isDisplayed())
-                {
-                    doAndWaitForPageSignal(clearAllFilters::click, COUNT_SIGNAL);
-                }
-            }
-        }
-    }
-
-    public void loadSavedGroup(String groupName)
-    {
-        click(Locators.loadMenu);
-        waitForElement(Locators.savedGroups.append(" a").containing(groupName));
-        click(Locators.savedGroups.append(" a").containing(groupName));
     }
 
     public SendParticipantPage clickSend()
     {
         clickAndWait(Locators.sendMenu);
         return new SendParticipantPage(getDriver());
+    }
+
+    public Window clickSendWithUnsavedGroup()
+    {
+        click(Locators.sendMenu);
+        return new Window.WindowFinder(getDriver()).withTitle("Save Group Before Sending").waitFor();
     }
 
     public void dismissTour()
@@ -306,13 +307,10 @@ public class DataFinderPage extends LabKeyPage
         public static final Locator.CssLocator clearAllFilters = Locator.css("span[ng-click='clearAllClick();']");
         public static final Locator.CssLocator groupLabel = Locator.css(".labkey-group-label");
         public static final Locator groupLabelInput = Locator.name("groupLabel");
-        public static final Locator.CssLocator saveMenu = Locator.css("#saveMenu");
-        public static final Locator.CssLocator loadMenu = Locator.css("#loadMenu");
-        public static final Locator.CssLocator sendMenu = Locator.css("#sendMenu");
-        public static final Locator.IdLocator manageMenu = Locator.id("df-manageMenu");
-        public static final Locator.CssLocator savedGroups = loadMenu.append(" ul.labkey-dropdown-menu-active");
-        public static final Locator.XPathLocator save = Locator.xpath("//li[contains(@ng-repeat, 'saveOptions')][not(contains(@class, 'inactive'))]").append(Locator.linkWithText("Save"));
-        public static final Locator.XPathLocator saveAs = Locator.xpath("//li[contains(@ng-repeat, 'saveOptions')][not(contains(@class, 'inactive'))]").append(Locator.linkWithText("Save As"));
+        private static final Locator.CssLocator saveMenu = Locator.css("#saveMenu");
+        private static final Locator.CssLocator loadMenu = Locator.css("#loadMenu");
+        private static final Locator.CssLocator sendMenu = Locator.css("#sendMenu");
+        private static final Locator.IdLocator manageMenu = Locator.id("df-manageMenu");
     }
 
     public enum Dimension
@@ -363,10 +361,8 @@ public class DataFinderPage extends LabKeyPage
         }
     }
 
-
-    public class GroupMenu extends Component
+    private abstract class GroupMenu extends Component
     {
-
         private final WebElement menu;
         private final Elements elements;
 
@@ -376,41 +372,53 @@ public class DataFinderPage extends LabKeyPage
             elements = new Elements();
         }
 
-        public void toggleMenu()
-        {
-            this.menu.click();
-        }
-
         @Override
         public WebElement getComponentElement()
         {
             return menu;
         }
 
+        public boolean isEnabled()
+        {
+            WebElement a = Locator.xpath("./a").findElement(this);
+            return !a.getAttribute("class").contains("disabled");
+        }
+
         public List<String> getActiveOptions()
         {
+            openMenu();
             return getOptions(elements.activeOption);
         }
 
         public List<String> getInactiveOptions()
         {
+            openMenu();
             return getOptions(elements.inactiveOption);
         }
 
-        public void chooseOption(String optionText, boolean waitForUpdate)
+        protected void clickOptionAndWaitForUpdate(String optionText)
+        {
+            doAndWaitForGroupUpdate(() -> clickOption(optionText));
+        }
+
+        protected void clickOption(String optionText)
         {
             TestLogger.log("Choosing menu option " + optionText);
-            List<WebElement> activeOptions = elements.activeOption.findElements(this);
-            for (WebElement option : activeOptions)
-            {
-                if (optionText.equals(option.getText().trim()))
-                {
-                    option.click();
-                    if (waitForUpdate)
-                        waitForGroupUpdate();
-                    return;
-                }
-            }
+            openMenu();
+            WebElement option = elements.menuOption.withText(optionText).findElement(this);
+            shortWait().until(ExpectedConditions.elementToBeClickable(option));
+
+            if (option.getAttribute("class").contains("inactive"))
+                Assert.fail("Menu option is not active: " + optionText);
+
+            option.click();
+        }
+
+        private void openMenu()
+        {
+            if (!isEnabled())
+                throw new IllegalStateException("Menu is not enabled: " + getComponentElement().getText());
+            new Actions(getDriver()).moveToElement(getComponentElement()).perform();
         }
 
         private List<String> getOptions(Locator locator)
@@ -426,8 +434,54 @@ public class DataFinderPage extends LabKeyPage
 
         private class Elements
         {
-            public Locator.CssLocator activeOption = Locator.css(".df-menu-item-link:not(.inactive)");
-            public Locator.CssLocator inactiveOption = Locator.css(".df-menu-item-link.inactive");
+            private final Locator.XPathLocator menuOption = Locator.byClass("df-menu-item-link");
+            private final Locator activeOption = menuOption.withoutClass("inactive");
+            private final Locator inactiveOption = menuOption.withClass("inactive");
+        }
+    }
+
+    public class SaveMenu extends GroupMenu
+    {
+        public SaveMenu()
+        {
+            super(Locators.saveMenu.findElement(getDriver()));
+        }
+
+        public void save()
+        {
+            clickOptionAndWaitForUpdate("Save");
+        }
+
+        public void saveAs()
+        {
+            clickOption("Save As");
+        }
+    }
+
+    public class LoadMenu extends GroupMenu
+    {
+        public LoadMenu()
+        {
+            super(Locators.loadMenu.findElement(getDriver()));
+        }
+
+        public void loadGroup(String groupName)
+        {
+            clickOptionAndWaitForUpdate(groupName);
+        }
+    }
+
+    public class ManageMenu extends GroupMenu
+    {
+        public ManageMenu()
+        {
+            super(Locators.manageMenu.findElement(getDriver()));
+        }
+
+        public ManageParticipantGroupsPage manageGroups()
+        {
+            doAndWaitForPageToLoad(() -> clickOption("Manage Groups"));
+            return new ManageParticipantGroupsPage(DataFinderPage.this);
         }
     }
 

@@ -27,7 +27,10 @@
 <%@ page import="org.labkey.api.data.TableSelector" %>
 <%@ page import="org.labkey.api.query.DefaultSchema" %>
 <%@ page import="org.labkey.api.query.QuerySchema" %>
+<%@ page import="org.labkey.api.rstudio.RStudioService" %>
+<%@ page import="org.labkey.api.services.ServiceRegistry" %>
 <%@ page import="org.labkey.api.util.HeartBeat" %>
+<%@ page import="org.labkey.api.util.URLHelper" %>
 <%@ page import="org.labkey.api.view.ActionURL" %>
 <%@ page import="org.labkey.api.view.HttpView" %>
 <%@ page import="org.labkey.api.view.ViewContext" %>
@@ -41,11 +44,8 @@
 <%@ page import="java.util.Date" %>
 <%@ page import="java.util.Map" %>
 <%@ page import="java.util.TreeMap" %>
-<%@ page import="org.labkey.api.rstudio.RStudioService" %>
-<%@ page import="org.labkey.api.services.ServiceRegistry" %>
-<%@ page import="org.labkey.api.util.URLHelper" %>
-<%@ page import="java.util.regex.Pattern" %>
 <%@ page import="java.util.regex.Matcher" %>
+<%@ page import="java.util.regex.Pattern" %>
 <%@ page extends="org.labkey.api.jsp.JspBase"%>
 <%!
     @Override
@@ -166,7 +166,7 @@
                 URLHelper startRstudio = null;
                 RStudioService rstudio = ServiceRegistry.get(RStudioService.class);
                 if (null != rstudio)
-                    startRstudio = rstudio.getRStudioLink(context.getUser());
+                    startRstudio = rstudio.getRStudioLink(context.getUser(), context.getContainer());
                 if (null != startRstudio)
                 {
                     %><%=textLink("RStudio", new ActionURL("rstudio","start",ContainerManager.getRoot()))%><%

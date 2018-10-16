@@ -656,6 +656,8 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
         $scope.dimAssay = dataspace.dimensions.Assay;
         $scope.dimType = dataspace.dimensions.Type;
         $scope.dimCategory = dataspace.dimensions.Category;
+        $scope.dimExposureMaterial = dataspace.dimensions.ExposureMaterial;
+        $scope.dimExposureProcess = dataspace.dimensions.ExposureProcess;
 
         $scope.currentGroupHasChanges = true;
         console_log("currentGroupHasChanges = true (dataFinderApp.init)");
@@ -1569,6 +1571,16 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
             "Principal":
             {
                 name: 'Principal', pluralName: 'Species', hierarchyName: 'Study.Principal', levelName: 'Principal', allMemberName: '[Study.Principal].[(All)]',
+                filterType: "OR", filterOptions: [{type: "OR", caption: "is any of"}]
+            },
+            "ExposureMaterial":
+            {
+                name: 'ExposureMaterial', caption:"Exposure Material", pluralName: 'Exposure Materials', hierarchyName: 'Subject.ExposureMaterial', levelName: 'ExposureMaterial', allMemberName: '[Subject.ExposureMaterial].[(All)]',
+                filterType: "OR", filterOptions: [{type: "OR", caption: "is any of"}]
+            },
+            "ExposureProcess":
+            {
+                name: 'ExposureProcess', caption:"Exposure Process", pluralName: 'Exposure Processes', hierarchyName: 'Subject.ExposureProcess', levelName: 'ExposureProcess', allMemberName: '[Subject.ExposureProcess].[(All)]',
                 filterType: "OR", filterOptions: [{type: "OR", caption: "is any of"}]
             },
             "Subject":

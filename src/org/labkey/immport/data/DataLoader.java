@@ -15,6 +15,7 @@
 
 package org.labkey.immport.data;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.vfs2.FileObject;
@@ -1174,6 +1175,13 @@ public class DataLoader extends PipelineJob
 
     // For serialization
     protected DataLoader() { }
+
+    // no arg constructor for serialization
+    public DataLoader()
+    {
+        _archive = null;
+        _restricted = false;
+    }
 
     public DataLoader(Container container, User user, String archive, boolean restricted)
     {

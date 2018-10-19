@@ -265,7 +265,7 @@ LI.df-member .df-member-name
 {
     display:inline-block;
     position:relative;
-    max-width:150pt;
+    max-width:148pt;
     overflow-x: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;

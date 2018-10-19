@@ -658,6 +658,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
         $scope.dimCategory = dataspace.dimensions.Category;
         $scope.dimExposureMaterial = dataspace.dimensions.ExposureMaterial;
         $scope.dimExposureProcess = dataspace.dimensions.ExposureProcess;
+        $scope.dimSampleType = dataspace.dimensions.SampleType;
 
         $scope.currentGroupHasChanges = true;
         console_log("currentGroupHasChanges = true (dataFinderApp.init)");
@@ -1581,6 +1582,11 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
             "ExposureProcess":
             {
                 name: 'ExposureProcess', caption:"Exposure Process", pluralName: 'Exposure Processes', hierarchyName: 'Subject.ExposureProcess', levelName: 'ExposureProcess', allMemberName: '[Subject.ExposureProcess].[(All)]',
+                filterType: "OR", filterOptions: [{type: "OR", caption: "is any of"}]
+            },
+            "SampleType":
+            {
+                name: 'SampleType', caption:"Sample Type", pluralName: 'Sample Types', hierarchyName: 'Sample.Type', levelName: 'Type', allMemberName: '[Sample.Type].[(All)]',
                 filterType: "OR", filterOptions: [{type: "OR", caption: "is any of"}]
             },
             "Subject":

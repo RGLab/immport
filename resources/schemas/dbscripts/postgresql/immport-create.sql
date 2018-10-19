@@ -507,6 +507,11 @@ BEGIN
   WHERE subject_accession IS NOT NULL AND assay IS NOT NULL AND study_accession IS NOT NULL;
 */
 
+  -- dimSampleType
+  INSERT INTO immport.dimSampleType (subjectid, type)
+  SELECT DISTINCT subject_accession || '.' || SUBSTRING(study_accession,4) as subjectid, type from immport.biosample
+  WHERE type IS NOT NULL;
+
   RETURN 1;
   END;
 $$ LANGUAGE plpgsql;

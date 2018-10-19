@@ -78,6 +78,14 @@
         </Dimension>
 
 
+       <Dimension name="Sample" visible="true" highCardinality="false" foreignKey="subjectid">
+           <Hierarchy name="Type" hasAll="true" primaryKey="subjectid">
+               <Table name="dimSampleType" schema="immport"/>
+               <Level name="Type" visible="true" table="dimSampleType" column="type" type="String" levelType="Regular" hideMemberIf="Never"/>
+           </Hierarchy>
+       </Dimension>
+
+
         <Measure name="RowCount" column="participantid" aggregator="count" visible="true">
         </Measure>
     </Cube>

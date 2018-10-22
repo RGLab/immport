@@ -1176,13 +1176,6 @@ public class DataLoader extends PipelineJob
     // For serialization
     protected DataLoader() { }
 
-    // no arg constructor for serialization
-    public DataLoader()
-    {
-        _archive = null;
-        _restricted = false;
-    }
-
     public DataLoader(Container container, User user, String archive, boolean restricted)
     {
         super("ImmPort", new ViewBackgroundInfo(container, user, null), PipelineService.get().getPipelineRootSetting(container));

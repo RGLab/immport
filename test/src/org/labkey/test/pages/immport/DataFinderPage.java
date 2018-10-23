@@ -328,7 +328,10 @@ public class DataFinderPage extends LabKeyPage
         GENDER("Gender", "genders"),
         RACE("Race", "races"),
         AGE("Age", "age groups"),
-        STUDY("Study", "studies");
+        STUDY("Study", "studies"),
+        MATERIAL("Exposure Material", "exposure materials"),
+        PROCESS("Exposure Process", "exposure processes"),
+        SAMPLETYPE("Sample Type", "sample types");
 
         private String caption;
         private String summaryLabel;

@@ -1,4 +1,4 @@
- /*
+﻿ /*
  * Copyright (c) 2013-2017 LabKey Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -270,12 +270,12 @@ BEGIN
   -- dimDemographic
 
   DELETE FROM immport.dimDemographic;
-  INSERT INTO immport.dimDemographic (SubjectId, Study, AgeInYears, Species, Gender, Race, Age)
+  INSERT INTO immport.dimDemographic (SubjectId, Study, AgeInYears, Species, Gender, Race, Age, exposure_material, exposure_process)
   SELECT DISTINCT
-    subject.subject_accession || '.' || SUBSTRING(s2s.study_accession,4) AS SubjectId,
-    s2s.study_accession AS Study,
+    subject.subject_accession || '.' || SUBSTRING(arm_or_cohort.study_accession,4) AS SubjectId,
+    arm_or_cohort.study_accession AS Study,
     CASE age_unit
-    WHEN 'Years' THEN floor(age_reported)
+    WHEN 'Years' THEN floor(min_subject_age)
       WHEN 'Weeks' THEN 0
       WHEN 'Months' THEN 0
       ELSE NULL
@@ -284,21 +284,25 @@ BEGIN
     gender AS Gender,
     coalesce(race,'Not_Specified') AS Race,
     CASE
-      WHEN floor(age_reported) < 10 THEN '0-10'
-      WHEN floor(age_reported) < 20 THEN '11-20'
-      WHEN floor(age_reported) < 30 THEN '21-30'
-      WHEN floor(age_reported) < 40 THEN '31-40'
-      WHEN floor(age_reported) < 50 THEN '41-50'
-      WHEN floor(age_reported) < 60 THEN '51-60'
-      WHEN floor(age_reported) < 70 THEN '61-70'
-      WHEN floor(age_reported) >= 70 THEN '> 70'
+      WHEN floor(min_subject_age) < 10 THEN '0-10'
+      WHEN floor(min_subject_age) < 20 THEN '11-20'
+      WHEN floor(min_subject_age) < 30 THEN '21-30'
+      WHEN floor(min_subject_age) < 40 THEN '31-40'
+      WHEN floor(min_subject_age) < 50 THEN '41-50'
+      WHEN floor(min_subject_age) < 60 THEN '51-60'
+      WHEN floor(min_subject_age) < 70 THEN '61-70'
+      WHEN floor(min_subject_age) >= 70 THEN '> 70'
       ELSE 'Unknown'
-    END AS Age
-  FROM immport.subject INNER JOIN immport.subject_2_study s2s ON subject.subject_accession = s2s.subject_accession
-    LEFT JOIN (
-      SELECT a2sj.subject_accession, arm.study_accession, a2sj.age_unit, a2sj.min_subject_age as age_reported
-      FROM immport.arm_2_subject a2sj INNER JOIN immport.arm_or_cohort arm ON a2sj.arm_accession = arm.arm_accession
-    ) s2age ON s2age.subject_accession = s2s.subject_accession AND s2age.study_accession = s2s.study_accession;
+    END AS Age,
+    -- NOTE: using SELECT here instead of LOJ in FROM so that this will error if there are ever multiple immune_exposure rows for one study/subject
+    coalesce((SELECT exposure_material_reported FROM immport.immune_exposure WHERE arm_2_subject.arm_accession = immune_exposure.arm_accession AND arm_2_subject.subject_accession = immune_exposure.subject_accession), 'Not_Specified') as exposure_material,
+    coalesce((SELECT exposure_process_preferred  FROM immport.immune_exposure WHERE arm_2_subject.arm_accession = immune_exposure.arm_accession AND arm_2_subject.subject_accession = immune_exposure.subject_accession), 'Not_Specified') as exposure_process
+  FROM immport.subject
+      INNER JOIN immport.arm_2_subject arm_2_subject ON subject.subject_accession = arm_2_subject.subject_accession 
+      INNER JOIN immport.arm_or_cohort ON arm_2_subject.arm_accession = arm_or_cohort.arm_accession
+     -- NOTE this join assumes only one immune_exposure row per study/subject (which is true in DR28)
+     ---LEFT OUTER JOIN immport.immune_exposure ON arm_2_subject.arm_accession = immune_exposure.arm_accession AND arm_2_subject.subject_accession = immune_exposure.subject_accession
+  ;
 
 
   -- dimStudy
@@ -322,146 +326,140 @@ BEGIN
   -- dimStudyCondition
 
   DELETE FROM immport.dimStudyCondition;
+  WITH study_ AS (
+      SELECT study_accession, lower(official_title || ' ' || condition_studied) as description
+      FROM immport.study 
+      WHERE study_accession NOT IN (SELECT study_accession FROM immport.immune_exposure WHERE disease_preferred IS NOT NULL)
+  )
   INSERT INTO immport.dimStudyCondition (Study, Condition)
 
-      SELECT study_accession AS Study, 'Ragweed Allergy' as Condition
-      FROM immport.study
-      WHERE
-        lower(official_title || ' ' || condition_studied) like '%ragweed%'
+      SELECT arm_or_cohort.study_accession AS Study, COALESCE(disease_preferred,disease_reported) as Condition 
+      FROM immport.immune_exposure JOIN immport.arm_or_cohort ON immune_exposure.arm_accession = arm_or_cohort.arm_accession
+      WHERE disease_preferred IS NOT NULL OR disease_reported IS NOT NULL
 
-      UNION ALL
+      UNION
+
+      SELECT study_accession AS Study, 'Ragweed Allergy' as Condition
+      FROM study_
+      WHERE description like '%ragweed%'
+
+      UNION
 
       SELECT study_accession AS Study, 'Atopic Dermatitis' as Condition
-      FROM immport.study
-      WHERE
-        lower(official_title || ' ' || condition_studied) like '%atopic dermatitis%'
+      FROM study_
+      WHERE description like '%atopic dermatitis%'
 
-      UNION ALL
+      UNION
 
       SELECT study_accession AS Study, 'Clostridium difficile' as Condition
-      FROM immport.study
+      FROM study_
       WHERE
-        lower(official_title || ' ' || condition_studied) like '%clostridium difficile%' OR
-        lower(official_title || ' ' || condition_studied) like '%c. difficile%'
+        description like '%clostridium difficile%' OR
+        description like '%c. difficile%'
 
-      UNION ALL
+      UNION
 
       SELECT study_accession AS Study, 'Renal transplant' as Condition
-      FROM immport.study
+      FROM study_
       WHERE
-        (lower(official_title || ' ' || condition_studied) like '%renal%' OR
-        lower(official_title || ' ' || condition_studied) like '%kidney%') AND
-        lower(official_title || ' ' || condition_studied) like '%transplant%'
+        (description like '%renal%' OR
+         description like '%kidney%') AND
+        description like '%transplant%'
 
-
-      UNION ALL
+      UNION
 
       SELECT study_accession AS Study, 'Arthritis' as Condition
-      FROM immport.study
-      WHERE
-        lower(official_title || ' ' || condition_studied) like '%arthritis%'
+      FROM study_
+      WHERE description like '%arthritis%'
 
-
-      UNION ALL
+      UNION
 
       SELECT study_accession AS Study, 'Hepatitis C' as Condition
-      FROM immport.study
-      WHERE
-        lower(official_title || ' ' || condition_studied) like '%hepatitis c%'
+      FROM study_
+      WHERE description like '%hepatitis c%'
 
-      UNION ALL
+      UNION
 
       SELECT study_accession AS Study, 'Influenza' as Condition
-      FROM immport.study
+      FROM study_
       WHERE
-        lower(official_title || ' ' || condition_studied) like '%flu%'
+        description like '%flu%'
 
-      UNION ALL
+      UNION
 
       SELECT study_accession AS Study, 'Smallpox' as Condition
-      FROM immport.study
-      WHERE
-        lower(official_title || ' ' || condition_studied) like '%smallpox%'
+      FROM study_
+      WHERE description like '%smallpox%'
 
-
-      UNION ALL
+      UNION
 
       SELECT study_accession AS Study, 'Tuberculosis' as Condition
-      FROM immport.study
-      WHERE
-        lower(official_title || ' ' || condition_studied) like '%tuberculosis%'
+      FROM study_
+      WHERE description like '%tuberculosis%'
 
-      UNION ALL
+      UNION
 
       SELECT study_accession AS Study, 'Lupus' as Condition
-      FROM immport.study
-      WHERE
-        lower(official_title || ' ' || condition_studied) like '%lupus%'
+      FROM study_
+      WHERE description like '%lupus%'
 
-      UNION ALL
+      UNION
 
       SELECT study_accession AS Study, 'West Nile virus' as Condition
-      FROM immport.study
-      WHERE
-        lower(official_title || ' ' || condition_studied) like '%west nile%' OR
-        lower(official_title || ' ' || condition_studied) like '%WNv%'
+      FROM study_
+      WHERE description like '%west nile%' OR
+        description like '%wnv%'
 
-      UNION ALL
+      UNION
 
       SELECT study_accession AS Study, 'Asthma' as Condition
-      FROM immport.study
+      FROM study_
       WHERE
-        lower(official_title || ' ' || condition_studied) like '%asthma%'
+        description like '%asthma%'
 
-
-      UNION ALL
+      UNION
 
       SELECT study_accession AS Study, 'Typhoid' as Condition
-      FROM immport.study
+      FROM study_
       WHERE
-        lower(official_title || ' ' || condition_studied) like '%typhoid%'
+        description like '%typhoid%'
 
-      UNION ALL
+      UNION
 
       SELECT study_accession AS Study, 'Cholera' as Condition
-      FROM immport.study
-      WHERE
-        lower(official_title || ' ' || condition_studied) like '%cholera%'
+      FROM study_
+      WHERE description like '%cholera%'
 
-      UNION ALL
+      UNION
 
       SELECT study_accession AS Study, 'Vasculitis' as Condition
-      FROM immport.study
+      FROM study_
       WHERE
-        lower(official_title || ' ' || condition_studied) like '%vasculitis%'
+        description like '%vasculitis%'
 
-      UNION ALL
+      UNION
 
       SELECT study_accession AS Study, 'Diabetes' as Condition
-      FROM immport.study
-      WHERE
-        lower(official_title || ' ' || condition_studied) like '%diabet%'
+      FROM study_
+      WHERE description like '%diabet%'
 
-      UNION ALL
+      UNION
 
       SELECT study_accession AS Study, 'Vaccinia' as Condition
-      FROM immport.study
-      WHERE
-        lower(official_title || ' ' || condition_studied) like '%vaccinia%'
+      FROM study_
+      WHERE description like '%vaccinia%'
 
-      UNION ALL
+      UNION
 
       SELECT study_accession AS Study, 'Helicobacter pylori' as Condition
-      FROM immport.study
-      WHERE
-        lower(official_title || ' ' || condition_studied) like '%pylori%'
+      FROM study_
+      WHERE description like '%pylori%'
 
-      UNION ALL
+      UNION
 
       SELECT study_accession AS Study, 'Escherichia coli' as Condition
-      FROM immport.study
-      WHERE
-        lower(official_title || ' ' || condition_studied) like '%escherichia coli%'
+      FROM study_
+      WHERE description like '%escherichia coli%'
   ;
 
   INSERT INTO immport.dimStudyCondition (Study, Condition)
@@ -508,6 +506,11 @@ BEGIN
   FROM immport.v_results_union
   WHERE subject_accession IS NOT NULL AND assay IS NOT NULL AND study_accession IS NOT NULL;
 */
+
+  -- dimSampleType
+  INSERT INTO immport.dimSampleType (subjectid, type)
+  SELECT DISTINCT subject_accession || '.' || SUBSTRING(study_accession,4) as subjectid, type from immport.biosample
+  WHERE type IS NOT NULL;
 
   RETURN 1;
   END;

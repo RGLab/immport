@@ -56,7 +56,7 @@ public class ImmPortModule extends DefaultModule
     @Override
     public double getVersion()
     {
-        return 18.30;
+        return 18.32;
     }
 
     @Override

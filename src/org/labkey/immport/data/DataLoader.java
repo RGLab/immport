@@ -15,6 +15,7 @@
 
 package org.labkey.immport.data;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.vfs2.FileObject;
@@ -68,7 +69,6 @@ import org.labkey.api.util.ConfigurationException;
 import org.labkey.api.util.DateUtil;
 import org.labkey.api.util.ExceptionUtil;
 import org.labkey.api.util.FileUtil;
-import org.labkey.api.util.Job;
 import org.labkey.api.util.Path;
 import org.labkey.api.util.URLHelper;
 import org.labkey.api.view.ViewBackgroundInfo;
@@ -97,7 +97,7 @@ import java.util.stream.Collectors;
 
 public class DataLoader extends PipelineJob
 {
-    static Logger _log = Logger.getLogger(DataLoader.class);
+    static final transient Logger LOG = Logger.getLogger(DataLoader.class);
 
     Map<String,Map<String,String>> _lookupDictionary = new CaseInsensitiveHashMap<>();
 
@@ -1170,8 +1170,11 @@ public class DataLoader extends PipelineJob
     //
 
 
-    final String _archive;
-    final boolean _restricted;
+    private String _archive;
+    private boolean _restricted;
+
+    // For serialization
+    protected DataLoader() { }
 
     public DataLoader(Container container, User user, String archive, boolean restricted)
     {

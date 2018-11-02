@@ -50,7 +50,6 @@ import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.data.dialect.SqlDialect;
 import org.labkey.api.exp.AbstractFileXarSource;
-import org.labkey.api.exp.ExperimentException;
 import org.labkey.api.exp.XarSource;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.files.FileContentService;
@@ -1199,12 +1198,6 @@ public class ImmPortController extends SpringActionController
         {
             super(null, info, pipe);
             this.xarFile = xarFile;
-        }
-
-        @Override
-        public boolean hasJacksonSerialization()
-        {
-            return true;
         }
 
         @Override

@@ -484,6 +484,12 @@
             <column columnName="treatment_accession"/>
         </columns>
     </table>
+    <table tableName="dimsampletype" tableDbType="TABLE">
+        <columns>
+            <column columnName="subjectid"/>
+            <column columnName="type"/>
+        </columns>
+    </table>
     <table tableName="study_link" tableDbType="TABLE">
         <columns>
             <column columnName="study_link_id"/>
@@ -1249,6 +1255,8 @@
             <column columnName="race"/>
             <column columnName="age"/>
             <column columnName="study"/>
+            <column columnName="exposure_material"/>
+            <column columnName="exposure_process"/>
         </columns>
     </table>
     <table tableName="reagent" tableDbType="TABLE">

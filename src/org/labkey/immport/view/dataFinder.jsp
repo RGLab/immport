@@ -253,7 +253,7 @@
                 <span ng-if="dim.filters.length" class="df-clear-filter active" ng-click="selectMember(dim.name,null,$event);">[clear]</span>
             </div>
             <div class="labkey-filter-options" ng-if="dim.filters.length > 1 && dim.filterOptions.length > 0" >
-                <a ng-click="displayFilterChoice(dim.name, $event)" ng-mouseover="displayFilterChoice(dim.name,$event);"  class="x4-menu-item-text" ng-class="{inactive: dim.filterOptions.length < 2}" href="#">{{dim.filterCaption}} <i ng-if="dim.filterOptions.length > 1" class="fa fa-caret-down"></i></a>
+                <a ng-click="displayFilterChoice(dim.name, $event)" ng-mouseover="displayFilterChoice(dim.name,$event);"  class="df-menu-item-text" ng-class="{inactive: dim.filterOptions.length < 2}" href="#">{{dim.filterCaption}} <i ng-if="dim.filterOptions.length > 1" class="fa fa-caret-down"></i></a>
             </div>
         </div>
         <ul>

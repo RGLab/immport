@@ -315,6 +315,14 @@ DIV.labkey-filter-popup
 }
 
 /* menus */
+
+/* x4-menu-item-text wipes out font color and size */
+.df-menu-item-text
+{
+    cursor: pointer;
+    margin-right: 16px;
+}
+
 .df-nav
 {
     margin: 0;

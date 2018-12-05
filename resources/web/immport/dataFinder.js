@@ -828,6 +828,26 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                 $event.stopPropagation();
         };
 
+        $scope.setFilterType = function (dimName, type)
+        {
+            $scope.filterChoice.show = false;
+            var dim = dataspace.dimensions[dimName];
+            if (!dim)
+                return;
+            if (dim.filterType === type)
+                return;
+            for (var f = 0; f < dim.filterOptions.length; f++)
+            {
+                if (dim.filterOptions[f].type == type)
+                {
+                    dim.filterType = type;
+                    dim.filterCaption = dim.filterOptions[f].caption;
+                    $scope.updateCountsAsync();
+                    return;
+                }
+            }
+        };
+
         $scope.selectMember = function (dimName, member, $event)
         {
             var shiftClick = $event && ($event.ctrlKey || $event.altKey || $event.metaKey);

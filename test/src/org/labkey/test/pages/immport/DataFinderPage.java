@@ -21,7 +21,6 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
-import org.openqa.selenium.support.ui.ExpectedConditions;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -367,12 +366,14 @@ public class DataFinderPage extends LabKeyPage
     private abstract class GroupMenu extends Component
     {
         private final WebElement menu;
-        private final Elements elements;
+        private final WebElement menuAnchor = Locator.xpath("./a").findWhenNeeded(this);
+        private final Locator.XPathLocator menuOption = Locator.byClass("df-menu-item-link");
+        private final Locator activeOption = menuOption.withoutClass("inactive");
+        private final Locator inactiveOption = menuOption.withClass("inactive");
 
         private GroupMenu(WebElement menu)
         {
             this.menu = menu;
-            elements = new Elements();
         }
 
         @Override
@@ -383,20 +384,19 @@ public class DataFinderPage extends LabKeyPage
 
         public boolean isEnabled()
         {
-            WebElement a = Locator.xpath("./a").findElement(this);
-            return !a.getAttribute("class").contains("disabled");
+            return !menuAnchor.getAttribute("class").contains("disabled");
         }
 
         public List<String> getActiveOptions()
         {
             openMenu();
-            return getOptions(elements.activeOption);
+            return getOptions(activeOption);
         }
 
         public List<String> getInactiveOptions()
         {
             openMenu();
-            return getOptions(elements.inactiveOption);
+            return getOptions(inactiveOption);
         }
 
         protected void clickOptionAndWaitForUpdate(String optionText)
@@ -407,21 +407,28 @@ public class DataFinderPage extends LabKeyPage
         protected void clickOption(String optionText)
         {
             TestLogger.log("Choosing menu option " + optionText);
-            openMenu();
-            WebElement option = elements.menuOption.withText(optionText).findElement(this);
-            shortWait().until(ExpectedConditions.elementToBeClickable(option));
+            WebElement option = menuOption.withText(optionText).findElement(this);
 
             if (option.getAttribute("class").contains("inactive"))
+            {
+                openMenu();
                 Assert.fail("Menu option is not active: " + optionText);
+            }
 
+            openMenuAction().moveToElement(option).perform();
             option.click();
         }
 
         private void openMenu()
         {
+            openMenuAction().perform();
+        }
+
+        private Actions openMenuAction()
+        {
             if (!isEnabled())
                 throw new IllegalStateException("Menu is not enabled: " + getComponentElement().getText());
-            new Actions(getDriver()).moveToElement(getComponentElement()).perform();
+            return new Actions(getDriver()).moveToElement(getComponentElement());
         }
 
         private List<String> getOptions(Locator locator)
@@ -433,13 +440,6 @@ public class DataFinderPage extends LabKeyPage
                 optionStrings.add(option.getText().trim());
             }
             return optionStrings;
-        }
-
-        private class Elements
-        {
-            private final Locator.XPathLocator menuOption = Locator.byClass("df-menu-item-link");
-            private final Locator activeOption = menuOption.withoutClass("inactive");
-            private final Locator inactiveOption = menuOption.withClass("inactive");
         }
     }
 

@@ -415,7 +415,11 @@ public class DataFinderPage extends LabKeyPage
                 Assert.fail("Menu option is not active: " + optionText);
             }
 
-            openMenuAction().moveToElement(option).perform();
+            int height = menuAnchor.getSize().getHeight();
+            openMenuAction()
+                    .moveByOffset(0, height) // Move down so that move to option doesn't pass over another menu
+                    .moveToElement(option)
+                    .perform();
             option.click();
         }
 

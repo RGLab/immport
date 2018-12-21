@@ -21,6 +21,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -428,14 +429,10 @@ public class DataFinderPage extends LabKeyPage
 
         private void openMenu()
         {
-            openMenuAction().perform();
-        }
-
-        private Actions openMenuAction()
-        {
             if (!isEnabled())
                 throw new IllegalStateException("Menu is not enabled: " + getComponentElement().getText());
-            return new Actions(getDriver()).moveToElement(getComponentElement());
+            new Actions(getDriver()).moveToElement(menuAnchor).perform();
+            shortWait().until(ExpectedConditions.visibilityOf(menuOption.findElement(this)));
         }
 
         private List<String> getOptions(Locator locator)
@@ -444,6 +441,7 @@ public class DataFinderPage extends LabKeyPage
             List<String> optionStrings = new ArrayList<>();
             for (WebElement option : options)
             {
+                shortWait().until(wd -> !option.getText().isBlank());
                 optionStrings.add(option.getText().trim());
             }
             return optionStrings;

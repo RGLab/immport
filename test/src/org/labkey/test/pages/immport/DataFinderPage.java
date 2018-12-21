@@ -399,6 +399,11 @@ public class DataFinderPage extends LabKeyPage
             return getOptions(inactiveOption);
         }
 
+        protected WebElement getMenuOption(String optionText)
+        {
+            return menuOption.withText(optionText).findElement(this);
+        }
+
         protected void clickOptionAndWaitForUpdate(String optionText)
         {
             doAndWaitForGroupUpdate(() -> clickOption(optionText));
@@ -407,16 +412,14 @@ public class DataFinderPage extends LabKeyPage
         protected void clickOption(String optionText)
         {
             TestLogger.log("Choosing menu option " + optionText);
-            WebElement option = menuOption.withText(optionText).findElement(this);
-
-            if (option.getAttribute("class").contains("inactive"))
-            {
-                openMenu();
-                Assert.fail("Menu option is not active: " + optionText);
-            }
-
+            WebElement option = getMenuOption(optionText);
             int height = menuAnchor.getSize().getHeight();
-            openMenuAction()
+
+            openMenu();
+            Assert.assertFalse("Menu option is not active: " + optionText, option.getAttribute("class").contains("inactive"));
+
+            new Actions(getDriver())
+                    .moveToElement(menuAnchor)
                     .moveByOffset(0, height) // Move down so that move to option doesn't pass over another menu
                     .moveToElement(option)
                     .perform();
@@ -487,7 +490,8 @@ public class DataFinderPage extends LabKeyPage
 
         public ManageParticipantGroupsPage manageGroups()
         {
-            doAndWaitForPageToLoad(() -> clickOption("Manage Groups"));
+            // Manage Groups menu likes to disappear in Firefox sometimes. We aren't here to test angularJS
+            beginAt(getMenuOption("Manage Groups").getAttribute("href"));
             return new ManageParticipantGroupsPage(DataFinderPage.this);
         }
     }

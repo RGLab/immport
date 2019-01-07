@@ -307,10 +307,7 @@ public class DataFinderPage extends LabKeyPage
         public static final Locator.CssLocator clearAllFilters = Locator.css("span[ng-click='clearAllClick();']");
         public static final Locator.CssLocator groupLabel = Locator.css(".labkey-group-label");
         public static final Locator groupLabelInput = Locator.name("groupLabel");
-        private static final Locator.CssLocator saveMenu = Locator.css("#saveMenu");
-        private static final Locator.CssLocator loadMenu = Locator.css("#loadMenu");
         private static final Locator.CssLocator sendMenu = Locator.css("#sendMenu");
-        private static final Locator.IdLocator manageMenu = Locator.id("df-manageMenu");
     }
 
     public enum Dimension
@@ -368,6 +365,7 @@ public class DataFinderPage extends LabKeyPage
     {
         private final WebElement menu;
         private final WebElement menuAnchor = Locator.xpath("./a").findWhenNeeded(this);
+        private final WebElement dropDownMenu = Locator.xpath("./ul").findWhenNeeded(this);
         private final Locator.XPathLocator menuOption = Locator.byClass("df-menu-item-link");
         private final Locator activeOption = menuOption.withoutClass("inactive");
         private final Locator inactiveOption = menuOption.withClass("inactive");
@@ -432,7 +430,9 @@ public class DataFinderPage extends LabKeyPage
             if (!isEnabled())
                 throw new IllegalStateException("Menu is not enabled: " + getComponentElement().getText());
             new Actions(getDriver()).moveToElement(menuAnchor).perform();
-            shortWait().until(ExpectedConditions.visibilityOf(menuOption.findElement(this)));
+            shortWait().until(ExpectedConditions.and(
+                    ExpectedConditions.visibilityOf(menuOption.findElement(this)),
+                    wd -> dropDownMenu.getAttribute("class").contains("labkey-dropdown-menu-active")));
         }
 
         private List<String> getOptions(Locator locator)
@@ -452,7 +452,7 @@ public class DataFinderPage extends LabKeyPage
     {
         public SaveMenu()
         {
-            super(Locators.saveMenu.findElement(getDriver()));
+            super(Locator.css("#saveMenu").findElement(getDriver()));
         }
 
         public void save()
@@ -470,7 +470,7 @@ public class DataFinderPage extends LabKeyPage
     {
         public LoadMenu()
         {
-            super(Locators.loadMenu.findElement(getDriver()));
+            super(Locator.css("#loadMenu").findElement(getDriver()));
         }
 
         public void loadGroup(String groupName)
@@ -483,7 +483,7 @@ public class DataFinderPage extends LabKeyPage
     {
         public ManageMenu()
         {
-            super(Locators.manageMenu.findElement(getDriver()));
+            super(Locator.id("df-manageMenu").findElement(getDriver()));
         }
 
         public ManageParticipantGroupsPage manageGroups()

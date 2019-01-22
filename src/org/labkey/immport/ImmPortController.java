@@ -30,7 +30,6 @@ import org.labkey.api.action.FormArrayList;
 import org.labkey.api.action.FormViewAction;
 import org.labkey.api.action.HasBindParameters;
 import org.labkey.api.action.NullSafeBindException;
-import org.labkey.api.action.RedirectAction;
 import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
 import org.labkey.api.admin.notification.NotificationService;
@@ -306,29 +305,6 @@ public class ImmPortController extends SpringActionController
         public void setStudy_accession(String study_accession)
         {
             this.study_accession = study_accession;
-        }
-    }
-
-
-    @RequiresNoPermission
-    public static class StudyRedirectAction extends RedirectAction<StudyForm>
-    {
-        @Override
-        public URLHelper getSuccessURL(StudyForm studyForm)
-        {
-            return null;
-        }
-
-        @Override
-        public boolean doAction(StudyForm studyForm, BindException errors) throws Exception
-        {
-            return false;
-        }
-
-        @Override
-        public void validateCommand(StudyForm target, Errors errors)
-        {
-
         }
     }
 

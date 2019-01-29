@@ -417,11 +417,23 @@ public class DataFinderPage extends LabKeyPage
             openMenu();
             Assert.assertFalse("Menu option is not active: " + optionText, option.getAttribute("class").contains("inactive"));
 
-            new Actions(getDriver())
-                    .moveToElement(menuAnchor)
-                    .moveByOffset(0, height) // Move down so that move to option doesn't pass over another menu
-                    .moveToElement(option)
-                    .perform();
+            for (int i = 0; i < 5; i++)
+            {
+                try
+                {
+                    new Actions(getDriver())
+                            .moveToElement(menuAnchor)
+                            .moveByOffset(0, height) // Move down so that move to option doesn't pass over another menu
+                            .moveToElement(option)
+                            .perform();
+                    break;
+                }
+                catch (WebDriverException retry)
+                {
+                    if (i > 3)
+                        throw retry;
+                }
+            }
             option.click();
         }
 

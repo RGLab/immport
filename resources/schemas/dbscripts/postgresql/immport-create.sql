@@ -295,9 +295,8 @@ BEGIN
       ELSE 'Unknown'
     END AS Age,
     -- NOTE: using SELECT here instead of LOJ in FROM so that this will error if there are ever multiple immune_exposure rows for one study/subject
-    -- BUG: this failed in DR29 added MIN() as temporary fix see https://www.labkey.org/HIPC/Support%20Tickets/issues-details.view?issueId=36663
-    coalesce((SELECT MIN(exposure_material_reported) FROM immport.immune_exposure WHERE arm_2_subject.arm_accession = immune_exposure.arm_accession AND arm_2_subject.subject_accession = immune_exposure.subject_accession), 'Not_Specified') as exposure_material,
-    coalesce((SELECT MIN(exposure_process_preferred) FROM immport.immune_exposure WHERE arm_2_subject.arm_accession = immune_exposure.arm_accession AND arm_2_subject.subject_accession = immune_exposure.subject_accession), 'Not_Specified') as exposure_process
+    coalesce((SELECT exposure_material_reported FROM immport.immune_exposure WHERE arm_2_subject.arm_accession = immune_exposure.arm_accession AND arm_2_subject.subject_accession = immune_exposure.subject_accession), 'Not_Specified') as exposure_material,
+    coalesce((SELECT exposure_process_preferred  FROM immport.immune_exposure WHERE arm_2_subject.arm_accession = immune_exposure.arm_accession AND arm_2_subject.subject_accession = immune_exposure.subject_accession), 'Not_Specified') as exposure_process
   FROM immport.subject
       INNER JOIN immport.arm_2_subject arm_2_subject ON subject.subject_accession = arm_2_subject.subject_accession 
       INNER JOIN immport.arm_or_cohort ON arm_2_subject.arm_accession = arm_or_cohort.arm_accession

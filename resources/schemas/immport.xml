@@ -629,6 +629,7 @@
             <column columnName="assay"/>
             <column columnName="arm_accession"/>
             <column columnName="biosample_accession"/>
+            <column columnName="type"/>
             <column columnName="expsample_accession"/>
             <column columnName="experiment_accession"/>
             <column columnName="study_accession"/>
@@ -1448,6 +1449,21 @@
             <column columnName="first_name"/>
             <column columnName="last_name"/>
             <column columnName="organization"/>
+        </columns>
+    </table>
+    <table tableName="dimsample" tableDbType="TABLE">
+        <columns>
+            <column columnName="sampleid"/>
+            <column columnName="subjectid"/>
+            <column columnName="type"/>
+            <column columnName="timepoint"/>
+            <column columnName="timepoint_sortorder"/>
+        </columns>
+    </table>
+    <table tableName="dimsampleassay" tableDbType="TABLE">
+        <columns>
+            <column columnName="sampleid"/>
+            <column columnName="assay"/>
         </columns>
     </table>
 </tables>

@@ -20,7 +20,7 @@ CREATE OR REPLACE VIEW immport.v_results_union AS
 
 SELECT
   subject_accession || '.' || SUBSTRING(study_accession,4) as subjectid,
-  assay,arm_accession,biosample_accession,expsample_accession,experiment_accession,study_accession,study_time_collected,study_time_collected_unit,subject_accession,workspace_id,
+  assay,arm_accession,biosample_accession,(SELECT type from immport.biosample where biosample.biosample_accession=X.biosample_accession),expsample_accession,experiment_accession,study_accession,study_time_collected,study_time_collected_unit,subject_accession,workspace_id,
   CASE study_time_collected_unit
     WHEN 'Days' THEN FLOOR(study_time_collected)
     WHEN 'Hours' THEN FLOOR(study_time_collected/24)
@@ -234,9 +234,15 @@ UNION ALL
 ;
 
 
+-- SELECT immport.fn_populateDimensions()
 
 CREATE OR REPLACE FUNCTION immport.fn_populateDimensions() RETURNS INTEGER AS $$
 BEGIN
+
+  DROP TABLE IF EXISTS temp_results_union;
+  CREATE TEMPORARY TABLE temp_results_union AS
+  SELECT *
+  FROM immport.v_results_union;
 
   -- dimStudyAssay
 
@@ -263,7 +269,7 @@ BEGIN
   SELECT DISTINCT
     subject_accession || '.' || SUBSTRING(study_accession,4) AS SubjectId,
     assay as Assay
-  FROM immport.v_results_union
+  FROM temp_results_union
   WHERE subject_accession IS NOT NULL AND study_accession IS NOT NULL;
 
 
@@ -295,8 +301,9 @@ BEGIN
       ELSE 'Unknown'
     END AS Age,
     -- NOTE: using SELECT here instead of LOJ in FROM so that this will error if there are ever multiple immune_exposure rows for one study/subject
-    coalesce((SELECT exposure_material_reported FROM immport.immune_exposure WHERE arm_2_subject.arm_accession = immune_exposure.arm_accession AND arm_2_subject.subject_accession = immune_exposure.subject_accession), 'Not_Specified') as exposure_material,
-    coalesce((SELECT exposure_process_preferred  FROM immport.immune_exposure WHERE arm_2_subject.arm_accession = immune_exposure.arm_accession AND arm_2_subject.subject_accession = immune_exposure.subject_accession), 'Not_Specified') as exposure_process
+    -- BUG: this failed in DR29 added MIN() as temporary fix see https://www.labkey.org/HIPC/Support%20Tickets/issues-details.view?issueId=36663
+    coalesce((SELECT MIN(exposure_material_reported) FROM immport.immune_exposure WHERE arm_2_subject.arm_accession = immune_exposure.arm_accession AND arm_2_subject.subject_accession = immune_exposure.subject_accession), 'Not_Specified') as exposure_material,
+    coalesce((SELECT MIN(exposure_process_preferred) FROM immport.immune_exposure WHERE arm_2_subject.arm_accession = immune_exposure.arm_accession AND arm_2_subject.subject_accession = immune_exposure.subject_accession), 'Not_Specified') as exposure_process
   FROM immport.subject
       INNER JOIN immport.arm_2_subject arm_2_subject ON subject.subject_accession = arm_2_subject.subject_accession 
       INNER JOIN immport.arm_or_cohort ON arm_2_subject.arm_accession = arm_or_cohort.arm_accession
@@ -495,7 +502,7 @@ BEGIN
       WHEN study_day > 56 THEN 57
       ELSE -2
     END as sortorder
-  FROM immport.v_results_union
+  FROM temp_results_union
   ORDER BY study_accession, sortorder;
 
 /*
@@ -503,7 +510,7 @@ BEGIN
   DELETE FROM immport.summarySubjectAssayStudy;
   INSERT INTO  immport.summarySubjectAssayStudy (subject_accession, assay, study_accession)
   SELECT DISTINCT subject_accession, assay, study_accession
-  FROM immport.v_results_union
+  FROM temp_results_union
   WHERE subject_accession IS NOT NULL AND assay IS NOT NULL AND study_accession IS NOT NULL;
 */
 
@@ -511,6 +518,47 @@ BEGIN
   INSERT INTO immport.dimSampleType (subjectid, type)
   SELECT DISTINCT subject_accession || '.' || SUBSTRING(study_accession,4) as subjectid, type from immport.biosample
   WHERE type IS NOT NULL;
+
+
+
+  -- dimSample
+  DELETE FROM immport.dimSample;
+  INSERT INTO immport.dimSample (SampleId, SubjectId, Type, Timepoint, Timepoint_SortOrder)
+  SELECT DISTINCT
+    biosample_accession as SampleId,
+    subject_accession || '.' || SUBSTRING(study_accession,4) AS SubjectId,
+    type as Type,
+    CASE
+      WHEN study_day < 0 THEN '<0'
+      WHEN study_day <= 14 THEN CAST(study_day AS VARCHAR)
+      WHEN study_day < 28 THEN '15-27'
+      WHEN study_day = 28 THEN '28'
+      WHEN study_day < 56 THEN '29-55'
+      WHEN study_day = 56 THEN '56'
+      WHEN study_day > 56 THEN '>56'
+      ELSE 'Unknown'
+      END as Timepoint,
+    CASE
+      WHEN study_day < 0 THEN -1
+      WHEN study_day <= 14 THEN study_day
+      WHEN study_day < 28 THEN 15
+      WHEN study_day = 28 THEN 28
+      WHEN study_day < 56 THEN 29
+      WHEN study_day = 56 THEN 56
+      WHEN study_day > 56 THEN 57
+      ELSE -2
+      END as Timepoint_SortOrder
+  FROM temp_results_union
+  WHERE biosample_accession IS NOT NULL AND subject_accession IS NOT NULL;
+
+
+  -- dimSampleAssay
+  DELETE FROM immport.dimSampleAssay;
+  INSERT INTO immport.dimSampleAssay (SampleId, Assay)
+  SELECT DISTINCT
+    biosample_accession as SampleId, assay as Assay
+  FROM temp_results_union
+  WHERE biosample_accession IS NOT NULL AND assay IS NOT NULL;
 
   RETURN 1;
   END;

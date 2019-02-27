@@ -23,13 +23,13 @@ import org.apache.log4j.Logger;
 import org.json.JSONObject;
 import org.labkey.api.action.Action;
 import org.labkey.api.action.ActionType;
-import org.labkey.api.action.ApiAction;
 import org.labkey.api.action.ApiSimpleResponse;
 import org.labkey.api.action.ExportAction;
 import org.labkey.api.action.FormArrayList;
 import org.labkey.api.action.FormViewAction;
 import org.labkey.api.action.HasBindParameters;
 import org.labkey.api.action.NullSafeBindException;
+import org.labkey.api.action.ReadOnlyApiAction;
 import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
 import org.labkey.api.admin.notification.NotificationService;
@@ -891,7 +891,7 @@ public class ImmPortController extends SpringActionController
 
 
     @RequiresNoPermission
-    public class ContainersForModuleAction extends ApiAction<NameForm>
+    public class ContainersForModuleAction extends ReadOnlyApiAction<NameForm>
     {
         @Override
         public Object execute(NameForm form, BindException errors) throws Exception

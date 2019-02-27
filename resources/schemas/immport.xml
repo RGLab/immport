@@ -26,6 +26,17 @@
             <column columnName="result_schema"/>
             <column columnName="upload_result_status"/>
             <column columnName="workspace_id"/>
+            <column columnName="treatment" wrappedColumnName="expsample_accession">
+                <isReadOnly>true</isReadOnly>
+                <isUnselectable>true</isUnselectable>
+                <fk>
+                    <fkTable>expsample_2_treatment</fkTable>
+                    <fkColumnName>expsample_accession</fkColumnName>
+                    <fkMultiValued>junction</fkMultiValued>
+                    <fkJunctionLookup>treatment_accession</fkJunctionLookup>
+                </fk>
+                <datatype>entityid</datatype>
+            </column>
         </columns>
     </table>
     <table tableName="lk_locus_name" tableDbType="TABLE">
@@ -481,7 +492,12 @@
     <table tableName="expsample_2_treatment" tableDbType="TABLE">
         <columns>
             <column columnName="expsample_accession"/>
-            <column columnName="treatment_accession"/>
+            <column columnName="treatment_accession">
+                <fk>
+                    <fkColumnName>treatment_accession</fkColumnName>
+                    <fkTable>treatment</fkTable>
+                </fk>
+            </column>
         </columns>
     </table>
     <table tableName="dimsampletype" tableDbType="TABLE">
@@ -838,6 +854,17 @@
             <column columnName="subtype"/>
             <column columnName="type"/>
             <column columnName="workspace_id"/>
+            <column columnName="treatment" wrappedColumnName="biosample_accession">
+                <isReadOnly>true</isReadOnly>
+                <isUnselectable>true</isUnselectable>
+                <fk>
+                    <fkTable>biosample_2_treatment</fkTable>
+                    <fkColumnName>biosample_accession</fkColumnName>
+                    <fkMultiValued>junction</fkMultiValued>
+                    <fkJunctionLookup>treatment_accession</fkJunctionLookup>
+                </fk>
+                <datatype>entityid</datatype>
+            </column>
         </columns>
     </table>
     <table tableName="subject_measure_result" tableDbType="TABLE">
@@ -1121,7 +1148,12 @@
     <table tableName="biosample_2_treatment" tableDbType="TABLE">
         <columns>
             <column columnName="biosample_accession"/>
-            <column columnName="treatment_accession"/>
+            <column columnName="treatment_accession">
+                <fk>
+                    <fkColumnName>treatment_accession</fkColumnName>
+                    <fkTable>treatment</fkTable>
+                </fk>
+            </column>
         </columns>
     </table>
     <table tableName="protocol_deviation" tableDbType="TABLE">

@@ -962,12 +962,6 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
 
         assertNotNull("Did not find a notice with the group name '" + groupsSent.get(SENT_MARK_AS_READ).groupName + "' in it.", notificationPanelItem2);
 
-        log("Expand the notification. Why? Just because we can, and make sure no errors occur.");
-        notificationPanelItem2.toggleExpand();
-
-        // Wait for the expand automation.
-        sleep(500);
-
         log("Mark the notification as being read.");
         notificationPanelItem2.markAsRead();
         expectedNotifications--;

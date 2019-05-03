@@ -124,7 +124,6 @@ public class ImmPortController extends SpringActionController
 {
     private static final Logger LOG = Logger.getLogger(ImmPortController.class);
 
-    @SuppressWarnings("unchecked")
     private static final DefaultActionResolver _actionResolver = new DefaultActionResolver(ImmPortController.class);
 
     public ImmPortController()
@@ -144,7 +143,7 @@ public class ImmPortController extends SpringActionController
     @RequiresPermission(ReadPermission.class)
     public class BeginAction extends SimpleViewAction
     {
-        public ModelAndView getView(Object o, BindException errors) throws Exception
+        public ModelAndView getView(Object o, BindException errors)
         {
             return new JspView("/org/labkey/immport/view/begin.jsp");
         }
@@ -196,7 +195,7 @@ public class ImmPortController extends SpringActionController
         }
 
         @Override
-        public ModelAndView getView(CopyBean form, boolean reshow, BindException errors) throws Exception
+        public ModelAndView getView(CopyBean form, boolean reshow, BindException errors)
         {
             if (reshow)
             {
@@ -246,7 +245,7 @@ public class ImmPortController extends SpringActionController
         }
 
         @Override
-        public ModelAndView getView(CopyBean form, boolean reshow, BindException errors) throws Exception
+        public ModelAndView getView(CopyBean form, boolean reshow, BindException errors)
         {
             String log = "";
             String error = "";
@@ -264,7 +263,7 @@ public class ImmPortController extends SpringActionController
         }
 
         @Override
-        public boolean handlePost(CopyBean form, BindException errors) throws Exception
+        public boolean handlePost(CopyBean form, BindException errors)
         {
             populateCube(getContainer());
             ImmPortDocumentProvider.reindex();
@@ -313,7 +312,7 @@ public class ImmPortController extends SpringActionController
     public class StudyCardAction extends SimpleViewAction<StudyIdForm>
     {
         @Override
-        public ModelAndView getView(StudyIdForm form, BindException errors) throws Exception
+        public ModelAndView getView(StudyIdForm form, BindException errors)
         {
             String studyId = (null==form) ? null : form.studyId;
             if (StringUtils.isEmpty(studyId))
@@ -547,10 +546,9 @@ public class ImmPortController extends SpringActionController
                             matrix = "gene_expression_matrices";
 
                             ContainerFilter cf = new ContainerFilter.CurrentAndSubfolders(getUser());
-                            TableInfo tableInf = QueryService.get().getUserSchema(getUser(), container, "assay.ExpressionMatrix.matrix").getTable("SelectedRuns");
-                            if(null != tableInf)
+                            TableInfo tableInf = QueryService.get().getUserSchema(getUser(), container, "assay.ExpressionMatrix.matrix").getTable("SelectedRuns", cf);
+                            if (null != tableInf)
                             {
-                                ((ContainerFilterable) tableInf).setContainerFilter(cf);
                                 TableSelector table = new TableSelector(tableInf);
                                 matrices = table.getArrayList(GeneExpressionMatricesBean.class);
                             }

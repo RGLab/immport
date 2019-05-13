@@ -56,11 +56,11 @@
     expression_runs_sql += "\n ORDER BY folderName, runName, runId";
     // ARG need a table info to use container filter
     QueryDefinition qd = QueryService.get().saveSessionQuery(getViewContext(), getContainer(), "study", expression_runs_sql);
+    qd.setContainerFilter(new ContainerFilter.CurrentAndSubfolders(getUser()));
     ArrayList<QueryException> errors = new ArrayList<>();
     TableInfo t = qd.getTable(errors, false);
     if (!errors.isEmpty())
         throw errors.get(0);
-    ((ContainerFilterable)t).setContainerFilter(new ContainerFilter.CurrentAndSubfolders(getUser()));
     Map<FieldKey,ColumnInfo> cols = QueryService.get().getColumns(t, PageFlowUtil.set(
             FieldKey.fromParts("folderId"),
             FieldKey.fromParts("folderName"),

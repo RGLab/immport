@@ -21,8 +21,11 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.collections.CaseInsensitiveTreeMap;
 import org.labkey.api.collections.CaseInsensitiveTreeSet;
+import org.labkey.api.data.AbstractTableInfo;
+import org.labkey.api.data.BaseColumnInfo;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DbSchemaType;
@@ -143,7 +146,7 @@ public class ImmPortSchema extends UserSchema
 
 
     @Override
-    public TableInfo createTable(String name)
+    public TableInfo createTable(String name, ContainerFilter cf)
     {
         if (availableTables == AvailableTables.NONE)
             return null;
@@ -209,13 +212,13 @@ public class ImmPortSchema extends UserSchema
 
     void addStandardFKs(TableInfo t)
     {
-        for (ColumnInfo c : t.getColumns())
+        for (var c : ((AbstractTableInfo)t).getMutableColumns())
         {
             String lkTableName = accessions.get(c.getName());
             if (null==lkTableName)
                 continue;
-            c.setFk(new QueryForeignKey(getSchemaName(),getContainer(),null,getUser(),lkTableName,c.getName(),c.getName(),true));
-            c.setDisplayColumnFactory(ColumnInfo.NOLOOKUP_FACTORY);
+            c.setFk(QueryForeignKey.from(this, null).to(lkTableName, c.getName(), c.getName()).raw(true));
+            c.setDisplayColumnFactory(BaseColumnInfo.NOLOOKUP_FACTORY);
         }
     }
 

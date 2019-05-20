@@ -36,7 +36,6 @@ import org.labkey.api.admin.notification.NotificationService;
 import org.labkey.api.data.ColumnHeaderType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerFilter;
-import org.labkey.api.data.ContainerFilterable;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DbSchemaType;
@@ -796,7 +795,7 @@ public class ImmPortController extends SpringActionController
 
         private ModelAndView notFound(FileForm form, int count)
         {
-            String back = PageFlowUtil.generateBackButton();
+            String back = PageFlowUtil.generateBackButton().toString();
 
             String msg = 0==count?
                     "No flow file found (or duplicates were found) with this name: " + PageFlowUtil.filter(form.getFile()) :

@@ -18,7 +18,7 @@
 <%@ page import="org.labkey.immport.data.StudyBean" %>
 <%@ page import="org.labkey.api.view.HttpView" %>
 <%@ page import="org.apache.commons.lang3.StringUtils" %>
-<%@ page extends="org.labkey.api.jsp.JspBase"%>
+<%@ page extends="org.labkey.api.jsp.OldJspBase"%>
 <%
 StudyBean study = (StudyBean)HttpView.currentModel();
 String descriptionHTML;

@@ -23,7 +23,7 @@
 <%@ page import="java.util.Map" %>
 <%@ page import="java.util.Set" %>
 <%@ page import="java.util.TreeSet" %>
-<%@ page extends="org.labkey.api.jsp.JspBase"%>
+<%@ page extends="org.labkey.api.jsp.OldJspBase"%>
 
 <labkey:errors/>
 

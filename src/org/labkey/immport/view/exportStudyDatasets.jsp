@@ -17,7 +17,7 @@
 %>
 <%@ taglib prefix="labkey" uri="http://www.labkey.org/taglib" %>
 <%@ page import="org.labkey.api.view.template.ClientDependencies" %>
-<%@ page extends="org.labkey.api.jsp.JspBase"%>
+<%@ page extends="org.labkey.api.jsp.OldJspBase"%>
 <%!
     @Override
     public void addClientDependencies(ClientDependencies dependencies)

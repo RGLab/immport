@@ -23,7 +23,7 @@
 <%@ page import="org.labkey.api.view.template.ClientDependencies" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.Map" %>
-<%@ page extends="org.labkey.api.jsp.OldJspBase"%>
+<%@ page extends="org.labkey.api.jsp.JspBase"%>
 <%!
     @Override
     public void addClientDependencies(ClientDependencies dependencies)

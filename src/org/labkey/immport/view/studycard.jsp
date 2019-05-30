@@ -17,15 +17,9 @@
 %>
 <%@ page import="org.labkey.immport.data.StudyBean" %>
 <%@ page import="org.labkey.api.view.HttpView" %>
-<%@ page import="org.apache.commons.lang3.StringUtils" %>
-<%@ page extends="org.labkey.api.jsp.OldJspBase"%>
+<%@ page extends="org.labkey.api.jsp.JspBase"%>
 <%
 StudyBean study = (StudyBean)HttpView.currentModel();
-String descriptionHTML;
-if (!StringUtils.isEmpty(study.getDescription()))
-    descriptionHTML= study.getDescription();
-else
-    descriptionHTML = h(study.getBrief_description());
 %>
 <div id="immport_study_card_<%=h(study.getStudy_accession())%>" style="padding:5pt;">
 <%=h(study.getStudy_accession())%> - <%=h(study.getOfficial_title())%>

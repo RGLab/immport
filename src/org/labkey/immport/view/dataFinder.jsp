@@ -46,7 +46,7 @@
 <%@ page import="java.util.TreeMap" %>
 <%@ page import="java.util.regex.Matcher" %>
 <%@ page import="java.util.regex.Pattern" %>
-<%@ page extends="org.labkey.api.jsp.OldJspBase"%>
+<%@ page extends="org.labkey.api.jsp.JspBase"%>
 <%!
     @Override
     public void addClientDependencies(ClientDependencies dependencies)

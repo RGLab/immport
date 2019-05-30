@@ -35,7 +35,8 @@
 <%@ page import="java.util.Collection" %>
 <%@ page import="java.util.HashMap" %>
 <%@ page import="java.util.Map" %>
-<%@ page extends="org.labkey.api.jsp.OldJspBase" %>
+<%@ page import="org.labkey.api.util.PageFlowUtil" %>
+<%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%!
     @Override
     public void addClientDependencies(ClientDependencies dependencies)
@@ -53,7 +54,7 @@
     if (!StringUtils.isEmpty(details.study.getDescription()))
         descriptionHTML= details.study.getDescription();
     else
-        descriptionHTML = h(details.study.getBrief_description());
+        descriptionHTML = PageFlowUtil.filter(details.study.getBrief_description());
 
     ActionURL studyUrl = null;
     if (!c.isRoot())

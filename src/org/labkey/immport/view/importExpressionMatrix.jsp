@@ -17,7 +17,7 @@
 <%@ page import="java.util.LinkedHashSet" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.Set" %>
-<%@ page extends="org.labkey.api.jsp.OldJspBase"%>
+<%@ page extends="org.labkey.api.jsp.JspBase"%>
 
 <labkey:errors/>
 

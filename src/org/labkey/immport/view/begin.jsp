@@ -18,7 +18,7 @@
 <%@ page import="org.labkey.api.data.Container" %>
 <%@ page import="org.labkey.api.view.ActionURL" %>
 <%@ page import="org.labkey.immport.ImmPortController" %>
-<%@ page extends="org.labkey.api.jsp.OldJspBase" %>
+<%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
     Container c = getContainer();
     ActionURL exportSpecimens = (new ActionURL("query","exportRowsXLSX",c))

@@ -15,7 +15,6 @@
 
 package org.labkey.immport.data;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.vfs2.FileObject;
@@ -361,93 +360,6 @@ public class DataLoader extends PipelineJob
     }
 
 
-    static class ExpSample2FileInfo extends CustomMergeCopyConfig
-    {
-        ExpSample2FileInfo(String table)
-        {
-            super(table);
-        }
-
-        @Override
-        Parameter.ParameterMap getParameterMap() throws SQLException
-        {
-            DbSchema targetSchema = DbSchema.get(this.getTargetSchema().getName());
-            TableInfo targetTableInfo = targetSchema.getTable(getTargetQuery());
-
-            Parameter expsample_accession = new Parameter("expsample_accession", JdbcType.VARCHAR);
-            Parameter file_info_id = new Parameter("file_info_id", JdbcType.INTEGER);
-            Parameter experiment_accession = new Parameter("experiment_accession", JdbcType.VARCHAR);
-            Parameter data_format = new Parameter("data_format", JdbcType.VARCHAR);
-            Parameter result_schema = new Parameter("result_schema", JdbcType.VARCHAR);
-            SQLFragment insert = new SQLFragment(
-                "INSERT INTO immport.expsample_2_file_info (expsample_accession, file_info_id, result_schema)\n" +
-                "SELECT ?, ?, ?\n",
-                expsample_accession, file_info_id, result_schema);
-            SQLFragment update = new SQLFragment("UPDATE immport.expsample_2_file_info SET expsample_accession=?, file_info_id=?, result_schema=?\n" +
-                "WHERE expsample_accession=? AND file_info_id=?\n",
-                expsample_accession, file_info_id, result_schema, expsample_accession, file_info_id);
-            SQLFragment sqlf = new SQLFragment();
-            sqlf.append("WITH __upsert__ AS (").append(update).append(" RETURNING *) ").append(insert).append(" WHERE NOT EXISTS (SELECT * FROM __upsert__)");
-            return new Parameter.ParameterMap(targetSchema.getScope(), sqlf, (Map<String,String>)null);
-        }
-    }
-
-    static class ExpSample2Reagent extends CustomMergeCopyConfig
-    {
-        ExpSample2Reagent(String table)
-        {
-            super(table);
-        }
-
-        @Override
-        Parameter.ParameterMap getParameterMap() throws SQLException
-        {
-            DbSchema targetSchema = DbSchema.get(this.getTargetSchema().getName());
-            TableInfo targetTableInfo = targetSchema.getTable(getTargetQuery());
-
-            Parameter expsample_accession = new Parameter("expsample_accession", JdbcType.VARCHAR);
-            Parameter reagent_accession = new Parameter("reagent_accession", JdbcType.VARCHAR);
-            SQLFragment insert = new SQLFragment(
-                    "INSERT INTO immport.expsample_2_reagent (expsample_accession, reagent_accession)\n" +
-                            "SELECT ?, ?\n",
-                    expsample_accession, reagent_accession);
-            SQLFragment update = new SQLFragment("UPDATE immport.expsample_2_reagent SET expsample_accession=?, reagent_accession=?\n" +
-                    "WHERE expsample_accession=? AND reagent_accession=?\n",
-                    expsample_accession, reagent_accession, expsample_accession, reagent_accession);
-            SQLFragment sqlf = new SQLFragment();
-            sqlf.append("WITH __upsert__ AS (").append(update).append(" RETURNING *) ").append(insert).append(" WHERE NOT EXISTS (SELECT * FROM __upsert__)");
-            return new Parameter.ParameterMap(targetSchema.getScope(), sqlf, (Map<String,String>)null);
-        }
-    }
-
-    static class ExpSample2Treatment extends CustomMergeCopyConfig
-    {
-        ExpSample2Treatment(String table)
-        {
-            super(table);
-        }
-
-        @Override
-        Parameter.ParameterMap getParameterMap() throws SQLException
-        {
-            DbSchema targetSchema = DbSchema.get(this.getTargetSchema().getName());
-            TableInfo targetTableInfo = targetSchema.getTable(getTargetQuery());
-
-            Parameter expsample_accession = new Parameter("expsample_accession", JdbcType.VARCHAR);
-            Parameter treatment_accession = new Parameter("treatment_accession", JdbcType.VARCHAR);
-            SQLFragment insert = new SQLFragment(
-                    "INSERT INTO immport.expsample_2_treatment (expsample_accession, treatment_accession)\n" +
-                            "SELECT ?, ?\n",
-                    expsample_accession, treatment_accession);
-            SQLFragment update = new SQLFragment("UPDATE immport.expsample_2_treatment SET expsample_accession=?, treatment_accession=?\n" +
-                    "WHERE expsample_accession=? AND treatment_accession=?\n",
-                    expsample_accession, treatment_accession, expsample_accession, treatment_accession);
-            SQLFragment sqlf = new SQLFragment();
-            sqlf.append("WITH __upsert__ AS (").append(update).append(" RETURNING *) ").append(insert).append(" WHERE NOT EXISTS (SELECT * FROM __upsert__)");
-            return new Parameter.ParameterMap(targetSchema.getScope(), sqlf, (Map<String,String>)null);
-        }
-    }
-
     static class _StatementDataIterator extends StatementDataIterator
     {
         _StatementDataIterator(DataIterator data, @Nullable Parameter.ParameterMap map, DataIteratorContext context)
@@ -538,9 +450,17 @@ public class DataLoader extends PipelineJob
                     public DataIterator getDataIterator(DataIteratorContext context)
                     {
                         DataIterator in = select.getDataIterator(context);
+                        // TODO in DR30 type column has gone away, fill in with '-' for now
+                        // TODO DROP COLUMN in 19.2 or 19.3
+                        boolean hasTypeColumn = false;
+                        for (int i=1 ; i<= in.getColumnCount() ; i++)
+                            hasTypeColumn |= "type".equalsIgnoreCase(in.getColumnInfo(i).getName());
+
                         SimpleTranslator out = new SimpleTranslator(in, context);
                         out.selectAll();
-                    out.addConstantColumn("restricted", JdbcType.BOOLEAN, restricted);
+                        out.addConstantColumn("restricted", JdbcType.BOOLEAN, restricted);
+                        if (!hasTypeColumn)
+                            out.addConstantColumn("type", JdbcType.VARCHAR, "-");
                         return out;
                     }
                 };
@@ -608,7 +528,7 @@ public class DataLoader extends PipelineJob
         }
     }
 
-    /* get study by joining to arm.arm_accession.biosample_accession */
+    /* get study by joining to arm_accession -> arm_or_cohort */
     static class ArmCopyConfig extends ImmPortCopyConfig
     {
         ArmCopyConfig(String table)
@@ -632,6 +552,57 @@ public class DataLoader extends PipelineJob
             job.info("" + rows + " " + (rows == 1 ? "row" : "rows") + " deleted from " + getTargetQuery());
         }
     }
+
+    /* get study by joining to experiment_accession -> experiment */
+    static class ExperimentCopyConfig extends ImmPortCopyConfig
+    {
+        ExperimentCopyConfig(String table)
+        {
+            super(table);
+        }
+
+        @Override
+        public void deleteFromTarget(PipelineJob job, List<String> studies) throws IOException, SQLException
+        {
+            DbSchema targetSchema = DbSchema.get(getTargetSchema().getName());
+
+            SQLFragment deleteSql = new SQLFragment();
+            deleteSql.append(
+                    "DELETE FROM " + getTargetSchema().getName() + "." + getTargetQuery() + "\n" +
+                            "WHERE experiment_accession IN (SELECT experiment_accession FROM " + getTargetSchema().getName() + ".experiment WHERE study_accession ");
+            targetSchema.getSqlDialect().appendInClauseSql(deleteSql, studies);
+            deleteSql.append(")");
+
+            int deleted = new SqlExecutor(targetSchema).execute(deleteSql);
+            job.info("" + deleted + " " + (deleted == 1 ? "row" : "rows") + " deleted from " + getTargetQuery());
+        }
+    }
+
+    /* get study by joining to expsample_accession -> expsample -> experiment */
+    static class ExpsampleCopyConfig extends ImmPortCopyConfig
+    {
+        ExpsampleCopyConfig(String table)
+        {
+            super(table);
+        }
+
+        @Override
+        public void deleteFromTarget(PipelineJob job, List<String> studies) throws IOException, SQLException
+        {
+            DbSchema targetSchema = DbSchema.get(getTargetSchema().getName());
+
+            SQLFragment deleteSql = new SQLFragment();
+            deleteSql.append(
+                    "DELETE FROM " + getTargetSchema().getName() + "." + getTargetQuery() + "\n" +
+                            "WHERE expsample_accession IN (SELECT expsample_accession from immport.expsample WHERE experiment_accession IN (SELECT experiment_accession FROM " + getTargetSchema().getName() + ".experiment WHERE study_accession ");
+            targetSchema.getSqlDialect().appendInClauseSql(deleteSql, studies);
+            deleteSql.append("))");
+
+            int deleted = new SqlExecutor(targetSchema).execute(deleteSql);
+            job.info("" + deleted + " " + (deleted == 1 ? "row" : "rows") + " deleted from " + getTargetQuery());
+        }
+    }
+
 
     static CopyConfig[] immportTables = new CopyConfig[]
     {
@@ -681,13 +652,13 @@ public class DataLoader extends PipelineJob
         new StudyCopyConfig("arm_or_cohort"),
         new StudyCopyConfig("biosample"),
         new SharedCopyConfig("experiment"),
-        new SharedCopyConfig("expsample"),
+        new ExperimentCopyConfig("expsample"),
         new SharedCopyConfig("file_info"),
         new SharedCopyConfig("protocol"),
         new SharedCopyConfig("reagent"),
         new SharedCopyConfig("treatment"),
         new StudyCopyConfig("adverse_event"),
-        new SharedCopyConfig("control_sample"),
+        new ExperimentCopyConfig("control_sample"),
         new SharedCopyConfig("expsample_mbaa_detail"),
         new SharedCopyConfig("expsample_public_repository"),
         new SharedCopyConfig("inclusion_exclusion"),
@@ -695,7 +666,7 @@ public class DataLoader extends PipelineJob
         new BiosampleCopyConfig("lab_test"),
         new StudyCopyConfig("protocol_deviation"),
         new StudyCopyConfig("reported_early_termination"),
-        new SharedCopyConfig("standard_curve"),
+        new ExperimentCopyConfig("standard_curve"),
         new StudyCopyConfig("study_categorization"),
         new StudyCopyConfig("study_file"),
         new StudyCopyConfig("study_glossary"),
@@ -714,8 +685,6 @@ public class DataLoader extends PipelineJob
             }
         },
         new SharedCopyConfig("program"),
-
-        new SharedCopyConfig("fcs_analyzed_result_marker"),
 
             // force using merge by override updateInsertOptionBeforeCopy()
         new SharedCopyConfig("fcs_header_marker")
@@ -761,14 +730,14 @@ public class DataLoader extends PipelineJob
 
             // junction tables
         new ArmCopyConfig("arm_2_subject"),
-        new BiosampleCopyConfig("expsample_2_biosample"),
+        new ExpsampleCopyConfig("expsample_2_biosample"),
         new BiosampleCopyConfig("biosample_2_treatment"),
-        new SharedCopyConfig("experiment_2_protocol"),
-        new ExpSample2FileInfo("expsample_2_file_info"),
-        new ExpSample2Reagent("expsample_2_reagent"),
+        new ExperimentCopyConfig("experiment_2_protocol"),
+        new ExpsampleCopyConfig("expsample_2_file_info"),
+        new ExpsampleCopyConfig("expsample_2_reagent"),
         new StudyCopyConfig("study_2_protocol"),
         new SharedCopyConfig("control_sample_2_file_info"),
-        new ExpSample2Treatment("expsample_2_treatment"),
+        new ExpsampleCopyConfig("expsample_2_treatment"),
         new ArmCopyConfig("planned_visit_2_arm"),
         new SharedCopyConfig("standard_curve_2_file_info"),
         new StudyCopyConfig("study_2_panel"),
@@ -998,6 +967,9 @@ public class DataLoader extends PipelineJob
             error("Could not load study accession numbers", preException);
             return;
         }
+
+        if (setStudyAccession.contains("SDY998"))
+            setStudyAccession.add("SDY999");    // because DR30
 
         info("Archive contains " + setStudyAccession.size() +" "+(setStudyAccession.size()==1?"study":"studies"));
 

@@ -316,7 +316,6 @@ public class DataFinderPage extends LabKeyPage
         SUBJECTS(null, "subjects"),
         SPECIES("Species", "species"),
         CONDITION("Condition", "conditions"),
-        TYPE("Type", "types"),
         CATEGORY("Research focus", "Category"),
         ASSAY("Assay", "assays"),
         TIMEPOINT("Day of Study", "timepoints"),

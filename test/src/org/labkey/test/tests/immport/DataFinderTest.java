@@ -333,7 +333,7 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
 
         Map<Dimension, DataFinderPage.DimensionPanel> dimensionPanels = finder.getAllDimensionPanels();
 
-        dimensionPanels.get(Dimension.TYPE).selectMember("Longitudinal");
+        dimensionPanels.get(Dimension.GENDER).selectMember("Male");
 
         List<DataFinderPage.StudyCard> filteredStudyCards = finder.getStudyCards();
         assertEquals("Study cards visible after selection", 0, filteredStudyCards.size());

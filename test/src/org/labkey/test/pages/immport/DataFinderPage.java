@@ -453,7 +453,7 @@ public class DataFinderPage extends LabKeyPage
             List<String> optionStrings = new ArrayList<>();
             for (WebElement option : options)
             {
-                shortWait().until(wd -> !option.getText().isBlank());
+                shortWait().until(wd -> !option.getText().replace(Locator.NBSP, "").isBlank());
                 optionStrings.add(option.getText().trim());
             }
             return optionStrings;

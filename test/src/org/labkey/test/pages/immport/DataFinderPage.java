@@ -316,7 +316,6 @@ public class DataFinderPage extends LabKeyPage
         SUBJECTS(null, "subjects"),
         SPECIES("Species", "species"),
         CONDITION("Condition", "conditions"),
-        TYPE("Type", "types"),
         CATEGORY("Research focus", "Category"),
         ASSAY("Assay", "assays"),
         TIMEPOINT("Day of Study", "timepoints"),
@@ -453,7 +452,7 @@ public class DataFinderPage extends LabKeyPage
             List<String> optionStrings = new ArrayList<>();
             for (WebElement option : options)
             {
-                shortWait().until(wd -> !option.getText().isBlank());
+                shortWait().until(wd -> !option.getText().replace(Locator.NBSP, "").isBlank());
                 optionStrings.add(option.getText().trim());
             }
             return optionStrings;

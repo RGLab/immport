@@ -235,19 +235,22 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                 $scope.closeMenu($event);
 
             $scope.clearAllFilters(false);
-            $scope._applyGroupFilters(group.filters);
+            var outofdate = $scope._applyGroupFilters(group.filters);
 
             $scope.doSearchTermsChanged();
             $scope.saveFilterState();
             $scope.updateCurrentGroup(group);
-            $scope.currentGroupHasChanges = false;
-            console_log("currentGroupHasChanges = false (applySubjectGroupFilter)");
+            $scope.currentGroupHasChanges = outofdate;
+            console_log("currentGroupHasChanges = " + outofdate);
 
             $scope.clearLoadGroupInfo();
         };
 
         $scope._applyGroupFilters = function(filters)
         {
+            var missingDimensions = [];
+            var missingMembers = [];
+
             for (var f in filters)
             {
                 if (filters.hasOwnProperty(f))
@@ -259,24 +262,48 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                         $scope.$emit("searchTermsAppliedFromFilter", filter.members);
                     }
 
-                    var dim = dataspace.dimensions[filter.name];
-
-                    if (dim && filter.members.length > 0)
+                    if (filter.members.length > 0)
                     {
-                        for (var i = 0; i < filter.members.length; i++)
+                        var dim = dataspace.dimensions[filter.name];
+                        if (!dim)
                         {
-                            var filteredName = filter.members[i];
-                            var member = dim.memberMap[filteredName];
-                            if (member)
-                            {
-                                member.selected = true;
-                                dim.filters.push(member);
-                            }
+                            missingDimensions.push(filter.name);
                         }
-                        dim.filterType = filter.operator;
+                        else
+                        {
+                            for (var i = 0; i < filter.members.length; i++)
+                            {
+                                var filteredName = filter.members[i];
+                                var member = dim.memberMap[filteredName];
+                                if (!member)
+                                {
+                                    missingMembers.push(filteredName);
+                                }
+                                else
+                                {
+                                    member.selected = true;
+                                    dim.filters.push(member);
+                                }
+                            }
+                            dim.filterType = filter.operator;
+                        }
                     }
                 }
             }
+
+            if (missingDimensions.length || missingMembers.length)
+            {
+                $scope.currentGroupHasChanges = true;
+                var msg = "Note: Some parts of this saved filter can no longer be applied.  Use 'Save' to update this filter.\n\n";
+                var m;
+                for (m in missingDimensions)
+                    msg += "Filter aspect '" + missingDimensions[m] + "' not found.\n";
+                for (m in missingMembers)
+                    msg += "Value '" + missingMembers[m] + "' not found.\n";
+                alert(msg);
+                return true;    // out-of-date, use save
+            }
+            return false;   // not out of date
         };
 
         $scope.clearLoadGroupInfo = function()
@@ -654,7 +681,7 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
         $scope.dimAge = dataspace.dimensions.Age;
         $scope.dimTimepoint = dataspace.dimensions.Timepoint;
         $scope.dimAssay = dataspace.dimensions.Assay;
-        $scope.dimType = dataspace.dimensions.Type;
+        // $scope.dimType = dataspace.dimensions.Type;
         $scope.dimCategory = dataspace.dimensions.Category;
         $scope.dimExposureMaterial = dataspace.dimensions.ExposureMaterial;
         $scope.dimExposureProcess = dataspace.dimensions.ExposureProcess;
@@ -1554,11 +1581,11 @@ function dataFinder(studyData, loadedStudies, loadGroupId, dataFinderAppId)
                 name: 'Assay', hierarchyName: 'Assay', levelName: 'Assay', allMemberName: '[Assay].[(All)]',
                 filterType: "AND", filterOptions: [{type: "OR", caption: "data for any of these"}, { type: "AND", caption: "data for all of these"}]
             },
-            "Type":
-            {
-                name: 'Type', hierarchyName: 'Study.Type', levelName: 'Type', allMemberName: '[Study.Type].[(All)]',
-                filterType: "OR", filterOptions: [{type: "OR", caption: "is any of"}]
-            },
+            // "Type":
+            // {
+            //     name: 'Type', hierarchyName: 'Study.Type', levelName: 'Type', allMemberName: '[Study.Type].[(All)]',
+            //     filterType: "OR", filterOptions: [{type: "OR", caption: "is any of"}]
+            // },
             "Category":
             {
                 caption: 'Research focus', name: 'Category', hierarchyName: 'Study.Category', levelName: 'Category', allMemberName: '[Study.Category].[(All)]',

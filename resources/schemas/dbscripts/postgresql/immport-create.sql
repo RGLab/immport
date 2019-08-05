@@ -85,7 +85,7 @@ UNION ALL
 
 SELECT
    CASE
-     WHEN file_info.detail IN ('Affymetrix CEL', 'Affymetrix other', 'Gene expression result', 'Illumina BeadArray', 'TPM') THEN 'Gene Expression'
+     WHEN file_info.detail IN ('Affymetrix CEL', 'Affymetrix other', 'Gene expression result', 'Illumina BeadArray', 'TPM', 'RNA sequencing result') THEN 'Gene Expression'
      WHEN file_info.detail IN ('CyTOF result') THEN 'CyTOF'
      ELSE 'UNKNOWN'
    END as assay,
@@ -110,7 +110,7 @@ FROM
     FROM
       immport.file_info INNER JOIN immport.expsample_2_file_info ON file_info.file_info_id = expsample_2_file_info.file_info_id
     WHERE
-      file_info.detail IN ('Affymetrix CEL', 'Affymetrix other', 'Gene expression result', 'Illumina BeadArray', 'TPM', 'CyTOF result')
+      file_info.detail IN ('Affymetrix CEL', 'Affymetrix other', 'Gene expression result', 'Illumina BeadArray', 'TPM', 'RNA sequencing result', 'CyTOF result')
   UNION
     SELECT
       'Gene expression result' as detail,
@@ -184,7 +184,7 @@ CREATE OR REPLACE VIEW immport.v_results_summary AS
       SELECT expsample_2_file_info.expsample_accession
       FROM immport.expsample_2_file_info JOIN immport.file_info ON expsample_2_file_info.file_info_id = file_info.file_info_id
       WHERE
-        file_info.detail IN ('Affymetrix CEL', 'Affymetrix other', 'Gene expression result', 'Illumina BeadArray', 'TPM')
+        file_info.detail IN ('Affymetrix CEL', 'Affymetrix other', 'Gene expression result', 'Illumina BeadArray', 'TPM', 'RNA sequencing result')
     UNION
       SELECT
          expsample_public_repository.expsample_accession

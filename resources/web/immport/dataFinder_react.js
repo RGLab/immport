@@ -307,9 +307,8 @@ var Facet = React.createClass(
         return false;
     },
 
-    handleFilterOption : function(filterOption, event)
+    handleFilterOption : function(filterOption)
     {
-        event.stopPropagation();
         if (this.props.dimension.filterType !== filterOption.type)
             if (typeof this.props.onFacetOptionChange === "function")
                 this.props.onFacetOptionChange(this.props.dimension, filterOption);
@@ -433,7 +432,7 @@ var DataFinderLayout = React.createClass(
         this.resize();
     },
 
-    handleViewportSizeChange()
+    handleViewportSizeChange : function()
     {
         if (viewportSizeTimeout)
             clearTimeout(viewportSizeTimeout);
@@ -559,6 +558,8 @@ var DataFinderLayout = React.createClass(
 
 var DataFinderController = React.createClass(
 {
+    // DataFinderController component life-cycle methods
+
     getInitialState : function()
     {
         var cube = LABKEY.query.olap.CubeManager.getCube({
@@ -568,16 +569,6 @@ var DataFinderController = React.createClass(
             deferLoad: false,
             memberExclusionFields:["[Subject].[Subject]"]
         });
-
-        var  subsetOptions = [];
-        if (loaded_study_list.length > 0)
-            subsetOptions.push({value: 'ImmuneSpace', name: 'ImmuneSpace studies' });
-        if (recent_study_list.length > 0)
-            subsetOptions.push({value: 'Recent', name: 'Recently added studies' });
-        if (hipc_study_list.length > 0)
-            subsetOptions.push({value: 'HipcFunded', name: 'HIPC funded studies' });
-        if (unloaded_study_list.length > 0)
-            subsetOptions.push({value: 'UnloadedImmPort', name: 'Unloaded ImmPort studies'});
 
         return (
         {
@@ -594,11 +585,14 @@ var DataFinderController = React.createClass(
             mapStudyVisible : {},    //TODO
             // TODO map Dimension->filterOption
 
-            loaded_study_list : loaded_study_list,  // TODO this is a global
+            loaded_study_list : [],
+            recent_study_list : [],
+            hipc_study_list : [],
+            unloaded_study_list : [],
 
             searchTerms : "",
-            subsetOptions : subsetOptions,
-            studySubset : loaded_study_list.length === 0 ? "UnloadedImmPort" : "ImmuneSpace",
+            subsetOptions : [],
+            studySubset : "UnloadedImmPort", //loaded_study_list.length === 0 ? "UnloadedImmPort" : "ImmuneSpace",
             filterByLevel : "[Subject].[Subject]",
 
             // query results stored in state.subjects as well as this.props.dimensions.*
@@ -618,12 +612,80 @@ var DataFinderController = React.createClass(
         });
     },
 
-    componentDidMount : function()
+    componentWillMount: function ()
     {
+        // initialize state.loaded_study_list and state.studySubset
+        var loaded_study_list = [];
+        var recent_study_list = [];
+        var hipc_study_list = [];
+        var unloaded_study_list = [];
+        this.props.studies.forEach(function(study){
+            if (study.loaded)
+                loaded_study_list.push(study.memberName);
+            else
+                unloaded_study_list.push(study.memberName);
+            if (study.highlight)
+                recent_study_list.push(study.memberName);
+            if (study.hipc_funded)
+                hipc_study_list.push(study.memberName);
+        });
+        var  subsetOptions = [];
+        if (loaded_study_list.length > 0)
+            subsetOptions.push({value: 'ImmuneSpace', name: 'ImmuneSpace studies' });
+        if (recent_study_list.length > 0)
+            subsetOptions.push({value: 'Recent', name: 'Recently added studies' });
+        if (hipc_study_list.length > 0)
+            subsetOptions.push({value: 'HipcFunded', name: 'HIPC funded studies' });
+        if (unloaded_study_list.length > 0)
+            subsetOptions.push({value: 'UnloadedImmPort', name: 'Unloaded ImmPort studies'});
+        var studySubset = loaded_study_list.length === 0 ? "UnloadedImmPort" : "ImmuneSpace";
+
+        this.setState(
+        {
+            loaded_study_list:loaded_study_list,
+            recent_study_list:recent_study_list,
+            hipc_study_list:hipc_study_list,
+            unloaded_study_list:unloaded_study_list,
+            subsetOptions:subsetOptions,
+            studySubset:studySubset
+        });
         var me = this;
-        this.state.cube.onReady(function(mdx){me.cubeOnReady(mdx);});
+        this.state.cube.onReady(function(mdx){
+            me.cubeOnReady(mdx);
+        });
     },
 
+    render : function()
+    {
+        // TODO localStorageService.bind($scope, 'searchTerms');
+
+        return React.createElement(DataFinderLayout, {
+            loading : !this.state.cubeLoaded && !this.state.firstQuery,
+            autoResize : true,
+            studies : this.props.studies,
+
+            dimensions : this.props.dimensions,
+            mapMemberCount : this.state.mapMemberCount,
+
+            initialSearchTerms : this.state.searchTerms,
+            searchMessage : "test",
+            studySubset : this.state.studySubset,
+            subsetOptions : this.state.subsetOptions,
+
+            onSearchTermsChanged : this.handleSearchTermsChanged,
+            onStudySubsetChanged : this.handleStudySubsetChanged,
+            onFacetChange : this.handleFacetChange,
+            onFacetClear : this.handleFacetClear,
+            onFacetOptionChange : this.handleFacetOptionChange
+        });
+    },
+
+    componentDidMount : function()
+    {
+    },
+
+    /* DataFinderController implementation methods */
+    
     initCubeMetaData : function()
     {
         var dimensions = this.props.dimensions;
@@ -662,6 +724,8 @@ var DataFinderController = React.createClass(
 
         var dimStudy = dimensions.Study;
         this.props.studies.forEach(function(study){
+            if (!dimStudy.memberMap[study.memberName])
+                debugger;
             dimStudy.memberMap[study.memberName].hidden = !study.loaded;
         });
     },
@@ -839,13 +903,13 @@ var DataFinderController = React.createClass(
         var studySubset = this.state.studySubset;
 
         if (studySubset === "ImmuneSpace")
-            return loaded_study_list;
+            return this.state.loaded_study_list;
         if (studySubset === "Recent")
-            return recent_study_list;
+            return this.state.recent_study_list;
         if (studySubset === "HipcFunded")
-            return hipc_study_list;
+            return this.state.hipc_study_list;
         if (studySubset === "UnloadedImmPort")
-            return unloaded_study_list;
+            return this.state.unloaded_study_list;
         var dimStudy = this.props.dimensions.Study;
         return Ext4.pluck(dimStudy.members, 'uniqueName');
     },
@@ -1090,6 +1154,7 @@ var DataFinderController = React.createClass(
 
         for (d in dimensions)
         {
+            if (!dimensions.hasOwnProperty(d)) continue;
             dim = dimensions[d];
             if (!dimensions.hasOwnProperty(d) || dim.name === "Study") continue;
             for (m = 0; m < dim.members.length; m++)
@@ -1135,31 +1200,5 @@ var DataFinderController = React.createClass(
         // TODO $scope.doneRendering();
         this.setState({mapMemberCount:{}, firstQuery:false});
         this.forceUpdate();
-    },
-
-
-    render : function()
-    {
-        // TODO localStorageService.bind($scope, 'searchTerms');
-
-        return React.createElement(DataFinderLayout, {
-            loading : !this.state.cubeLoaded && !this.state.firstQuery,
-            autoResize : true,
-            studies : this.props.studies,
-
-            dimensions : this.props.dimensions,
-            mapMemberCount : this.state.mapMemberCount,
-
-            initialSearchTerms : this.state.searchTerms,
-            searchMessage : "test",
-            studySubset : this.state.studySubset,
-            subsetOptions : this.state.subsetOptions,
-
-            onSearchTermsChanged : this.handleSearchTermsChanged,
-            onStudySubsetChanged : this.handleStudySubsetChanged,
-            onFacetChange : this.handleFacetChange,
-            onFacetClear : this.handleFacetClear,
-            onFacetOptionChange : this.handleFacetOptionChange
-        });
     }
 });

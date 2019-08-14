@@ -18,7 +18,6 @@
 <%@ page import="org.apache.commons.lang3.StringUtils" %>
 <%@ page import="org.labkey.api.data.Container" %>
 <%@ page import="org.labkey.api.data.ContainerFilter" %>
-<%@ page import="org.labkey.api.data.ContainerFilterable" %>
 <%@ page import="org.labkey.api.data.ContainerManager" %>
 <%@ page import="org.labkey.api.data.DbSchema" %>
 <%@ page import="org.labkey.api.data.DbSchemaType" %>
@@ -27,8 +26,6 @@
 <%@ page import="org.labkey.api.data.TableSelector" %>
 <%@ page import="org.labkey.api.query.DefaultSchema" %>
 <%@ page import="org.labkey.api.query.QuerySchema" %>
-<%@ page import="org.labkey.api.rstudio.RStudioService" %>
-<%@ page import="org.labkey.api.services.ServiceRegistry" %>
 <%@ page import="org.labkey.api.util.HeartBeat" %>
 <%@ page import="org.labkey.api.view.ActionURL" %>
 <%@ page import="org.labkey.api.view.HttpView" %>
@@ -52,6 +49,8 @@
         dependencies.add("Ext4");               // TODO still used for popup window
         dependencies.add("clientapi/ext4");     // TODO
         dependencies.add("query/olap.js");
+        dependencies.add("core/SQL.js");
+
         dependencies.add("dataFinder.css");
         dependencies.add("immport/ParticipantGroup.js");
         dependencies.add("immport/hipc.css");
@@ -113,6 +112,7 @@
         return "false";
     }
 %>
+<script src='<%=getContextPath()%>/clientapi/core/SQL.js'></script>
 <script type="text/javascript">
 
 var $=$||jQuery;
@@ -120,9 +120,10 @@ var $=$||jQuery;
 
     //
     // INITIALIZE STUDY DATA
+    // INITIALIZE STUDY DATA
     //
 
-    var studyData = [<%
+<%--    var studyData = [<%
     String comma = "\n  ";
     for (StudyBean study : studies)
     {
@@ -141,12 +142,7 @@ var $=$||jQuery;
         comma = "\n";
         Container p = c.getProject();
         QuerySchema s = DefaultSchema.get(context.getUser(), p).getSchema("study");
-        TableInfo sp = s.getTable("StudyProperties");
-        if (sp.supportsContainerFilter())
-        {
-            ContainerFilter cf = new ContainerFilter.AllInProject(context.getUser());
-            ((ContainerFilterable)sp).setContainerFilter(cf);
-        }
+        TableInfo sp = s.getTable("StudyProperties", new ContainerFilter.AllInProject(context.getUser()));
         Collection<Map<String, Object>> maps = new TableSelector(sp).getMapCollection();
 
         long now = HeartBeat.currentTimeMillis();
@@ -225,7 +221,7 @@ var $=$||jQuery;
         }
         studies.push(s);
     }
-
+--%>
     //
     // INITIALIZE DIMENSIONS
     //
@@ -322,8 +318,86 @@ var $=$||jQuery;
     }
 
 
-LABKEY.Utils.onReady(function(){
-    ReactDOM.render(React.createElement(DataFinderController, {studies:studies, dimensions:dimensions}), document.getElementById("dataFinderApp"));
+LABKEY.Utils.onReady(function()
+{
+    var map = {};
+
+    // query immport.studies
+    var SQL = LABKEY.Query.SQL || LABKEY.Query.experimental.SQL;
+    var queryComplete = 0;
+
+    var immportStudySQL =
+            "SELECT study.*, P.name as program_title, pi.pi_names\n" +
+            "FROM immport.study\n" +
+            " LEFT OUTER JOIN (SELECT study_accession, MIN(contract_grant_id) as contract_grant_id FROM immport.contract_grant_2_study GROUP BY study_accession) CG2S ON study.study_accession = CG2S.study_accession\n" +
+            " LEFT OUTER JOIN immport.contract_grant C ON CG2S.contract_grant_id = C.contract_grant_id\n" +
+            " LEFT OUTER JOIN immport.program P on C.program_id = P.program_id\n" +
+            " LEFT OUTER JOIN\n" +
+            "\t(\n" +
+            // extra parens required in group_concat is probably a bug
+            "\tSELECT study_accession, group_concat( (first_name || ' ' || last_name), ', ') as pi_names\n" +
+            "\tFROM immport.study_personnel\n" +
+            "\tWHERE role_in_study like '%principal%' OR role_in_study like '%Principal%'\n" +
+            "\tGROUP BY study_accession) pi ON study.study_accession = pi.study_accession\n";
+
+    SQL.execute({schema:"immport", sql:immportStudySQL, success:function(raw)
+        {
+            var immportStudies = SQL.asObjects(raw.names, raw.rows);
+            immportStudies.forEach(function(immportStudy)
+            {
+                var study_accession = immportStudy.study_accession;
+                var hipc_funded = (immportStudy.program_title && immportStudy.program_title.indexOf("HIPC")>=0);
+                map[study_accession] = $.extend(
+                        map[study_accession]||{study_accession:study_accession, container:null, highlight:false, hipc_funded:hipc_funded, loaded:false, url:null},
+                        {
+                            id: parseInt(study_accession.substr(3)),
+                            memberName: '[Study].[' + study_accession + ']',
+                            pi : immportStudy.pi_names,
+                            restricted : !!immportStudy.restricted,
+                            title : immportStudy.brief_title || immportStudy.official_title
+                        });
+            });
+            queryComplete++;
+            if (queryComplete === 2)
+                renderFinder();
+        }
+    });
+    SQL.execute({schema:"study", sql:"SELECT *, Container.Name FROM study.StudyProperties", success:function(raw)
+        {
+            var labkeyStudies = SQL.asObjects(raw.names, raw.rows);
+            labkeyStudies.forEach(function(labkeyStudy){
+                var study_accession = labkeyStudy.Label || labkeyStudy.Name;
+                if (!/SDY[0-9]+/.exec(study_accession))
+                    return;
+                var highlight = labkeyStudy.highlight_until && labkeyStudy.highlight_until>(new Date());
+                map[study_accession] = $.extend(
+                        map[study_accession]||{study_accession:study_accession},
+                        {
+                            containerId : labkeyStudy.Container,
+                            highlight : highlight,
+                            hipc_funded: !!labkeyStudy.hipc_funded,
+                            loaded: true,
+                            url: LABKEY.ActionURL.buildURL("project","begin",LABKEY.ActionURL.getContainer() + "/" + study_accession)
+                        });
+            });
+            queryComplete++;
+            if (queryComplete === 2)
+                renderFinder();
+        }
+    });
+
+    function renderFinder()
+    {
+        var studiesFromQuery = [];
+        for (var study_accession in map)
+        {
+            if (map.hasOwnProperty(study_accession))
+                studiesFromQuery.push(map[study_accession]);
+        }
+        ReactDOM.render(React.createElement(DataFinderController, {studies:studiesFromQuery, dimensions:dimensions}), document.getElementById("dataFinderApp"));
+    }
+    // query study.studyData
+
 });
 
 </script>

@@ -15,31 +15,7 @@
      * limitations under the License.
      */
 %>
-<%@ page import="org.apache.commons.lang3.StringUtils" %>
-<%@ page import="org.labkey.api.data.Container" %>
-<%@ page import="org.labkey.api.data.ContainerFilter" %>
-<%@ page import="org.labkey.api.data.ContainerManager" %>
-<%@ page import="org.labkey.api.data.DbSchema" %>
-<%@ page import="org.labkey.api.data.DbSchemaType" %>
-<%@ page import="org.labkey.api.data.SqlSelector" %>
-<%@ page import="org.labkey.api.data.TableInfo" %>
-<%@ page import="org.labkey.api.data.TableSelector" %>
-<%@ page import="org.labkey.api.query.DefaultSchema" %>
-<%@ page import="org.labkey.api.query.QuerySchema" %>
-<%@ page import="org.labkey.api.util.HeartBeat" %>
-<%@ page import="org.labkey.api.view.ActionURL" %>
-<%@ page import="org.labkey.api.view.HttpView" %>
-<%@ page import="org.labkey.api.view.ViewContext" %>
 <%@ page import="org.labkey.api.view.template.ClientDependencies" %>
-<%@ page import="org.labkey.immport.data.StudyBean" %>
-<%@ page import="java.util.ArrayList" %>
-<%@ page import="java.util.Collection" %>
-<%@ page import="java.util.Collections" %>
-<%@ page import="java.util.Date" %>
-<%@ page import="java.util.Map" %>
-<%@ page import="java.util.TreeMap" %>
-<%@ page import="java.util.regex.Matcher" %>
-<%@ page import="java.util.regex.Pattern" %>
 <%@ page extends="org.labkey.api.jsp.JspBase"%>
 <%!
     @Override
@@ -59,7 +35,7 @@
         dependencies.add("immport/dataFinder_react.js");
     }
 %>
-<%
+<--%
     ViewContext context = HttpView.currentContext();
     assert null != context;
     // CONSIDER: add this to fn_populateDimensions (maybe just add additional program_id column to dimStudy)
@@ -86,7 +62,7 @@
     Map<String,StudyBean> mapOfStudies = new TreeMap<>();
     for (StudyBean sb : studies)
         mapOfStudies.put(sb.getStudy_accession(), sb);
-%>
+--%>
 
 <div id="dataFinderWrapper" class="labkey-data-finder-outer">
 <div id="dataFinderApp" class="labkey-data-finder-inner" ng-app="dataFinderApp" ng-controller="dataFinder">

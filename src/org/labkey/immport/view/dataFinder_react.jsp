@@ -35,7 +35,7 @@
         dependencies.add("immport/dataFinder_react.js");
     }
 %>
-<--%
+<%--
     ViewContext context = HttpView.currentContext();
     assert null != context;
     // CONSIDER: add this to fn_populateDimensions (maybe just add additional program_id column to dimStudy)
@@ -76,18 +76,6 @@
  --%>
 <%-- N.B. This is not robust enough to have two finder web parts on the same page --%>
 
-<%!
-    String isTrue(Object o)
-    {
-        if (null == o)
-            return "false";
-        if (o instanceof Boolean)
-            return o == Boolean.TRUE ? "true" : "false";
-        if (o instanceof Number)
-            return ((Number) o).intValue() == 0 ? "false" : "true";
-        return "false";
-    }
-%>
 <script src='<%=getContextPath()%>/clientapi/core/SQL.js'></script>
 <script type="text/javascript">
 

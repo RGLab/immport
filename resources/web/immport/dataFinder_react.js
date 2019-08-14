@@ -343,7 +343,7 @@ var Facet = React.createClass(
                         dim.filterOptions.length<2 ? null:
                             DIV({className:"dropdown-menu"},
                                 dim.filterOptions.map(function(opt){
-                                    return A({className:"dropdown-item", key:opt.type, onClick:me.handleFilterOption.bind(me,opt)}, opt.caption, BR());
+                                    return A({className:"dropdown-item", key:opt.type, onClick:function(event){me.handleFilterOption(opt,event);}}, opt.caption, BR());
                             }))
                     )
                 )
@@ -387,8 +387,7 @@ var DataFinderLayout = React.createClass(
 
     componentWillMount: function ()
     {
-        viewportResizeFn = this.handleViewportSizeChange.bind(this);
-        $( window ).resize( viewportResizeFn );
+        $( window ).resize( this.handleViewportSizeChange );
     },
 
     componentWillUnmount: function()

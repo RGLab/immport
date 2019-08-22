@@ -18,7 +18,6 @@
 <%@ page import="org.apache.commons.lang3.StringUtils" %>
 <%@ page import="org.labkey.api.data.Container" %>
 <%@ page import="org.labkey.api.data.ContainerFilter" %>
-<%@ page import="org.labkey.api.data.ContainerFilterable" %>
 <%@ page import="org.labkey.api.data.ContainerManager" %>
 <%@ page import="org.labkey.api.data.DbSchema" %>
 <%@ page import="org.labkey.api.data.DbSchemaType" %>
@@ -160,8 +159,8 @@
                     <span id="message" class="labkey-filter-message" ng-if="!loadedStudiesShown()">No data are available for participants since you are viewing unloaded studies.</span>
 		</div>
 		<div class="df-help-links">
-                <%=textLink("quick help", "#", "start_tutorial()", "showTutorial")%>
-                <%=textLink("Export Study Datasets", ImmPortController.ExportStudyDatasetsAction.class)%>
+                <%=link("quick help").href("#").onClick("start_tutorial()").id("showTutorial")%>
+                <%=link("Export Study Datasets", ImmPortController.ExportStudyDatasetsAction.class)%>
                 <%
                 URLHelper startRstudio = null;
                 RStudioService rstudio = ServiceRegistry.get(RStudioService.class);
@@ -169,7 +168,7 @@
                     startRstudio = rstudio.getRStudioLink(context.getUser(), context.getContainer());
                 if (null != startRstudio)
                 {
-                    %><%=textLink("RStudio", new ActionURL("rstudio","start",ContainerManager.getRoot()))%><%
+                    %><%=link("RStudio", new ActionURL("rstudio", "start", ContainerManager.getRoot()))%><%
                 } %>
                 </div>
             </td>

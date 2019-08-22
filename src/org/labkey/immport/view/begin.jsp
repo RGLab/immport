@@ -31,18 +31,18 @@
 
 <p>
 <b>To load new ImmPort archive</b><br>
-<%=textLink("Import Archive", new ActionURL(ImmPortController.ImportArchiveAction.class, c))%><br>
-<%=textLink("Populate cube", new ActionURL(ImmPortController.PopulateCubeAction.class, c))%><br>
-<%=textLink("Data Finder", new ActionURL(ImmPortController.DataFinderAction.class, c))%><br>
-<%=textLink("Public/Restricted Studies", new ActionURL(ImmPortController.RestrictedStudiesAction.class, c))%><br>
+<%=link("Import Archive", new ActionURL(ImmPortController.ImportArchiveAction.class, c))%><br>
+<%=link("Populate cube", new ActionURL(ImmPortController.PopulateCubeAction.class, c))%><br>
+<%=link("Data Finder", new ActionURL(ImmPortController.DataFinderAction.class, c))%><br>
+<%=link("Public/Restricted Studies", new ActionURL(ImmPortController.RestrictedStudiesAction.class, c))%><br>
 </p>
 <p>
 <b>Load or refresh data in a new study</b><br>
-<%=textLink("Copy datasets for one study in this folder", new ActionURL("immport", "copyImmPortStudy", c))%><br>
+<%=link("Copy datasets for one study in this folder", new ActionURL("immport", "copyImmPortStudy", c))%><br>
 </p>
 <p>
 <b>Reload all data (should be executed from the /Studies container):</b><br>
-<%=textLink("Copy datasets for multiple child studies", new ActionURL("immport", "reimportStudies", c))%><br>
+<%=link("Copy datasets for multiple child studies", new ActionURL("immport", "reimportStudies", c))%><br>
 <%--
 <p>
 To create a gender subject_groups<br>
@@ -53,11 +53,11 @@ To create a gender subject_groups<br>
 --%>
 </p>
 <h3>Post loading tasks</h3>
-  <%=textLink("Hide empty datasets", new ActionURL("study", "datasetVisibility", c))%><br>
-  <%=textLink("Highligh study", new ActionURL("study", "manageStudyProperties", c))%><br>
-  <%=textLink("Update modules", new ActionURL("admin", "folderType", c).addParameter("tabId", "folderType"))%><br>
+  <%=link("Hide empty datasets", new ActionURL("study", "datasetVisibility", c))%><br>
+  <%=link("Highligh study", new ActionURL("study", "manageStudyProperties", c))%><br>
+  <%=link("Update modules", new ActionURL("admin", "folderType", c).addParameter("tabId", "folderType"))%><br>
 </p>
 
 <h3>Expression Matrix publish/import</h3>
-  <%=textLink("Export selected expression matrices", new ActionURL(ImmPortController.PublishExpressionMatrixAction.class, c))%><br>
-  <%=textLink("Import published expression matrices", new ActionURL(ImmPortController.ImportExpressionMatrixAction.class, c))%><br>
+  <%=link("Export selected expression matrices", new ActionURL(ImmPortController.PublishExpressionMatrixAction.class, c))%><br>
+  <%=link("Import published expression matrices", new ActionURL(ImmPortController.ImportExpressionMatrixAction.class, c))%><br>

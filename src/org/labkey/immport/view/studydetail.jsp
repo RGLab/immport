@@ -18,12 +18,12 @@
 <%@ page import="org.apache.commons.lang3.StringUtils" %>
 <%@ page import="org.labkey.api.data.Container" %>
 <%@ page import="org.labkey.api.data.ContainerFilter" %>
-<%@ page import="org.labkey.api.data.ContainerFilterable" %>
 <%@ page import="org.labkey.api.data.ContainerManager" %>
 <%@ page import="org.labkey.api.data.TableInfo" %>
 <%@ page import="org.labkey.api.data.TableSelector" %>
 <%@ page import="org.labkey.api.query.DefaultSchema" %>
 <%@ page import="org.labkey.api.query.QuerySchema" %>
+<%@ page import="org.labkey.api.util.PageFlowUtil" %>
 <%@ page import="org.labkey.api.view.ActionURL" %>
 <%@ page import="org.labkey.api.view.HttpView" %>
 <%@ page import="org.labkey.api.view.JspView" %>
@@ -35,7 +35,6 @@
 <%@ page import="java.util.Collection" %>
 <%@ page import="java.util.HashMap" %>
 <%@ page import="java.util.Map" %>
-<%@ page import="org.labkey.api.util.PageFlowUtil" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%!
     @Override
@@ -115,7 +114,7 @@
                 %><span class="pub-title"><%=h(pub.getTitle())%></span><%
                     if (!StringUtils.isEmpty(pub.getPubmed_id()))
                     {
-                        %><br/><%=textLink("PubMed","http://www.ncbi.nlm.nih.gov/pubmed/?term=" + pub.getPubmed_id(), null, null, linkProps)%><%
+                        %><br/><%=link("PubMed").href("http://www.ncbi.nlm.nih.gov/pubmed/?term=" + pub.getPubmed_id()).onClick(null).id(null).attributes(linkProps)%><%
                     }
                 %></p><%
             }
@@ -123,9 +122,9 @@
         %></div>
     </div>
 
-    <%=textLink("ImmPort","https://immport.niaid.nih.gov/immportWeb/clinical/study/displayStudyDetails.do?itemList=" + details.study.getStudy_accession(), null, null, linkProps)%><br>
+    <%=link("ImmPort").href("https://immport.niaid.nih.gov/immportWeb/clinical/study/displayStudyDetails.do?itemList=" + details.study.getStudy_accession()).onClick(null).id(null).attributes(linkProps)%><br>
     <% if (null != studyUrl) { %>
-        <%= textLink("View study " + details.study.getStudy_accession(), studyUrl, null, null, linkProps)%><br>
+        <%= link("View study " + details.study.getStudy_accession(), studyUrl).onClick(null).id(null).attributes(linkProps)%><br>
     <% } %>
 </div>
 </div>

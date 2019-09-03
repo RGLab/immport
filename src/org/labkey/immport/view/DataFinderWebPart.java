@@ -37,7 +37,7 @@ public class DataFinderWebPart extends JspView
 
     public DataFinderWebPart(Container c, ImmPortController.SentGroupForm form)
     {
-        super("/org/labkey/immport/view/dataFinder.jsp");
+        super("/org/labkey/immport/view/dataFinder_react.jsp");
         setTitle("Data Finder");
         setTitleHref(new ActionURL(ImmPortController.DataFinderAction.class, c));
 

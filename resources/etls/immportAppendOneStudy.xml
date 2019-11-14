@@ -9,59 +9,59 @@
     <transforms>
         <transform id="demographics" type="org.labkey.di.pipeline.TransformTask">
             <source schemaName="immport" queryName="ds_demographics" />
-            <destination schemaName="study" queryName="demographics" targetOption="merge" />
+            <destination schemaName="study" queryName="demographics" targetOption="merge" bulkLoad="true" />
         </transform>
         <transform id="elispot" type="org.labkey.di.pipeline.TransformTask">
             <source schemaName="immport" queryName="ds_elispot" />
-            <destination schemaName="study" queryName="elispot" targetOption="append" />
+            <destination schemaName="study" queryName="elispot" targetOption="append" bulkLoad="true" />
         </transform>
         <transform id="hai" type="org.labkey.di.pipeline.TransformTask">
             <source schemaName="immport" queryName="ds_hai" />
-            <destination schemaName="study" queryName="hai" targetOption="append" />
+            <destination schemaName="study" queryName="hai" targetOption="append" bulkLoad="true" />
         </transform>
         <transform id="hla_typing" type="org.labkey.di.pipeline.TransformTask">
             <source schemaName="immport" queryName="ds_hla_typing" />
-            <destination schemaName="study" queryName="hla_typing" targetOption="append" />
+            <destination schemaName="study" queryName="hla_typing" targetOption="append" bulkLoad="true" />
         </transform>
         <transform id="kir_typing" type="org.labkey.di.pipeline.TransformTask">
             <source schemaName="immport" queryName="ds_kir_typing" />
-            <destination schemaName="study" queryName="kir_typing" targetOption="append" />
+            <destination schemaName="study" queryName="kir_typing" targetOption="append" bulkLoad="true" />
         </transform>
         <transform id="mbaa" type="org.labkey.di.pipeline.TransformTask">
             <source schemaName="immport" queryName="ds_mbaa" />
-            <destination schemaName="study" queryName="mbaa" targetOption="append" />
+            <destination schemaName="study" queryName="mbaa" targetOption="append" bulkLoad="true" />
         </transform>
         <transform id="neut_ab_titer" type="org.labkey.di.pipeline.TransformTask">
             <source schemaName="immport" queryName="ds_neut_ab_titer" />
-            <destination schemaName="study" queryName="neut_ab_titer" targetOption="append" />
+            <destination schemaName="study" queryName="neut_ab_titer" targetOption="append" bulkLoad="true" />
         </transform>
         <transform id="pcr" type="org.labkey.di.pipeline.TransformTask">
             <source schemaName="immport" queryName="ds_pcr" />
-            <destination schemaName="study" queryName="pcr" targetOption="append" />
+            <destination schemaName="study" queryName="pcr" targetOption="append" bulkLoad="true" />
         </transform>
         <transform id="cohort_membership" type="org.labkey.di.pipeline.TransformTask">
             <source schemaName="immport" queryName="ds_cohort_membership" />
-            <destination schemaName="study" queryName="cohort_membership" targetOption="append" />
+            <destination schemaName="study" queryName="cohort_membership" targetOption="append" bulkLoad="true" />
         </transform>
         <transform id="gene_expression_files" type="org.labkey.di.pipeline.TransformTask">
             <source schemaName="immport" queryName="ds_gene_expression_files" />
-            <destination schemaName="study" queryName="gene_expression_files" targetOption="append" />
+            <destination schemaName="study" queryName="gene_expression_files" targetOption="append" bulkLoad="true" />
         </transform>
         <transform id="fcs_analyzed_result" type="org.labkey.di.pipeline.TransformTask">
             <source schemaName="immport" queryName="ds_fcs_analyzed_result" />
-            <destination schemaName="study" queryName="fcs_analyzed_result" targetOption="append" />
+            <destination schemaName="study" queryName="fcs_analyzed_result" targetOption="append" bulkLoad="true" />
         </transform>
         <transform id="elisa" type="org.labkey.di.pipeline.TransformTask">
             <source schemaName="immport" queryName="ds_elisa" />
-            <destination schemaName="study" queryName="elisa" targetOption="append" />
+            <destination schemaName="study" queryName="elisa" targetOption="append" bulkLoad="true" />
         </transform>
         <transform id="fcs_analyzed_result_samples" type="org.labkey.di.pipeline.TransformTask">
             <source schemaName="immport" queryName="ds_fcs_sample_files" />
-            <destination schemaName="study" queryName="fcs_sample_files" targetOption="truncate" />
+            <destination schemaName="study" queryName="fcs_sample_files" targetOption="truncate" bulkLoad="true" />
         </transform>
         <transform id="fcs_analyzed_result_controls" type="org.labkey.di.pipeline.TransformTask">
             <source schemaName="immport" queryName="ds_fcs_control_files" />
-            <destination schemaName="study" queryName="fcs_control_files" targetOption="truncate" />
+            <destination schemaName="study" queryName="fcs_control_files" targetOption="truncate" bulkLoad="true" />
         </transform>
         <transform id="hideEmptyDatasets" type="TaskrefTransformStep">
             <taskref ref="org.labkey.immport.data.AfterStudyLoadTask"/>

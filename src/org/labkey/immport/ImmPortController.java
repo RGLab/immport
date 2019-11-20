@@ -1026,7 +1026,7 @@ public class ImmPortController extends SpringActionController
         @Override
         public ModelAndView getView(PublishExpressionMatrixForm form, boolean reshow, BindException errors) throws Exception
         {
-            return new JspView<>(ImmPortController.class, "view/publishExpressionMatrix.jsp", form, errors);
+            return new JspView<>("/org/labkey/immport/view/publishExpressionMatrix.jsp", form, errors);
         }
 
         @Override
@@ -1120,7 +1120,7 @@ public class ImmPortController extends SpringActionController
             QuerySchema microarray = DefaultSchema.get(getUser(), getContainer()).getSchema("Microarray");
             if (null == microarray)
                 errors.reject(ERROR_MSG, "Microarray module is not enabled in this container.");
-            return new JspView<>(ImportExpressionMatrixAction.class, "view/importExpressionMatrix.jsp", form, errors);
+            return new JspView<>("/org/labkey/immport/view/importExpressionMatrix.jsp", form, errors);
         }
 
         @Override

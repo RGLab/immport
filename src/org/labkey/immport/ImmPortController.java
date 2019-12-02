@@ -1225,5 +1225,35 @@ public class ImmPortController extends SpringActionController
                 throw new RuntimeException(ex);
             }
         }
-    };
+    }
+
+
+    @RequiresNoPermission
+    public static class TestProxyTargetAction extends ReadOnlyApiAction<Object>
+    {
+        @Override
+        public Object execute(Object o, BindException errors) throws Exception
+        {
+            var req = getViewContext().getRequest();
+
+            JSONObject headers = new JSONObject();
+            for (var e=req.getHeaderNames() ; e.hasMoreElements() ; )
+            {
+                var name = e.nextElement();
+                var value = req.getHeader(name);
+                headers.put(name,value);
+            }
+
+            JSONObject user = new JSONObject();
+            user.put("id", (getViewContext().getUser().getUserId()));
+            user.put("email", (getViewContext().getUser().getEmail()));
+
+            JSONObject ret = new JSONObject();
+            ret.put("success", true);
+            ret.put("headers", headers);
+            ret.put("parameters", req.getParameterMap());
+            ret.put("user", user);
+            return ret;
+        }
+    }
 }

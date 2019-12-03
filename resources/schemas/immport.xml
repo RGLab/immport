@@ -434,6 +434,7 @@
     <table tableName="mbaa_result" tableDbType="TABLE">
         <columns>
             <column columnName="result_id"/>
+            <column columnName="analyte_accession"/>
             <column columnName="analyte_preferred"/>
             <column columnName="analyte_reported"/>
             <column columnName="arm_accession"/>
@@ -1061,6 +1062,7 @@
     <table tableName="elisa_result" tableDbType="TABLE">
         <columns>
             <column columnName="result_id"/>
+            <column columnName="analyte_accession"/>
             <column columnName="analyte_preferred"/>
             <column columnName="analyte_reported"/>
             <column columnName="arm_accession"/>
@@ -1190,6 +1192,7 @@
     <table tableName="standard_curve" tableDbType="TABLE">
         <columns>
             <column columnName="standard_curve_accession"/>
+            <column columnName="analyte_accession"/>
             <column columnName="analyte_preferred"/>
             <column columnName="analyte_reported"/>
             <column columnName="assay_group_id"/>
@@ -1295,6 +1298,7 @@
     <table tableName="reagent" tableDbType="TABLE">
         <columns>
             <column columnName="reagent_accession"/>
+            <column columnName="analyte_accession"/>
             <column columnName="analyte_preferred"/>
             <column columnName="analyte_reported"/>
             <column columnName="antibody_registry_id"/>
@@ -1358,6 +1362,7 @@
             <column columnName="gene_id"/>
             <column columnName="gene_name"/>
             <column columnName="gene_symbol"/>
+            <column columnName="analyte_accession"/>
             <column columnName="gene_symbol_preferred"/>
             <column columnName="gene_symbol_reported"/>
             <column columnName="other_gene_accession"/>
@@ -1408,6 +1413,7 @@
     <table tableName="elispot_result" tableDbType="TABLE">
         <columns>
             <column columnName="result_id"/>
+            <column columnName="analyte_accession"/>
             <column columnName="analyte_preferred"/>
             <column columnName="analyte_reported"/>
             <column columnName="arm_accession"/>

@@ -9,7 +9,7 @@ SELECT
   COALESCE(study_time_collected,9999.0000) as sequencenum,
 
   result_id,
-  COALESCE((SELECT uniprot_entry FROM lk_analyte WHERE analyte_accession=result.analyte_preferred AND uniprot_entry != '-'),analyte_reported,analyte_preferred) AS analyte,
+  COALESCE((SELECT uniprot_entry FROM lk_analyte WHERE lk_analyte.analyte_accession=result.analyte_accession AND uniprot_entry != '-'),analyte_reported,analyte_preferred) AS analyte,
   analyte_preferred,
   analyte_reported,
   arm_accession,

@@ -618,7 +618,8 @@ public class DataFinderTest extends BaseWebDriverTest implements PostgresOnlyTes
         waitFor(() -> exportedFile.length() > 0, "Exported file is empty: " + exportedFile.getAbsolutePath(), WAIT_FOR_JAVASCRIPT * 10);
 
         log("Validate contents");
-        try (FileSystem fs = FileSystems.newFileSystem(exportedFile.toPath(), null)) {
+        try (FileSystem fs = FileSystems.newFileSystem(exportedFile.toPath(), (ClassLoader) null)) // 'null' is ambiguous in Java 13+
+        {
             // Extract a file
             List<String> lines = Files.readAllLines(fs.getPath("fcs_analyzed_result.tsv"), Charset.forName("UTF-8"));
             Assert.assertEquals(

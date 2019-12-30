@@ -712,21 +712,6 @@ public class ImmPortController extends SpringActionController
 
 
     @RequiresPermission(ReadPermission.class)
-    public class StudyFinderExtAction extends SimpleViewAction
-    {
-        public ModelAndView getView(Object o, BindException errors) throws Exception
-        {
-            return new JspView("/org/labkey/immport/view/studyfinderExt.jsp");
-        }
-
-        public NavTree appendNavTrail(NavTree root)
-        {
-            return root;
-        }
-    }
-
-
-    @RequiresPermission(ReadPermission.class)
     public class DataFinderAction extends SimpleViewAction<SentGroupForm>
     {
         public ModelAndView getView(SentGroupForm form, BindException errors) throws Exception

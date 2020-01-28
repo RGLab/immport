@@ -288,7 +288,12 @@ BEGIN
     END as AgeInYears,
     species As Species,
     gender AS Gender,
-    coalesce(race,'Not_Specified') AS Race,
+    CASE
+      WHEN race = 'Not_Specified' THEN 'Unknown'
+      WHEN race = 'Not Specified' THEN 'Unknown'
+      WHEN race IS NULL THEN 'Unknown'
+      ELSE race
+    END AS Race,
     CASE
       WHEN floor(min_subject_age) < 10 THEN '0-10'
       WHEN floor(min_subject_age) < 20 THEN '11-20'
@@ -302,8 +307,8 @@ BEGIN
     END AS Age,
     -- NOTE: using SELECT here instead of LOJ in FROM so that this will error if there are ever multiple immune_exposure rows for one study/subject
     -- BUG: this failed in DR29 added MIN() as temporary fix see https://www.labkey.org/HIPC/Support%20Tickets/issues-details.view?issueId=36663
-    coalesce((SELECT MIN(exposure_material_reported) FROM immport.immune_exposure WHERE arm_2_subject.arm_accession = immune_exposure.arm_accession AND arm_2_subject.subject_accession = immune_exposure.subject_accession), 'Not_Specified') as exposure_material,
-    coalesce((SELECT MIN(exposure_process_preferred) FROM immport.immune_exposure WHERE arm_2_subject.arm_accession = immune_exposure.arm_accession AND arm_2_subject.subject_accession = immune_exposure.subject_accession), 'Not_Specified') as exposure_process
+    coalesce((SELECT MIN(exposure_material_reported) FROM immport.immune_exposure WHERE arm_2_subject.arm_accession = immune_exposure.arm_accession AND arm_2_subject.subject_accession = immune_exposure.subject_accession), 'Unknown') as exposure_material,
+    coalesce((SELECT MIN(exposure_process_preferred) FROM immport.immune_exposure WHERE arm_2_subject.arm_accession = immune_exposure.arm_accession AND arm_2_subject.subject_accession = immune_exposure.subject_accession), 'Unknown') as exposure_process
   FROM immport.subject
       INNER JOIN immport.arm_2_subject arm_2_subject ON subject.subject_accession = arm_2_subject.subject_accession 
       INNER JOIN immport.arm_or_cohort ON arm_2_subject.arm_accession = arm_or_cohort.arm_accession

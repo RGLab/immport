@@ -287,7 +287,10 @@ BEGIN
       ELSE NULL
     END as AgeInYears,
     species As Species,
-    gender AS Gender,
+    CASE 
+      WHEN gender = 'Not Specified' THEN 'Unknown'
+      ELSE gender
+    END AS Gender,
     CASE
       WHEN race = 'Not_Specified' THEN 'Unknown'
       WHEN race = 'Not Specified' THEN 'Unknown'
@@ -308,7 +311,7 @@ BEGIN
     -- NOTE: using SELECT here instead of LOJ in FROM so that this will error if there are ever multiple immune_exposure rows for one study/subject
     -- BUG: this failed in DR29 added MIN() as temporary fix see https://www.labkey.org/HIPC/Support%20Tickets/issues-details.view?issueId=36663
     coalesce((SELECT MIN(exposure_material_reported) FROM immport.immune_exposure WHERE arm_2_subject.arm_accession = immune_exposure.arm_accession AND arm_2_subject.subject_accession = immune_exposure.subject_accession), 'Unknown') as exposure_material,
-    coalesce((SELECT MIN(exposure_process_preferred) FROM immport.immune_exposure WHERE arm_2_subject.arm_accession = immune_exposure.arm_accession AND arm_2_subject.subject_accession = immune_exposure.subject_accession), 'Unknown') as exposure_process
+    coalesce((SELECT MIN(exposure_process_preferred) FROM immport.immune_exposure WHERE arm_2_subject.arm_accession = immune_exposure.arm_accession AND arm_2_subject.subject_accession = immune_exposure.subject_accession), 'unknown') as exposure_process
   FROM immport.subject
       INNER JOIN immport.arm_2_subject arm_2_subject ON subject.subject_accession = arm_2_subject.subject_accession 
       INNER JOIN immport.arm_or_cohort ON arm_2_subject.arm_accession = arm_or_cohort.arm_accession
@@ -347,7 +350,7 @@ BEGIN
 
       SELECT arm_or_cohort.study_accession AS Study, COALESCE(disease_preferred,disease_reported) as Condition 
       FROM immport.immune_exposure JOIN immport.arm_or_cohort ON immune_exposure.arm_accession = arm_or_cohort.arm_accession
-      WHERE disease_preferred IS NOT NULL OR disease_reported IS NOT NULL
+      WHERE (disease_preferred IS NOT NULL OR disease_reported IS NOT NULL) 
 
       UNION
 
@@ -505,7 +508,7 @@ BEGIN
       WHEN study_day < 56 THEN 29
       WHEN study_day = 56 THEN 56
       WHEN study_day > 56 THEN 57
-      ELSE -2
+      ELSE 99
     END as sortorder
   FROM temp_results_union
   ORDER BY study_accession, sortorder;
@@ -551,7 +554,7 @@ BEGIN
       WHEN study_day < 56 THEN 29
       WHEN study_day = 56 THEN 56
       WHEN study_day > 56 THEN 57
-      ELSE -2
+      ELSE 99
       END as Timepoint_SortOrder
   FROM temp_results_union
   WHERE biosample_accession IS NOT NULL AND subject_accession IS NOT NULL;

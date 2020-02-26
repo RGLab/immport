@@ -1,0 +1,2 @@
+# direct external dependencies for project :server:optionalModules:immport
+commons-vfs2-2.0.jar

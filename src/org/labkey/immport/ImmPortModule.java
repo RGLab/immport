@@ -60,7 +60,7 @@ public class ImmPortModule extends DefaultModule
     @Override
     public @Nullable Double getSchemaVersion()
     {
-        return 19.12;
+        return 19.31;
     }
 
     @Override

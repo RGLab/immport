@@ -30,6 +30,7 @@ import org.labkey.api.action.FormViewAction;
 import org.labkey.api.action.HasBindParameters;
 import org.labkey.api.action.NullSafeBindException;
 import org.labkey.api.action.ReadOnlyApiAction;
+import org.labkey.api.action.SimpleRedirectAction;
 import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
 import org.labkey.api.admin.notification.NotificationService;
@@ -750,6 +751,18 @@ public class ImmPortController extends SpringActionController
         }
     }
 
+    @RequiresPermission(ReadPermission.class)
+    public class DataFinderRedirectAction extends SimpleRedirectAction
+    {
+        @Override
+        public URLHelper getRedirectURL(Object o) throws Exception
+        {
+            if (getContainer().isRoot())
+                throw new NotFoundException();
+            return ImmPortModule.getDataFinderURL(getContainer(), getUser());
+        }
+    }
+
     public static class SentGroupForm
     {
         private Integer _groupId;
@@ -866,7 +879,7 @@ public class ImmPortController extends SpringActionController
         @Override
         public NavTree appendNavTrail(NavTree root)
         {
-            return root.addChild("Data Finder", new ActionURL(DataFinderAction.class, getContainer()))
+            return root.addChild("Data Finder", ImmPortModule.getDataFinderURL(getContainer(),getUser()))
                     .addChild("Export Study Datasets");
         }
     }

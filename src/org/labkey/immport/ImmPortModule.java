@@ -49,11 +49,13 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
-import static com.rometools.utils.Strings.isBlank;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 public class ImmPortModule extends DefaultModule
 {
-    public static String NAME = "ImmPort";
+    public static final String NAME = "ImmPort";
+    public static final String PROPERTY_PROXYFINDERURI = "proxyTargetUri";
+    public static final String PROPERTY_DATAFINDERURI = "dataFinderUri";
 
     public static final SearchService.SearchCategory searchCategoryStudy = new SearchService.SearchCategory("immport_study", "ImmPort Study", false);
 
@@ -96,11 +98,11 @@ public class ImmPortModule extends DefaultModule
         // override the base RExportScriptFactory to use a script based on the ImmuneSpaceR package
         QueryView.register(new ImmuneSpaceRExportScriptFactory(), true);
 
-        ModuleProperty proxyTarget = new ModuleProperty(this, "proxyTargetUri", ModuleProperty.InputType.text, "target for RApi proxy servlet (/_rapi/)", "target uri", false);
+        ModuleProperty proxyTarget = new ModuleProperty(this, PROPERTY_PROXYFINDERURI, ModuleProperty.InputType.text, "target for RApi proxy servlet (/_rapi/)", "target uri", false);
         proxyTarget.setEditPermissions(Arrays.asList(AdminOperationsPermission.class));
         addModuleProperty(proxyTarget);
 
-        ModuleProperty studyFinder = new ModuleProperty(this, "dataFinderUri", ModuleProperty.InputType.text, "URL for data finder, default /Studies/project-begin.view", "datafinder url", true)
+        ModuleProperty studyFinder = new ModuleProperty(this, PROPERTY_DATAFINDERURI, ModuleProperty.InputType.text, "URL for data finder, default /Studies/project-begin.view", "datafinder url", true)
         {
             @Override
             public String getDefaultValue()
@@ -172,10 +174,10 @@ public class ImmPortModule extends DefaultModule
     public static URLHelper getDataFinderURL(Container c, User user)
     {
         URLHelper dataFinder = null;
-        ImmPortModule m = (ImmPortModule)ModuleLoader.getInstance().getModule("immport");
+        ImmPortModule m = (ImmPortModule)ModuleLoader.getInstance().getModule(NAME);
         if (null == m)
             throw new NotFoundException();
-        ModuleProperty prop = m.getModuleProperties().get("dataFinderUri");
+        ModuleProperty prop = m.getModuleProperties().get(PROPERTY_DATAFINDERURI);
 
         try
         {

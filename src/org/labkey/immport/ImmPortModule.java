@@ -20,6 +20,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.admin.FolderSerializationRegistry;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerManager;
 import org.labkey.api.module.DefaultModule;
 import org.labkey.api.module.FolderTypeManager;
 import org.labkey.api.module.Module;
@@ -29,24 +30,33 @@ import org.labkey.api.module.ModuleProperty;
 import org.labkey.api.query.QueryView;
 import org.labkey.api.rstudio.RStudioService;
 import org.labkey.api.search.SearchService;
+import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.AdminOperationsPermission;
 import org.labkey.api.security.roles.RoleManager;
 import org.labkey.api.services.ServiceRegistry;
+import org.labkey.api.util.URLHelper;
+import org.labkey.api.view.ActionURL;
+import org.labkey.api.view.NotFoundException;
 import org.labkey.api.view.SimpleWebPartFactory;
 import org.labkey.api.view.WebPartFactory;
 import org.labkey.immport.security.ImmPortAdminRole;
 import org.labkey.immport.view.DataFinderWebPart;
 
 import java.lang.reflect.InvocationTargetException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
 public class ImmPortModule extends DefaultModule
 {
-    public static String NAME = "ImmPort";
+    public static final String NAME = "ImmPort";
+    public static final String PROPERTY_PROXYFINDERURI = "proxyTargetUri";
+    public static final String PROPERTY_DATAFINDERURI = "dataFinderUri";
 
     public static final SearchService.SearchCategory searchCategoryStudy = new SearchService.SearchCategory("immport_study", "ImmPort Study", false);
 
@@ -60,7 +70,7 @@ public class ImmPortModule extends DefaultModule
     @Override
     public @Nullable Double getSchemaVersion()
     {
-        return 19.31;
+        return 19.32;
     }
 
     @Override
@@ -89,10 +99,27 @@ public class ImmPortModule extends DefaultModule
         // override the base RExportScriptFactory to use a script based on the ImmuneSpaceR package
         QueryView.register(new ImmuneSpaceRExportScriptFactory(), true);
 
-        ModuleProperty proxyTarget = new ModuleProperty(this, "proxyTargetUri", ModuleProperty.InputType.text, "target for RApi proxy servlet (/_rapi/)", "target uri", false);
+        ModuleProperty proxyTarget = new ModuleProperty(this, PROPERTY_PROXYFINDERURI, ModuleProperty.InputType.text, "target for RApi proxy servlet (/_rapi/)", "target uri", false);
         proxyTarget.setEditPermissions(Arrays.asList(AdminOperationsPermission.class));
         addModuleProperty(proxyTarget);
+
+        ModuleProperty studyFinder = new ModuleProperty(this, PROPERTY_DATAFINDERURI, ModuleProperty.InputType.text, "URL for data finder, default /Studies/project-begin.view", "datafinder url", true)
+        {
+            @Override
+            public String getDefaultValue()
+            {
+                Container studies = ContainerManager.getRoot().getChild("Studies");
+                if (null != studies)
+                    return studies.getStartURL(null).toLocalString(false);
+                return "";
+            }
+        };
+
+        studyFinder.setEditPermissions(Arrays.asList(AdminOperationsPermission.class));
+        addModuleProperty(studyFinder);
     }
+
+
 
     @Override
     public void doStartup(ModuleContext moduleContext)
@@ -143,5 +170,27 @@ public class ImmPortModule extends DefaultModule
     public Set<String> getSchemaNames()
     {
         return Collections.singleton("immport");
+    }
+
+    public static URLHelper getDataFinderURL(Container c, User user)
+    {
+        URLHelper dataFinder = null;
+        ImmPortModule m = (ImmPortModule)ModuleLoader.getInstance().getModule(NAME);
+        if (null == m)
+            throw new NotFoundException();
+        ModuleProperty prop = m.getModuleProperties().get(PROPERTY_DATAFINDERURI);
+
+        try
+        {
+            String url = prop.getValueContainerSpecific(c);
+            if (!isBlank(url))
+                dataFinder = new URLHelper(url);
+        }
+        catch (URISyntaxException x)
+        { /* pass */ }
+
+        if (null == dataFinder && null != c.getProject())
+            dataFinder = new ActionURL(ImmPortController.DataFinderAction.class, c.getProject());
+        return dataFinder;
     }
 }

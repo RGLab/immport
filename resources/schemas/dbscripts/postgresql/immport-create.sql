@@ -320,24 +320,6 @@ BEGIN
   ;
 
 
-  -- dimStudy
-
-  DELETE FROM immport.dimStudy;
-
-  -- study x contract_grant_2_study is MxM, even though it is 1xM 99% of the time
-  -- we're going to force this to me 1xM, with a synthetic junction table
-  INSERT INTO immport.dimStudy (Study, Type, Program, SortOrder)
-    SELECT DISTINCT
-      study.study_accession as Study,
-      study.type as Type,
-      P.name as Program,
-      cast(substring(study.study_accession,4) as integer) as SortOrder
-    FROM immport.study
-      LEFT OUTER JOIN (SELECT study_accession, MIN(contract_grant_id) as contract_grant_id FROM immport.contract_grant_2_study GROUP BY study_accession) cg2s ON study.study_accession = cg2s.study_accession
-      LEFT OUTER JOIN immport.contract_grant C ON cg2s.contract_grant_id = C.contract_grant_id
-      LEFT OUTER JOIN immport.program P on C.program_id = P.program_id;
-
-
   -- dimStudyCondition
 
   DELETE FROM immport.dimStudyCondition;
@@ -567,6 +549,61 @@ BEGIN
     biosample_accession as SampleId, assay as Assay
   FROM temp_results_union
   WHERE biosample_accession IS NOT NULL AND assay IS NOT NULL;
+
+  -- dimStudy
+  -- this table is really doing double duty as a CUBE input table (Study, Type, Program, Sort Order) as well as
+  -- a place to put summary information for the "study card" (brief_title, shared_study, restricted, research_focus, pi_names, assays, sample_types)
+  -- NOTE: join to study.StudyProperties for                 (restricted, container)
+
+  DELETE FROM immport.dimStudy;
+
+  -- study x contract_grant_2_study is MxM, even though it is 1xM 99% of the time
+  -- we're going to force this to me 1xM, with a synthetic junction table
+  INSERT INTO immport.dimStudy (Study, Type, Program, SortOrder, brief_title, shared_study, restricted, research_focus, pi_names, assays, sample_types)
+  SELECT DISTINCT
+      study.study_accession as Study,
+      study.type as Type,
+      P.name as Program,
+      cast(substring(study.study_accession,4) as integer) as SortOrder,
+      study.brief_title,
+      study.shared_study,
+      study.restricted,
+      study_categorization.research_focus,
+      pi.pi_names,
+      A.assays,
+      st.sample_types
+  FROM immport.study
+      LEFT OUTER JOIN (SELECT study_accession, MIN(contract_grant_id) as contract_grant_id FROM immport.contract_grant_2_study GROUP BY study_accession) cg2s ON study.study_accession = cg2s.study_accession
+      LEFT OUTER JOIN immport.contract_grant C ON cg2s.contract_grant_id = C.contract_grant_id
+      LEFT OUTER JOIN immport.program P on C.program_id = P.program_id
+      LEFT OUTER JOIN immport.study_categorization ON study.study_accession = study_categorization.study_accession
+      LEFT OUTER JOIN
+       (
+           SELECT array_to_string(array_agg(DISTINCT first_name || ' ' || last_name), ', ') AS pi_names, study_accession
+           FROM immport.study_personnel
+           WHERE role_in_study LIKE '%Principal%'
+           GROUP BY study_accession
+       ) pi
+       ON study.study_accession = pi.study_accession
+      LEFT OUTER JOIN
+       (
+           SELECT array_to_string(array_agg(DISTINCT assay), ', ') AS assays, study
+           FROM immport.dimstudyassay
+           GROUP BY study
+       ) A
+       ON study.study_accession = A.study
+      LEFT OUTER JOIN
+       (
+           SELECT array_to_string(array_agg(DISTINCT sample_type), ', ') as sample_types, studyid as study_accession
+           FROM
+               (
+                   SELECT ('SDY' || split_part(subjectid, '.', 2)) as studyid, type as sample_type
+                   FROM immport.dimsampletype
+               ) st_inner
+           GROUP BY studyid
+       ) st
+       ON study.study_accession = st.study_accession
+;
 
   RETURN 1;
   END;

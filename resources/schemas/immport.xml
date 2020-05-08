@@ -1018,6 +1018,13 @@
             <column columnName="type"/>
             <column columnName="sortorder"/>
             <column columnName="program"/>
+            <column columnName="assays"/>
+            <column columnName="brief_title"/>
+            <column columnName="pi_names"/>
+            <column columnName="research_focus"/>
+            <column columnName="restricted"/>
+            <column columnName="sample_types"/>
+            <column columnName="shared_study"/>
         </columns>
     </table>
     <table tableName="expsample_2_biosample" tableDbType="TABLE">

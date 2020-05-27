@@ -144,17 +144,17 @@ public class ImmPortController extends SpringActionController
     @RequiresPermission(ReadPermission.class)
     public class BeginAction extends SimpleViewAction
     {
+        @Override
         public ModelAndView getView(Object o, BindException errors)
         {
             return new JspView("/org/labkey/immport/view/begin.jsp");
         }
 
-        public NavTree appendNavTrail(NavTree root)
+        @Override
+        public void addNavTrail(NavTree root)
         {
-            return root;
         }
     }
-
 
     public static class CopyBean
     {
@@ -228,9 +228,8 @@ public class ImmPortController extends SpringActionController
         }
 
         @Override
-        public NavTree appendNavTrail(NavTree root)
+        public void addNavTrail(NavTree root)
         {
-            return root;
         }
     }
 
@@ -278,9 +277,8 @@ public class ImmPortController extends SpringActionController
         }
 
         @Override
-        public NavTree appendNavTrail(NavTree root)
+        public void addNavTrail(NavTree root)
         {
-            return root;
         }
     }
 
@@ -325,9 +323,8 @@ public class ImmPortController extends SpringActionController
         }
 
         @Override
-        public NavTree appendNavTrail(NavTree root)
+        public void addNavTrail(NavTree root)
         {
-            return null;
         }
     }
 
@@ -379,6 +376,7 @@ public class ImmPortController extends SpringActionController
             _schemas = schemas;
         }
 
+        @Override
         public BindException bindParameters(PropertyValues values)
         {
             BindException errors = new NullSafeBindException(this, "form");
@@ -617,32 +615,32 @@ public class ImmPortController extends SpringActionController
         }
 
         @Override
-        public NavTree appendNavTrail(NavTree root)
+        public void addNavTrail(NavTree root)
         {
-            if (null == _study.study)
-                return root;
-
-            QuerySchema s = DefaultSchema.get(getUser(), getContainer()).getSchema("immport");
-            TableInfo t = null==s ? null : s.getTable("study");
-            ActionURL grid = null==t ? null : t.getGridURL(getContainer());
-
-            if (null == _form.getReturnActionURL())
+            if (null != _study.study)
             {
-                if (null != grid)
+
+                QuerySchema s = DefaultSchema.get(getUser(), getContainer()).getSchema("immport");
+                TableInfo t = null == s ? null : s.getTable("study");
+                ActionURL grid = null == t ? null : t.getGridURL(getContainer());
+
+                if (null == _form.getReturnActionURL())
                 {
-                    root.addChild("Studies",grid);
+                    if (null != grid)
+                    {
+                        root.addChild("Studies", grid);
+                    }
+                    else
+                    {
+                        ActionURL list = new ActionURL("query", "executeQuery", getContainer());
+                        list.addParameter("schemaName", "immport");
+                        list.addParameter("query.queryName", "study");
+                        list.addParameter(".lastFilter", "true");
+                        root.addChild("Studies", list);
+                    }
                 }
-                else
-                {
-                    ActionURL list = new ActionURL("query","executeQuery",getContainer());
-                    list.addParameter("schemaName","immport");
-                    list.addParameter("query.queryName","study");
-                    list.addParameter(".lastFilter", "true");
-                    root.addChild("Studies", list);
-                }
+                root.addChild(_study.study.getStudy_accession());
             }
-            root.addChild(_study.study.getStudy_accession());
-            return root;
         }
     }
 
@@ -708,11 +706,10 @@ public class ImmPortController extends SpringActionController
         }
 
         @Override
-        public NavTree appendNavTrail(NavTree root)
+        public void addNavTrail(NavTree root)
         {
             root.addChild("ImmPort",new ActionURL(BeginAction.class, getContainer()));
             root.addChild("restricted studies",new ActionURL(RestrictedStudiesAction.class, getContainer()));
-            return root;
         }
     }
 
@@ -720,6 +717,7 @@ public class ImmPortController extends SpringActionController
     @RequiresPermission(ReadPermission.class)
     public class DataFinderAction extends SimpleViewAction<SentGroupForm>
     {
+        @Override
         public ModelAndView getView(SentGroupForm form, BindException errors) throws Exception
         {
             // if the user is viewing a sent participant group, remove any notifications related to it
@@ -735,9 +733,9 @@ public class ImmPortController extends SpringActionController
             return wp;
         }
 
-        public NavTree appendNavTrail(NavTree root)
+        @Override
+        public void addNavTrail(NavTree root)
         {
-            return root;
         }
     }
 
@@ -832,9 +830,8 @@ public class ImmPortController extends SpringActionController
         }
 
         @Override
-        public NavTree appendNavTrail(NavTree root)
+        public void addNavTrail(NavTree root)
         {
-            return root;
         }
     }
 
@@ -850,9 +847,8 @@ public class ImmPortController extends SpringActionController
         }
 
         @Override
-        public NavTree appendNavTrail(NavTree root)
+        public void addNavTrail(NavTree root)
         {
-            return null;
         }
     }
 
@@ -867,10 +863,10 @@ public class ImmPortController extends SpringActionController
         }
 
         @Override
-        public NavTree appendNavTrail(NavTree root)
+        public void addNavTrail(NavTree root)
         {
-            return root.addChild("Data Finder", ImmPortModule.getDataFinderURL(getContainer(),getUser()))
-                    .addChild("Export Study Datasets");
+            root.addChild("Data Finder", ImmPortModule.getDataFinderURL(getContainer(),getUser()));
+            root.addChild("Export Study Datasets");
         }
     }
 
@@ -1068,10 +1064,9 @@ public class ImmPortController extends SpringActionController
         }
 
         @Override
-        public NavTree appendNavTrail(NavTree root)
+        public void addNavTrail(NavTree root)
         {
             root.addChild("Publish expression matrix runs to another folder");
-            return root;
         }
     }
 
@@ -1155,10 +1150,9 @@ public class ImmPortController extends SpringActionController
         }
 
         @Override
-        public NavTree appendNavTrail(NavTree root)
+        public void addNavTrail(NavTree root)
         {
             root.addChild("Import published expression matrix runs");
-            return root;
         }
     }
 
